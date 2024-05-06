@@ -18,7 +18,7 @@ BASE_URL = f"https://github.com/iscc/iscc-binaries/releases/download/v{BASE_VERS
 MODEL_FILENAME = "iscc-sct-v0.1.0.onnx"
 MODEL_URL = f"{BASE_URL}/{MODEL_FILENAME}"
 MODEL_PATH = Path(sci.dirs.user_data_dir) / MODEL_FILENAME
-MODEL_CHECKSUM = "af95054d463e4c95de4c099a7947dbc2f3db168507fef25e91e6984a6f32dd3c"
+MODEL_CHECKSUM = "ff254d62db55ed88a1451b323a66416f60838dd2f0338dba21bc3b8822459abc"
 
 
 @contextmanager

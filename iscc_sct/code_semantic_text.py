@@ -1,4 +1,6 @@
 from loguru import logger as log
+from semantic_text_splitter import TextSplitter
+from tokenizers import Tokenizer
 from base64 import b32encode
 from pathlib import Path
 from typing import List, Tuple
@@ -26,8 +28,12 @@ BIT_LEN_MAP = {
     256: "0111",
 }
 
-# Lazy loaded ONNX model
+
+model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+# Lazy loaded model, tokenizer, splitter
 _model = None
+_tokenizer = None
+_splitter = None
 
 
 def code_text_semantic(text, bits=64):
@@ -65,9 +71,34 @@ def soft_hash_text_semantic(arr, bits=64):
     :param int bits: Bit-length of semantic image hash (default 64).
     :return: Tuple of image-hash digest and semantic feature vector from model.
     """
+    pass
 
 
-pass
+def splitter():
+    # type: () -> TextSplitter
+    """Initialize, cache and return splitter"""
+    global _splitter
+    if _splitter is None:
+        log.debug(f"Initializing splitter for iscc-sct {sct.__version__}")
+        with sct.metrics(name="ONNX load time {seconds:.2f} seconds"):
+            _splitter = TextSplitter.from_huggingface_tokenizer(
+                tokenizer(),
+                capacity=127,
+                overlap=48,
+                trim=False,
+            )
+    return _splitter
+
+
+def tokenizer():
+    # type: () -> Tokenizer
+    """Initialize, cache and return tokenizer"""
+    global _tokenizer
+    if _tokenizer is None:
+        log.debug(f"Initializing tokenizer for iscc-sct {sct.__version__}")
+        with sct.metrics(name="ONNX load time {seconds:.2f} seconds"):
+            _tokenizer = Tokenizer.from_pretrained(model_name)
+    return _tokenizer
 
 
 def model():
@@ -76,15 +107,38 @@ def model():
     global _model
     if _model is None:
         model_path = sct.get_model()
-        log.info(f"Initializing ONNX model for iscc-sci {sct.__version__}")
+        log.debug(f"Initializing ONNX model for iscc-sct {sct.__version__}")
         with sct.metrics(name="ONNX load time {seconds:.2f} seconds"):
             _model = rt.InferenceSession(model_path)
     return _model
 
 
+def split_text(text):
+    # type: (str) -> List[str]
+    """Split text into chunks for embedding"""
+    return splitter().chunks(text)
+
+
+def tokenize_chunks(chunks):
+    # type: (List[str]) -> dict
+    """Tokenize text chunks"""
+    encodings = tokenizer().encode_batch(chunks)
+    input_ids = np.array([encoding.ids for encoding in encodings], dtype=np.int64)
+    attention_mask = np.array([encoding.attention_mask for encoding in encodings], dtype=np.int64)
+    type_ids = np.array([encoding.type_ids for encoding in encodings], dtype=np.int64)
+    return {"input_ids": input_ids, "attention_mask": attention_mask, "token_type_ids": type_ids}
+
+
+def embed_tokens(tokens):
+    # type: (dict) -> np.array
+    """Create embeddigns from tokenized text chunks"""
+    result = model().run(None, tokens)
+    return np.array(result[0])
+
+
 def preprocess_text(text):
     # type: (str) -> NDArray[np.float32]
-    """Preprocess image for inference."""
+    """Tokenizes text for inference."""
     pass
 
 
