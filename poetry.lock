@@ -1014,4 +1014,4 @@ gpu = ["onnxruntime-gpu"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "35ee7d24bc9c4d85cea75754ecd8d02959e1d2caa4d2861555e10bce7fe72ec8"
+content-hash = "a9f7150b593ee6100d219262dffb9a44aaaa43d4fa8aa1ed9a8d7f1e56a9bed4"
