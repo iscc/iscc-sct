@@ -36,30 +36,44 @@ _tokenizer = None
 _splitter = None
 
 
-def code_text_semantic(text, bits=64):
-    # type: (str, int) -> dict
+def code_text_semantic(fp, bits=64):
+    # type: (str|Path, int) -> dict
     """
     Generate ISCC Semantic-Code Text from text input.
 
-    :param str|Path text: Text for Semantic-Code creation.
+    :param str|Path fp: Text filepath used for Semantic-Code creation.
     :param int bits: Bit-length of ISCC Semantic-Code Text (default 64, max 256).
     :return: ISCC metadata - `{"iscc": ..., "features": ...}`
     :rtype: dict
     """
-    pass
+    return gen_text_code_semantic(fp.read_text(encoding="utf-8"))
 
 
-def gen_text_code_semantic(arr, bits=64):
-    # type: (NDArray[np.float32], int) -> dict
+def gen_text_code_semantic(text, bits=64):
+    # type: (str, int) -> dict
     """
-    Create an ISCC Semantic-Code Image from normalized text embeddings.
+    Create an ISCC Semantic-Code Text from plaintext.
 
-    :param NDArray[np.float32] arr: Normalized text embeddings
-    :param int bits: Bit-length of ISCC Semantic-Code Image (default 64, max 256).
-    :return: ISCC Schema compatible dict with Semantic-Code Image.
+    :param str text: Normalized text embeddings
+    :param int bits: Bit-length of ISCC Semantic-Code Text (default 64, max 256).
+    :return: ISCC Schema compatible dict with Semantic-Code Text.
     :rtype: dict
     """
-    pass
+    if bits < 32 or bits % 32:
+        raise ValueError(f"Invalid bitlength {bits}")
+
+    mtype = "0001"  # SEMANTIC
+    stype = "0000"  # TEXT
+    version = "0000"  # V0
+    length = BIT_LEN_MAP[bits]
+    header = int(mtype + stype + version + length, 2).to_bytes(2, byteorder="big")
+
+    features = embed_text(text)
+    digest = binarize(features)
+    digest = digest[: bits // 8]
+    code = b32encode(header + digest).decode("ascii").rstrip("=")
+    iscc = "ISCC:" + code
+    return {"iscc": iscc, "features": features.tolist()}
 
 
 def soft_hash_text_semantic(arr, bits=64):
@@ -129,11 +143,47 @@ def tokenize_chunks(chunks):
     return {"input_ids": input_ids, "attention_mask": attention_mask, "token_type_ids": type_ids}
 
 
+def embed_text(text):
+    # type: (str) -> NDArray
+    """Create global text embedding"""
+    chunks = split_text(text)
+    chunks_embeddings = embed_chunks(chunks)
+    text_embedding = mean_pooling(chunks_embeddings)
+    return text_embedding
+
+
+def embed_chunks(chunks):
+    # type: (List[str]) -> NDArray[np.float32]
+    """Embed text chunks"""
+    tokens = tokenize_chunks(chunks)
+    token_embeddings = embed_tokens(tokens)
+    return attention_pooling(token_embeddings, tokens["attention_mask"])
+
+
 def embed_tokens(tokens):
     # type: (dict) -> np.array
     """Create embeddigns from tokenized text chunks"""
     result = model().run(None, tokens)
     return np.array(result[0])
+
+
+def attention_pooling(token_embeddings, attention_mask):
+    # type: (np.array, np.array) -> np.array
+    """Attention mask based mean pooling of inference results"""
+    input_mask_expanded = attention_mask[:, :, None].astype(np.float32)
+    sum_embeddings = np.sum(token_embeddings * input_mask_expanded, axis=1)
+    sum_mask = np.clip(np.sum(input_mask_expanded, axis=1), a_min=1e-9, a_max=None)
+    mean_pooled = sum_embeddings / sum_mask
+    norm = np.linalg.norm(mean_pooled, ord=2, axis=1, keepdims=True)
+    result = mean_pooled / np.clip(norm, a_min=1e-9, a_max=None)
+    return result.astype(np.float32)
+
+
+def mean_pooling(embeddings):
+    # type: (NDArray[np.float32]) -> NDArray
+    """Calculate document vector form chunk embeddings"""
+    document_vector = embeddings.mean(axis=0)
+    return document_vector / np.linalg.norm(document_vector)
 
 
 def preprocess_text(text):

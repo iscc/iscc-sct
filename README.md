@@ -13,7 +13,7 @@ similarity detection.
 
 ## What is ISCC Semantic Text-Code
 
-The ISCC framework already comes with an Text-Code that is based on lexical similarity and can match
+The ISCC framework already comes with a Text-Code that is based on lexical similarity and can match
 near duplicates. The ISCC Semantic Text-Code is planned as a new additional ISCC-UNIT focused on
 capturing a more abstract and broad semantic similarity. As such the Semantic Text-Code is
 engineered to be robust against a broader range of variations and translations of text that cannot

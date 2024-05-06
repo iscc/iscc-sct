@@ -1,5 +1,12 @@
+import pytest
 import iscc_sct as sct
-from iscc_sct.code_semantic_text import split_text, tokenize_chunks, embed_tokens
+from iscc_sct.code_semantic_text import (
+    split_text,
+    tokenize_chunks,
+    embed_tokens,
+    embed_chunks,
+    embed_text,
+)
 import numpy as np
 
 
@@ -31,22 +38,34 @@ def test_embed_tokens():
     )
 
 
-# def test_code_text_semantic_default(text_en):
-#     result = sct.code_text_semantic(text_en)
-#     assert result["iscc"] == "ISCC:..."
-#
-#
-# def test_code_image_semantic_256bit(text_en):
-#     result = sct.code_text_semantic(text_en, bits=256)
-#     assert result["iscc"] == "ISCC:..."
-#
-#
-# def test_gen_image_code_semantic():
-#     result = sct.gen_text_code_semantic([1.1, 2.2])
-#     assert result["iscc"] == "ISCC:..."
-#
-#
-# def test_models():
-#     from iscc_sct.code_semantic_text import model
-#     engine = model()
-#     assert engine
+def test_embed_chunks():
+    chunks = ["Hello World"]
+    expected = np.array([0.008697219, 0.038051583, 0.043976285], dtype=np.float32)
+    embeddings = embed_chunks(chunks)
+    np.testing.assert_array_equal(embeddings[0][:3], expected)
+
+
+def test_embed_text(text_en):
+    result = embed_text(text_en)
+    assert len(result) == 384
+    assert result[:3] == pytest.approx([0.0324117, 0.022712378, 0.050273094])
+
+
+def test_gen_text_code_semantic(text_en):
+    result = sct.gen_text_code_semantic(text_en)
+    assert result["iscc"] == "ISCC:CAA636IXQD736IGJ"
+    assert result["features"][:3] == pytest.approx([0.0324117, 0.022712378, 0.050273094])
+
+
+def test_cross_lingual_match(text_en, text_de):
+    a = sct.gen_text_code_semantic(text_en)["iscc"]
+    assert a == "ISCC:CAA636IXQD736IGJ"
+    b = sct.gen_text_code_semantic(text_de)["iscc"]
+    assert b == "ISCC:CAA636IXQD4TMIGL"  # hamming distance for the codes is 6 bits
+
+
+def test_models():
+    from iscc_sct.code_semantic_text import model
+
+    engine = model()
+    assert engine
