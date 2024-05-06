@@ -1,14 +1,20 @@
-from pathlib import Path
 from loguru import logger as log
+import os
 import time
-from contextlib import contextmanager
+from pathlib import Path
 from urllib.request import urlretrieve
 from blake3 import blake3
-import iscc_sct as sci
+from platformdirs import PlatformDirs
+
+
+APP_NAME = "iscc-sct"
+APP_AUTHOR = "iscc"
+dirs = PlatformDirs(appname=APP_NAME, appauthor=APP_AUTHOR)
+os.makedirs(dirs.user_data_dir, exist_ok=True)
 
 
 __all__ = [
-    "metrics",
+    "timer",
     "get_model",
 ]
 
@@ -17,18 +23,23 @@ BASE_VERSION = "1.0.0"
 BASE_URL = f"https://github.com/iscc/iscc-binaries/releases/download/v{BASE_VERSION}"
 MODEL_FILENAME = "iscc-sct-v0.1.0.onnx"
 MODEL_URL = f"{BASE_URL}/{MODEL_FILENAME}"
-MODEL_PATH = Path(sci.dirs.user_data_dir) / MODEL_FILENAME
+MODEL_PATH = Path(dirs.user_data_dir) / MODEL_FILENAME
 MODEL_CHECKSUM = "ff254d62db55ed88a1451b323a66416f60838dd2f0338dba21bc3b8822459abc"
 
 
-@contextmanager
-def metrics(name):
-    """Context manager for logging performance metrics."""
-    start_time = time.time()
-    yield
-    end_time = time.time()
-    duration = end_time - start_time
-    log.debug(name.format(seconds=duration))
+class timer:
+    def __init__(self, message: str):
+        self.message = message
+
+    def __enter__(self):
+        # Record the start time
+        self.start_time = time.perf_counter()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        # Calculate the elapsed time
+        elapsed_time = time.perf_counter() - self.start_time
+        # Log the message with the elapsed time
+        log.debug(f"{self.message} {elapsed_time:.4f} seconds")
 
 
 def get_model():
@@ -37,8 +48,11 @@ def get_model():
         try:
             return check_integrity(MODEL_PATH, MODEL_CHECKSUM)
         except RuntimeError:
-            log.warning("Model file integrity error - redownloading...")
-    urlretrieve(MODEL_URL, filename=MODEL_PATH)
+            log.warning("Model file integrity error - redownloading ...")
+            urlretrieve(MODEL_URL, filename=MODEL_PATH)
+    else:
+        log.info("Downloading embedding model ...")
+        urlretrieve(MODEL_URL, filename=MODEL_PATH)
     return check_integrity(MODEL_PATH, MODEL_CHECKSUM)
 
 
@@ -53,7 +67,7 @@ def check_integrity(file_path, checksum):
     """
     file_path = Path(file_path)
     file_hasher = blake3(max_threads=blake3.AUTO)
-    with metrics("Integrity check took {seconds:.4f} seconds"):
+    with timer("INTEGRITY check time"):
         file_hasher.update_mmap(file_path)
         file_hash = file_hasher.hexdigest()
     if checksum != file_hash:

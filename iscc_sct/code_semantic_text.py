@@ -7,6 +7,7 @@ from typing import List, Tuple
 import numpy as np
 import onnxruntime as rt
 from numpy.typing import NDArray
+from functools import cache
 import iscc_sct as sct
 
 
@@ -14,7 +15,6 @@ __all__ = [
     "code_text_semantic",
     "gen_text_code_semantic",
     "soft_hash_text_semantic",
-    "preprocess_text",
 ]
 
 BIT_LEN_MAP = {
@@ -30,10 +30,37 @@ BIT_LEN_MAP = {
 
 
 model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-# Lazy loaded model, tokenizer, splitter
-_model = None
-_tokenizer = None
-_splitter = None
+
+
+@cache
+def tokenizer():
+    # type: () -> Tokenizer
+    with sct.timer("TOKENIZER load time"):
+        return Tokenizer.from_pretrained(model_name)
+
+
+@cache
+def splitter():
+    # type: () -> TextSplitter
+    with sct.timer("TEXTSPLITTER load time"):
+        return TextSplitter.from_huggingface_tokenizer(
+            tokenizer(), capacity=127, overlap=48, trim=False
+        )
+
+
+@cache
+def model():
+    # type: () -> rt.InferenceSession
+    with sct.timer("ONNXMODEL aquisition time"):
+        model_path = sct.get_model()
+    available_onnx_providers = rt.get_available_providers()
+    log.debug(f"Available ONNX providers {', '.join(available_onnx_providers)}")
+    selected_onnx_providers = ["CPUExecutionProvider"]
+    if "CUDAExecutionProvider" in available_onnx_providers:
+        selected_onnx_providers.insert(0, "CUDAExecutionProvider")
+    log.debug(f"Using ONNX providers {', '.join(selected_onnx_providers)}")
+    with sct.timer("ONNXMODEL load time"):
+        return rt.InferenceSession(model_path, providers=selected_onnx_providers)
 
 
 def code_text_semantic(fp, bits=64):
@@ -88,45 +115,6 @@ def soft_hash_text_semantic(arr, bits=64):
     pass
 
 
-def splitter():
-    # type: () -> TextSplitter
-    """Initialize, cache and return splitter"""
-    global _splitter
-    if _splitter is None:
-        log.debug(f"Initializing splitter for iscc-sct {sct.__version__}")
-        with sct.metrics(name="ONNX load time {seconds:.2f} seconds"):
-            _splitter = TextSplitter.from_huggingface_tokenizer(
-                tokenizer(),
-                capacity=127,
-                overlap=48,
-                trim=False,
-            )
-    return _splitter
-
-
-def tokenizer():
-    # type: () -> Tokenizer
-    """Initialize, cache and return tokenizer"""
-    global _tokenizer
-    if _tokenizer is None:
-        log.debug(f"Initializing tokenizer for iscc-sct {sct.__version__}")
-        with sct.metrics(name="ONNX load time {seconds:.2f} seconds"):
-            _tokenizer = Tokenizer.from_pretrained(model_name)
-    return _tokenizer
-
-
-def model():
-    # type: () -> rt.InferenceSession
-    """Initialize, cache and return inference model"""
-    global _model
-    if _model is None:
-        model_path = sct.get_model()
-        log.debug(f"Initializing ONNX model for iscc-sct {sct.__version__}")
-        with sct.metrics(name="ONNX load time {seconds:.2f} seconds"):
-            _model = rt.InferenceSession(model_path)
-    return _model
-
-
 def split_text(text):
     # type: (str) -> List[str]
     """Split text into chunks for embedding"""
@@ -161,7 +149,7 @@ def embed_chunks(chunks):
 
 
 def embed_tokens(tokens):
-    # type: (dict) -> np.array
+    # type: (dict) -> NDArray
     """Create embeddigns from tokenized text chunks"""
     result = model().run(None, tokens)
     return np.array(result[0])
@@ -184,18 +172,6 @@ def mean_pooling(embeddings):
     """Calculate document vector form chunk embeddings"""
     document_vector = embeddings.mean(axis=0)
     return document_vector / np.linalg.norm(document_vector)
-
-
-def preprocess_text(text):
-    # type: (str) -> NDArray[np.float32]
-    """Tokenizes text for inference."""
-    pass
-
-
-def vectorize(arr):
-    # type: (NDArray) -> List[NDArray[np.float32]]
-    """Apply inference on tokenized text data"""
-    pass
 
 
 def binarize(vec):
