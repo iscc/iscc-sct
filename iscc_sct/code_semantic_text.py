@@ -59,8 +59,10 @@ def model():
     if "CUDAExecutionProvider" in available_onnx_providers:
         selected_onnx_providers.insert(0, "CUDAExecutionProvider")
     log.debug(f"Using ONNX providers {', '.join(selected_onnx_providers)}")
+    so = rt.SessionOptions()
+    so.graph_optimization_level = rt.GraphOptimizationLevel.ORT_ENABLE_ALL
     with sct.timer("ONNXMODEL load time"):
-        return rt.InferenceSession(model_path, providers=selected_onnx_providers)
+        return rt.InferenceSession(model_path, sess_options=so, providers=selected_onnx_providers)
 
 
 def code_text_semantic(fp, bits=64):
