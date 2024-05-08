@@ -54,6 +54,46 @@ CAPACITY = 127  # Maximum number of tokens per chunk
 OVERLAP = 48  # Maximum number of allowed tokens to overlap between chunks
 
 
+def code_text_semantic(fp, bits=64):
+    # type: (str|Path, int) -> dict
+    """
+    Generate ISCC Semantic-Code Text from text input.
+
+    :param str|Path fp: Text filepath used for Semantic-Code creation.
+    :param int bits: Bit-length of ISCC Semantic-Code Text (default 64, max 256).
+    :return: ISCC metadata - `{"iscc": ..., "features": ...}`
+    :rtype: dict
+    """
+    return gen_text_code_semantic(fp.read_text(encoding="utf-8"), bits=bits)
+
+
+def gen_text_code_semantic(text, bits=64):
+    # type: (str, int) -> dict
+    """
+    Create an ISCC Semantic-Code Text from plaintext.
+
+    :param str text: Normalized text embeddings
+    :param int bits: Bit-length of ISCC Semantic-Code Text (default 64, max 256).
+    :return: ISCC Schema compatible dict with Semantic-Code Text.
+    :rtype: dict
+    """
+    if bits < 32 or bits % 32:
+        raise ValueError(f"Invalid bitlength {bits}")
+
+    mtype = "0001"  # SEMANTIC
+    stype = "0000"  # TEXT
+    version = "0000"  # V0
+    length = BIT_LEN_MAP[bits]
+    header = int(mtype + stype + version + length, 2).to_bytes(2, byteorder="big")
+
+    features = embed_text(text)
+    digest = binarize(features)
+    digest = digest[: bits // 8]
+    code = b32encode(header + digest).decode("ascii").rstrip("=")
+    iscc = "ISCC:" + code
+    return {"iscc": iscc, "features": features.tolist()}
+
+
 @cache
 def tokenizer():
     # type: () -> Tokenizer
@@ -103,46 +143,6 @@ def model():
     so.graph_optimization_level = rt.GraphOptimizationLevel.ORT_ENABLE_ALL
     with sct.timer("ONNXMODEL load time"):
         return rt.InferenceSession(model_path, sess_options=so, providers=selected_onnx_providers)
-
-
-def code_text_semantic(fp, bits=64):
-    # type: (str|Path, int) -> dict
-    """
-    Generate ISCC Semantic-Code Text from text input.
-
-    :param str|Path fp: Text filepath used for Semantic-Code creation.
-    :param int bits: Bit-length of ISCC Semantic-Code Text (default 64, max 256).
-    :return: ISCC metadata - `{"iscc": ..., "features": ...}`
-    :rtype: dict
-    """
-    return gen_text_code_semantic(fp.read_text(encoding="utf-8"), bits=bits)
-
-
-def gen_text_code_semantic(text, bits=64):
-    # type: (str, int) -> dict
-    """
-    Create an ISCC Semantic-Code Text from plaintext.
-
-    :param str text: Normalized text embeddings
-    :param int bits: Bit-length of ISCC Semantic-Code Text (default 64, max 256).
-    :return: ISCC Schema compatible dict with Semantic-Code Text.
-    :rtype: dict
-    """
-    if bits < 32 or bits % 32:
-        raise ValueError(f"Invalid bitlength {bits}")
-
-    mtype = "0001"  # SEMANTIC
-    stype = "0000"  # TEXT
-    version = "0000"  # V0
-    length = BIT_LEN_MAP[bits]
-    header = int(mtype + stype + version + length, 2).to_bytes(2, byteorder="big")
-
-    features = embed_text(text)
-    digest = binarize(features)
-    digest = digest[: bits // 8]
-    code = b32encode(header + digest).decode("ascii").rstrip("=")
-    iscc = "ISCC:" + code
-    return {"iscc": iscc, "features": features.tolist()}
 
 
 def split_text(text):
