@@ -32,8 +32,8 @@ def test_gen_text_code_semantic_checks_bits():
 
 def test_split_text(text_en):
     chunks = split_text(text_en)
-    assert chunks[0][:8] == "\n Thank "
-    assert chunks[-1][:8] == "\n (Laugh"
+    assert chunks[0][1][:8] == "\n Thank "
+    assert chunks[-1][1][:8] == "\n (Laugh"
 
 
 def test_tokenize_chunks():

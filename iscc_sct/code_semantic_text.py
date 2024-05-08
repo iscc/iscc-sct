@@ -24,7 +24,7 @@ from semantic_text_splitter import TextSplitter
 from tokenizers import Tokenizer
 from base64 import b32encode
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 import numpy as np
 import onnxruntime as rt
 from numpy.typing import NDArray
@@ -146,15 +146,14 @@ def model():
 
 
 def split_text(text):
-    # type: (str) -> List[str]
+    # type: (str) -> List[Tuple[int, str]]
     """
     Split text into manageable chunks for embedding.
 
-    :param str text: Input text to be split.
+    :param text: Text to split.
     :return: A list of text chunks.
-    :rtype: List[str]
     """
-    return splitter().chunks(text)
+    return splitter().chunk_indices(text)
 
 
 def tokenize_chunks(chunks):
@@ -182,7 +181,7 @@ def embed_text(text):
     :return: An array representing the global text embedding.
     :rtype: NDArray
     """
-    chunks = split_text(text)
+    chunks = [item[1] for item in split_text(text)]
     chunks_embeddings = embed_chunks(chunks)
     text_embedding = mean_pooling(chunks_embeddings)
     return text_embedding
