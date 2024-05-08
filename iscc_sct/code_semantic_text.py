@@ -54,7 +54,10 @@ BIT_LEN_MAP = {
 TOKENIZER_PATH = HERE / "tokenizer.json"
 CAPACITY = 127  # Maximum number of tokens per chunk
 OVERLAP = 48  # Maximum number of allowed tokens to overlap between chunks
-TRIM = False  # Weather to trim whitespace on token chunks
+TRIM = False  # Trim whitespace from chunks
+MAINTYPE = "0001"  # SEMANTIC
+SUBTYPE = "0000"  # TEXT
+SCT_VERSION = "0000"  # V0
 
 
 def code_text_semantic(fp, **options):
@@ -123,11 +126,8 @@ def gen_text_code_semantic(text, **options):
         result["embedding"] = embedding.tolist()
 
     # Encode global document embedding
-    mtype = "0001"  # SEMANTIC
-    stype = "0000"  # TEXT
-    version = "0000"  # V0
     length = BIT_LEN_MAP[opts.bits]
-    header = int(mtype + stype + version + length, 2).to_bytes(2, byteorder="big")
+    header = int(MAINTYPE + SUBTYPE + SCT_VERSION + length, 2).to_bytes(2, byteorder="big")
     digest = binarize(embedding)[: opts.bits // 8]
     code = sct.encode_base32(header + digest)
     result["iscc"] = "ISCC:" + code
