@@ -1,6 +1,8 @@
 from pathlib import Path
 
 import pytest
+from blake3 import blake3
+
 import iscc_sct as sct
 from iscc_sct.code_semantic_text import (
     split_text,
@@ -83,3 +85,12 @@ def test_cross_lingual_match(text_en, text_de):
     assert a == "ISCC:CAA636IXQD736IGJ"
     b = sct.gen_text_code_semantic(text_de)["iscc"]
     assert b == "ISCC:CAA636IXQD4TMIGL"  # hamming distance for the codes is 6 bits
+
+
+def test_tokenizer_integrity(text_en):
+    # test if updates break tokenizer compatibility
+    hasher = blake3()
+    for idx, chunk in split_text(text_en):
+        hasher.update(chunk.encode("utf-8"))
+    checksum = hasher.hexdigest()
+    assert checksum == "7a7ad1ce83c36f853d31390150403e225bac7825a5573dd5c9e326b0917c7b52"
