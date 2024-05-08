@@ -1,3 +1,24 @@
+# -*- coding: utf-8 -*-
+"""*A semantic similarity preserving hash for plain-text content (soft hash).*
+
+The ISCC Text-Code Semantic is generated from plain-text that has been extracted from a media asset.
+
+!!! Warning
+
+    Plain-text extraction from documents in various formats (especially PDF) may
+    yield diffent results depending on the extraction tools being used.
+    The [iscc-sdk](https://github.com/iscc/iscc-sdk) uses [Apache Tika](https://tika.apache.org)
+    to extract text from documents for Text-Code generation.
+
+**Algorithm overview**
+
+- Split text into semantically coherent overlapping chunks.
+- Create vector embeddings of the chunks.
+- Average and binarize the chunk embeddings.
+- Count characters of collapsed text
+- Apply [`soft_hash_text_v0`][iscc_core.code_content_text.soft_hash_text_v0] to collapsed text
+"""
+
 from loguru import logger as log
 from semantic_text_splitter import TextSplitter
 from tokenizers import Tokenizer
@@ -28,7 +49,9 @@ BIT_LEN_MAP = {
 }
 
 
-model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+CAPACITY = 127  # Maximum number of tokens per chunk
+OVERLAP = 48  # Maximum number of allowed tokens to overlap between chunks
 
 
 @cache
@@ -41,7 +64,7 @@ def tokenizer():
     :rtype: Tokenizer
     """
     with sct.timer("TOKENIZER load time"):
-        return Tokenizer.from_pretrained(model_name)
+        return Tokenizer.from_pretrained(MODEL_NAME)
 
 
 @cache
@@ -55,7 +78,7 @@ def splitter():
     """
     with sct.timer("TEXTSPLITTER load time"):
         return TextSplitter.from_huggingface_tokenizer(
-            tokenizer(), capacity=127, overlap=48, trim=False
+            tokenizer(), capacity=CAPACITY, overlap=OVERLAP, trim=False
         )
 
 
