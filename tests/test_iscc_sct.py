@@ -9,7 +9,6 @@ from iscc_sct.code_semantic_text import (
     tokenize_chunks,
     embed_tokens,
     embed_chunks,
-    embed_text,
 )
 import numpy as np
 
@@ -141,14 +140,6 @@ def test_embed_chunks():
     expected = [0.008697219, 0.038051583, 0.043976285]
     embeddings = embed_chunks(chunks)
     assert list(embeddings[0][:3]) == pytest.approx(expected, rel=1e-3)
-
-
-def test_embed_text(text_en):
-    sct.code_semantic_text._model = None
-    sct.onnx_providers = ["CPUExecutionProvider"]
-    result = embed_text(text_en)
-    assert len(result) == 384
-    assert list(result[:3]) == pytest.approx([0.0324117, 0.022712378, 0.050273094], rel=1e-3)
 
 
 def test_gen_text_code_semantic(text_en):

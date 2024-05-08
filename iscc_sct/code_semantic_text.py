@@ -208,21 +208,6 @@ def tokenize_chunks(chunks):
     return {"input_ids": input_ids, "attention_mask": attention_mask, "token_type_ids": type_ids}
 
 
-def embed_text(text):
-    # type: (str) -> NDArray
-    """
-    Create a global text embedding from the input text.
-
-    :param str text: Text to embed.
-    :return: An array representing the global text embedding.
-    :rtype: NDArray
-    """
-    chunks = [item[1] for item in split_text(text)]
-    chunks_embeddings = embed_chunks(chunks)
-    text_embedding = mean_pooling(chunks_embeddings)
-    return text_embedding
-
-
 def embed_chunks(chunks):
     # type: (List[str]) -> NDArray[np.float32]
     """
