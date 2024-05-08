@@ -92,6 +92,10 @@ def gen_text_code_semantic(text, **options):
     :key chunks (bool): Return text chunks (Default False).
     :return: Dict with ISCC processing results
     """
+
+    if not text:
+        raise ValueError("Input text cannot be empty.")
+
     opts = sct.SctOptions(**options) if options else sct.sct_opts
 
     result = {"iscc": None}  # Initialize first so `iscc` key is first in dict
@@ -276,16 +280,4 @@ def binarize(vec):
     :return: A bytes object representing the binary hash.
     :rtype: bytes
     """
-    bits = [1 if num >= 0 else 0 for num in vec]
-
-    # Prepare a bytearray for the result
-    result = bytearray()
-
-    # Process each 8 bits (or the remaining in the last iteration)
-    for i in range(0, len(bits), 8):
-        # Convert 8 bits into a byte
-        byte = 0
-        for bit in bits[i : i + 8]:
-            byte = (byte << 1) | bit
-        result.append(byte)
-    return bytes(result)
+    return bytes((np.packbits(np.array(vec) >= 0)))

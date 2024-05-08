@@ -106,6 +106,12 @@ def test_code_text_semantic_chunks():
     assert result["chunks"][-1].endswith("(Applause)\n")
 
 
+def test_gen_text_code_semantic_empty():
+    with pytest.raises(ValueError) as excinfo:
+        sct.gen_text_code_semantic("")
+    assert str(excinfo.value) == "Input text cannot be empty."
+
+
 def test_gen_text_code_semantic_checks_bits():
     with pytest.raises(ValueError):
         sct.gen_text_code_semantic("Test", bits=99)
