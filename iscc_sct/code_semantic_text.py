@@ -3,7 +3,7 @@ from semantic_text_splitter import TextSplitter
 from tokenizers import Tokenizer
 from base64 import b32encode
 from pathlib import Path
-from typing import List, Tuple
+from typing import List
 import numpy as np
 import onnxruntime as rt
 from numpy.typing import NDArray
@@ -14,7 +14,6 @@ import iscc_sct as sct
 __all__ = [
     "code_text_semantic",
     "gen_text_code_semantic",
-    "soft_hash_text_semantic",
 ]
 
 BIT_LEN_MAP = {
@@ -35,6 +34,12 @@ model_name = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 @cache
 def tokenizer():
     # type: () -> Tokenizer
+    """
+    Load and cache the tokenizer model based on the predefined model name.
+
+    :return: An instance of the Tokenizer.
+    :rtype: Tokenizer
+    """
     with sct.timer("TOKENIZER load time"):
         return Tokenizer.from_pretrained(model_name)
 
@@ -42,6 +47,12 @@ def tokenizer():
 @cache
 def splitter():
     # type: () -> TextSplitter
+    """
+    Load and cache the text splitter, initialized with a tokenizer.
+
+    :return: An instance of TextSplitter.
+    :rtype: TextSplitter
+    """
     with sct.timer("TEXTSPLITTER load time"):
         return TextSplitter.from_huggingface_tokenizer(
             tokenizer(), capacity=127, overlap=48, trim=False
@@ -51,6 +62,12 @@ def splitter():
 @cache
 def model():
     # type: () -> rt.InferenceSession
+    """
+    Load and cache the ONNX inference model from a specified path.
+
+    :return: An ONNX inference session.
+    :rtype: rt.InferenceSession
+    """
     with sct.timer("ONNXMODEL aquisition time"):
         model_path = sct.get_model()
     available_onnx_providers = rt.get_available_providers()
@@ -105,27 +122,27 @@ def gen_text_code_semantic(text, bits=64):
     return {"iscc": iscc, "features": features.tolist()}
 
 
-def soft_hash_text_semantic(arr, bits=64):
-    # type: (NDArray[np.float32], int) -> Tuple[bytes, NDArray[np.float32]]
-    """
-    Calculate semantic text hash from preprocessed text.
-
-    :param NDArray[np.float32] arr: Preprocessed image array
-    :param int bits: Bit-length of semantic image hash (default 64).
-    :return: Tuple of image-hash digest and semantic feature vector from model.
-    """
-    pass
-
-
 def split_text(text):
     # type: (str) -> List[str]
-    """Split text into chunks for embedding"""
+    """
+    Split text into manageable chunks for embedding.
+
+    :param str text: Input text to be split.
+    :return: A list of text chunks.
+    :rtype: List[str]
+    """
     return splitter().chunks(text)
 
 
 def tokenize_chunks(chunks):
     # type: (List[str]) -> dict
-    """Tokenize text chunks"""
+    """
+    Tokenize text chunks into model-compatible formats.
+
+    :param List[str] chunks: Text chunks to tokenize.
+    :return: Dictionary of tokenized data including input IDs, attention masks, and type IDs.
+    :rtype: dict
+    """
     encodings = tokenizer().encode_batch(chunks)
     input_ids = np.array([encoding.ids for encoding in encodings], dtype=np.int64)
     attention_mask = np.array([encoding.attention_mask for encoding in encodings], dtype=np.int64)
@@ -135,7 +152,13 @@ def tokenize_chunks(chunks):
 
 def embed_text(text):
     # type: (str) -> NDArray
-    """Create global text embedding"""
+    """
+    Create a global text embedding from the input text.
+
+    :param str text: Text to embed.
+    :return: An array representing the global text embedding.
+    :rtype: NDArray
+    """
     chunks = split_text(text)
     chunks_embeddings = embed_chunks(chunks)
     text_embedding = mean_pooling(chunks_embeddings)
@@ -144,7 +167,13 @@ def embed_text(text):
 
 def embed_chunks(chunks):
     # type: (List[str]) -> NDArray[np.float32]
-    """Embed text chunks"""
+    """
+    Embed text chunks using the loaded model.
+
+    :param List[str] chunks: Text chunks to embed.
+    :return: An array of embeddings for each chunk.
+    :rtype: NDArray[np.float32]
+    """
     tokens = tokenize_chunks(chunks)
     token_embeddings = embed_tokens(tokens)
     return attention_pooling(token_embeddings, tokens["attention_mask"])
@@ -152,14 +181,27 @@ def embed_chunks(chunks):
 
 def embed_tokens(tokens):
     # type: (dict) -> NDArray
-    """Create embeddigns from tokenized text chunks"""
+    """
+    Create embeddings from tokenized text chunks using the model.
+
+    :param dict tokens: Tokenized text data.
+    :return: An array of embeddings.
+    :rtype: NDArray
+    """
     result = model().run(None, tokens)
     return np.array(result[0])
 
 
 def attention_pooling(token_embeddings, attention_mask):
     # type: (np.array, np.array) -> np.array
-    """Attention mask based mean pooling of inference results"""
+    """
+    Apply attention mask based mean pooling to the token embeddings.
+
+    :param np.array token_embeddings: Raw token embeddings from the model.
+    :param np.array attention_mask: Attention masks for the embeddings.
+    :return: An array of pooled embeddings.
+    :rtype: np.array
+    """
     input_mask_expanded = attention_mask[:, :, None].astype(np.float32)
     sum_embeddings = np.sum(token_embeddings * input_mask_expanded, axis=1)
     sum_mask = np.clip(np.sum(input_mask_expanded, axis=1), a_min=1e-9, a_max=None)
@@ -171,15 +213,26 @@ def attention_pooling(token_embeddings, attention_mask):
 
 def mean_pooling(embeddings):
     # type: (NDArray[np.float32]) -> NDArray
-    """Calculate document vector form chunk embeddings"""
+    """
+    Calculate the document vector from chunk embeddings using mean pooling.
+
+    :param NDArray[np.float32] embeddings: Chunk embeddings.
+    :return: A normalized document vector.
+    :rtype: NDArray
+    """
     document_vector = embeddings.mean(axis=0)
     return document_vector / np.linalg.norm(document_vector)
 
 
 def binarize(vec):
     # type: (NDArray) -> bytes
-    """Binarize vector embeddings."""
+    """
+    Binarize vector embeddings into a binary hash.
 
+    :param NDArray vec: Vector to be binarized.
+    :return: A bytes object representing the binary hash.
+    :rtype: bytes
+    """
     bits = [1 if num >= 0 else 0 for num in vec]
 
     # Prepare a bytearray for the result
