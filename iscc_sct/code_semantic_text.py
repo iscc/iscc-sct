@@ -32,6 +32,9 @@ from functools import cache
 import iscc_sct as sct
 
 
+HERE = Path(__file__).parent.absolute()
+
+
 __all__ = [
     "code_text_semantic",
     "gen_text_code_semantic",
@@ -49,9 +52,10 @@ BIT_LEN_MAP = {
 }
 
 
-MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+TOKENIZER_PATH = HERE / "tokenizer.json"
 CAPACITY = 127  # Maximum number of tokens per chunk
 OVERLAP = 48  # Maximum number of allowed tokens to overlap between chunks
+TRIM = False  # Weather to trim whitespace on token chunks
 
 
 def code_text_semantic(fp, bits=64):
@@ -104,7 +108,7 @@ def tokenizer():
     :rtype: Tokenizer
     """
     with sct.timer("TOKENIZER load time"):
-        return Tokenizer.from_pretrained(MODEL_NAME)
+        return Tokenizer.from_file(TOKENIZER_PATH.as_posix())
 
 
 @cache
@@ -118,7 +122,7 @@ def splitter():
     """
     with sct.timer("TEXTSPLITTER load time"):
         return TextSplitter.from_huggingface_tokenizer(
-            tokenizer(), capacity=CAPACITY, overlap=OVERLAP, trim=False
+            tokenizer(), capacity=CAPACITY, overlap=OVERLAP, trim=TRIM
         )
 
 
