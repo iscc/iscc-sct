@@ -219,7 +219,6 @@ def embed_chunks(chunks):
     """
     tokens = tokenize_chunks(chunks)
     token_embeddings = embed_tokens(tokens)
-    attention_pooling(token_embeddings, tokens["attention_mask"])
     return attention_pooling(token_embeddings, tokens["attention_mask"])
 
 
