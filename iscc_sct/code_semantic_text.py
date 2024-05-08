@@ -22,9 +22,8 @@ The ISCC Text-Code Semantic is generated from plain-text that has been extracted
 from loguru import logger as log
 from semantic_text_splitter import TextSplitter
 from tokenizers import Tokenizer
-from base64 import b32encode
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Any, Dict
 import numpy as np
 import onnxruntime as rt
 from numpy.typing import NDArray
@@ -58,44 +57,88 @@ OVERLAP = 48  # Maximum number of allowed tokens to overlap between chunks
 TRIM = False  # Weather to trim whitespace on token chunks
 
 
-def code_text_semantic(fp, bits=64):
-    # type: (str|Path, int) -> dict
+def code_text_semantic(fp, **options):
+    # type: (Path|str, Any) -> Dict[str, Any]
     """
-    Generate ISCC Semantic-Code Text from text input.
+    Generate ISCC Semantic-Code Text from a text file.
 
-    :param str|Path fp: Text filepath used for Semantic-Code creation.
-    :param int bits: Bit-length of ISCC Semantic-Code Text (default 64, max 256).
-    :return: ISCC metadata - `{"iscc": ..., "features": ...}`
-    :rtype: dict
+    NOTE:
+        If you enable generating granular features with `features=True` those features will have
+        the same bit-length as the generated ISCC-UNIT.
+
+    :param fp: File path of plaintext file to process
+    :param options: Custom processing options for overriding global options
+    :key bits (int): Length of generated Semantic Text-Code in bits (Default 64)
+    :key characters (bool): Return document character count (Default True).
+    :key features (bool): Return granular document features (Default False).
+    :key offsets (bool): Return character offsets for granular features (Default False).
+    :key chunks (bool): Return text chunks (Default False).
+    :return: Dict with ISCC processing results
     """
-    return gen_text_code_semantic(fp.read_text(encoding="utf-8"), bits=bits)
+    return gen_text_code_semantic(fp.read_text(encoding="utf-8"), **options)
 
 
-def gen_text_code_semantic(text, bits=64):
+def gen_text_code_semantic(text, **options):
     # type: (str, int) -> dict
     """
     Create an ISCC Semantic-Code Text from plaintext.
 
-    :param str text: Normalized text embeddings
-    :param int bits: Bit-length of ISCC Semantic-Code Text (default 64, max 256).
-    :return: ISCC Schema compatible dict with Semantic-Code Text.
-    :rtype: dict
+    :param str text: Plaint text for ISCC processing
+    :param options: Custom processing options for overriding global options
+    :key bits (int): Length of generated Semantic Text-Code in bits (Default 64)
+    :key characters (bool): Return document character count (Default True).
+    :key features (bool): Return granular document features (Default False).
+    :key offsets (bool): Return character offsets for granular features (Default False).
+    :key chunks (bool): Return text chunks (Default False).
+    :return: Dict with ISCC processing results
     """
-    if bits < 32 or bits % 32:
-        raise ValueError(f"Invalid bitlength {bits}")
+    opts = sct.SctOptions(**options) if options else sct.sct_opts
 
+    result = {"iscc": None}  # Initialize first so `iscc` key is first in dict
+
+    if opts.characters:
+        result["characters"] = len(text)
+
+    # Text splitting
+    splits = split_text(text)
+    offsets, chunks = [list(item) for item in zip(*splits)]
+    if opts.chunks:
+        result["chunks"] = chunks
+    if opts.offsets:
+        result["offsets"] = offsets
+
+    # Chunk embedding
+    embeddings = embed_chunks(chunks)
+    if opts.features:
+        feature_digests = [binarize(vec)[: opts.bits // 8] for vec in embeddings]
+        result["features"] = [sct.encode_base32(digest) for digest in feature_digests]
+
+    # Create global document embedding
+    embedding = mean_pooling(embeddings)
+    if opts.embedding:
+        result["embedding"] = embedding.tolist()
+
+    # Encode global document embedding
     mtype = "0001"  # SEMANTIC
     stype = "0000"  # TEXT
     version = "0000"  # V0
-    length = BIT_LEN_MAP[bits]
+    length = BIT_LEN_MAP[opts.bits]
     header = int(mtype + stype + version + length, 2).to_bytes(2, byteorder="big")
+    digest = binarize(embedding)[: opts.bits // 8]
+    code = sct.encode_base32(header + digest)
+    result["iscc"] = "ISCC:" + code
+    return result
 
-    features = embed_text(text)
-    digest = binarize(features)
-    digest = digest[: bits // 8]
-    code = b32encode(header + digest).decode("ascii").rstrip("=")
-    iscc = "ISCC:" + code
-    return {"iscc": iscc, "features": features.tolist()}
+
+def split_text(text):
+    # type: (str) -> List[Tuple[int,str]]
+    """
+    Split text into semantically coherent chunks for embedding.
+
+    :param str text: Text to split.
+    :return: A list of offset, chunk tuples [(offset,chunk), ...]
+    """
+    return splitter().chunk_indices(text)
 
 
 @cache
@@ -149,17 +192,6 @@ def model():
         return rt.InferenceSession(model_path, sess_options=so, providers=selected_onnx_providers)
 
 
-def split_text(text):
-    # type: (str) -> List[Tuple[int, str]]
-    """
-    Split text into manageable chunks for embedding.
-
-    :param text: Text to split.
-    :return: A list of text chunks.
-    """
-    return splitter().chunk_indices(text)
-
-
 def tokenize_chunks(chunks):
     # type: (List[str]) -> dict
     """
@@ -194,7 +226,7 @@ def embed_text(text):
 def embed_chunks(chunks):
     # type: (List[str]) -> NDArray[np.float32]
     """
-    Embed text chunks using the loaded model.
+    Embed text chunks and return vector embeddings.
 
     :param List[str] chunks: Text chunks to embed.
     :return: An array of embeddings for each chunk.
@@ -202,6 +234,7 @@ def embed_chunks(chunks):
     """
     tokens = tokenize_chunks(chunks)
     token_embeddings = embed_tokens(tokens)
+    attention_pooling(token_embeddings, tokens["attention_mask"])
     return attention_pooling(token_embeddings, tokens["attention_mask"])
 
 
@@ -225,7 +258,7 @@ def attention_pooling(token_embeddings, attention_mask):
 
     :param np.array token_embeddings: Raw token embeddings from the model.
     :param np.array attention_mask: Attention masks for the embeddings.
-    :return: An array of pooled embeddings.
+    :return: An array of pooled and normalized embeddings.
     :rtype: np.array
     """
     input_mask_expanded = attention_mask[:, :, None].astype(np.float32)
@@ -253,7 +286,7 @@ def mean_pooling(embeddings):
 def binarize(vec):
     # type: (NDArray) -> bytes
     """
-    Binarize vector embeddings into a binary hash.
+    Binarize an embedding vector into a hash digest.
 
     :param NDArray vec: Vector to be binarized.
     :return: A bytes object representing the binary hash.

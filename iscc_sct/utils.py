@@ -1,3 +1,5 @@
+from base64 import b32encode
+
 from loguru import logger as log
 import os
 import time
@@ -16,6 +18,7 @@ os.makedirs(dirs.user_data_dir, exist_ok=True)
 __all__ = [
     "timer",
     "get_model",
+    "encode_base32",
 ]
 
 
@@ -75,3 +78,14 @@ def check_integrity(file_path, checksum):
         log.error(msg)
         raise RuntimeError(msg)
     return file_path
+
+
+def encode_base32(data):
+    # type: (bytes) -> str
+    """
+    Standard RFC4648 base32 encoding without padding.
+
+    :param bytes data: Data for base32 encoding
+    :return: Base32 encoded str
+    """
+    return b32encode(data).decode("ascii").rstrip("=")

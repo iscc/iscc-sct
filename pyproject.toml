@@ -45,6 +45,7 @@ loguru = "*"
 blake3 = "*"
 platformdirs = "*"
 tokenizers = "*"
+pydantic-settings = "^2.2.1"
 
 [tool.poetry.extras]
 cpu = ["onnxruntime"]
