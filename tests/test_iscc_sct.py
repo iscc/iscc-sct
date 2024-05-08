@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 import iscc_sct as sct
 from iscc_sct.code_semantic_text import (
@@ -10,8 +12,22 @@ from iscc_sct.code_semantic_text import (
 import numpy as np
 
 
+HERE = Path(__file__).parent.absolute()
+
+
 def test_version():
     assert sct.__version__ == "0.1.0"
+
+
+def test_code_text_semantic():
+    fp = HERE / "en.txt"
+    result = sct.code_text_semantic(fp)
+    assert result["iscc"] == "ISCC:CAA636IXQD736IGJ"
+
+
+def test_gen_text_code_semantic_checks_bits():
+    with pytest.raises(ValueError):
+        sct.gen_text_code_semantic("Test", bits=99)
 
 
 def test_split_text(text_en):

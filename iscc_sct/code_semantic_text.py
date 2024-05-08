@@ -115,7 +115,7 @@ def code_text_semantic(fp, bits=64):
     :return: ISCC metadata - `{"iscc": ..., "features": ...}`
     :rtype: dict
     """
-    return gen_text_code_semantic(fp.read_text(encoding="utf-8"))
+    return gen_text_code_semantic(fp.read_text(encoding="utf-8"), bits=bits)
 
 
 def gen_text_code_semantic(text, bits=64):
