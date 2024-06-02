@@ -62,6 +62,7 @@ ruff = "*"
 
 [tool.poetry.group.docs.dependencies]
 mdformat = "*"
+mdformat-gfm = "*"
 
 [tool.ruff]
 line-length = 100
