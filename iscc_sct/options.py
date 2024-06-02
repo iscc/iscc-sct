@@ -21,11 +21,6 @@ class SctOptions(BaseSettings):
         multiple_of=32,
     )
 
-    def copy(self, update=None, **kwargs):
-        if update:
-            for key, value in update.items():
-                setattr(self, key, value)
-        return super().copy(update=update, **kwargs)
     characters: bool = Field(
         True, description="ISCC_SCT_CHARACTERS - Include document character count"
     )
@@ -47,6 +42,18 @@ class SctOptions(BaseSettings):
         extra="ignore",
         validate_assignment=True,
     )
+
+    def override(self, update=None):
+        # type: (dict|None) -> SctOptions
+        """Returns an updated and validated deep copy of the current settings instance."""
+        if not update:
+            return self
+
+        opts = self.model_copy(deep=True)
+        # We need update fields individually so validation gets triggered
+        for field, value in update.items():
+            setattr(opts, field, value)
+        return opts
 
 
 sct_opts = SctOptions()
