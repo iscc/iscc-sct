@@ -99,7 +99,10 @@ def gen_text_code_semantic(text, **options):
     if not text:
         raise ValueError("Input text cannot be empty.")
 
-    opts = sct.SctOptions(**options) if options else sct.sct_opts
+    if options:
+        opts = sct.sct_opts.copy(update=options)
+    else:
+        opts = sct.sct_opts
 
     result = {"iscc": None}  # Initialize first so `iscc` key is first in dict
 
