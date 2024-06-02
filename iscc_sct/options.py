@@ -20,6 +20,12 @@ class SctOptions(BaseSettings):
         le=256,
         multiple_of=32,
     )
+
+    def copy(self, update=None, **kwargs):
+        if update:
+            for key, value in update.items():
+                setattr(self, key, value)
+        return super().copy(update=update, **kwargs)
     characters: bool = Field(
         True, description="ISCC_SCT_CHARACTERS - Include document character count"
     )
