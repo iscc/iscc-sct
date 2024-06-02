@@ -37,7 +37,7 @@ classifiers=[
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4.0"
+python = ">3.9.7,<3.13"
 semantic-text-splitter = "*"
 onnxruntime = { version = "*", optional = true }
 onnxruntime-gpu = { version = "*", optional = true }
@@ -59,10 +59,15 @@ pytest-cov = "*"
 [tool.poetry.group.dev.dependencies]
 poethepoet = "*"
 ruff = "*"
-
-[tool.poetry.group.docs.dependencies]
 mdformat = "*"
 mdformat-gfm = "*"
+
+[tool.poetry.group.aider]
+optional = true
+
+[tool.poetry.group.aider.dependencies]
+streamlit = "*"
+aider-chat = {git = "https://github.com/paul-gauthier/aider.git"}
 
 [tool.ruff]
 line-length = 100
