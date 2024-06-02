@@ -39,6 +39,7 @@ class SctOptions(BaseSettings):
         env_file_encoding="utf-8",
         env_prefix="ISCC_SCT_",
         extra="ignore",
+        validate_assignment=True,
     )
 
 
