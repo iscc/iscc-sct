@@ -4,6 +4,7 @@ from pydantic import BaseModel
 __all__ = [
     "SctFeature",
     "SctMeta",
+]
 
 class SctMeta(BaseModel):
     iscc: str
