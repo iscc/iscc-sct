@@ -21,21 +21,21 @@ class SctMeta(BaseModel):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "SctMeta":
-        features = None
-        if "features" in data:
-            features = [
-                SctFeature(
-                    feature=feature,
-                    offset=offset,
-                    size=size,
-                    text=text
-                ) for feature, offset, size, text in zip(
-                    data["features"],
-                    data.get("offsets", []),
-                    data.get("sizes", []),
-                    data.get("chunks", [])
-                )
-            ]
+        features = []
+        feature_list = data.get("features", [])
+        offset_list = data.get("offsets", [])
+        size_list = data.get("sizes", [])
+        text_list = data.get("chunks", [])
+
+        max_len = max(len(feature_list), len(offset_list), len(size_list), len(text_list))
+
+        for i in range(max_len):
+            features.append(SctFeature(
+                feature=feature_list[i] if i < len(feature_list) else None,
+                offset=offset_list[i] if i < len(offset_list) else None,
+                size=size_list[i] if i < len(size_list) else None,
+                text=text_list[i] if i < len(text_list) else None
+            ))
         return cls(
             iscc=data["iscc"],
             characters=data.get("characters"),
