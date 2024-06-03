@@ -5,6 +5,7 @@ __all__ = [
     "SctFeature",
     "SctMeta",
 ]
+]
 
 class SctMeta(BaseModel):
     iscc: str
