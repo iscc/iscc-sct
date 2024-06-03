@@ -15,6 +15,19 @@ import numpy as np
 
 HERE = Path(__file__).parent.absolute()
 
+TEXT = """
+`iscc-sct` is a **proof of concept implementation** of a semantic Text-Code for the
+[ISCC](https://core.iscc.codes) (*International Standard Content Code*). Semantic Text-Codes are
+designed to capture and represent the language agnostic semantic content of text for improved
+similarity detection.
+
+The ISCC framework already comes with a Text-Code that is based on lexical similarity and can match
+near duplicates. The ISCC Semantic Text-Code is planned as a new additional ISCC-UNIT focused on
+capturing a more abstract and broad semantic similarity. As such the Semantic Text-Code is
+engineered to be robust against a broader range of variations and translations of text that cannot
+be matched based on lexical similarity.
+"""
+
 
 def test_version():
     assert sct.__version__ == "0.1.0"
@@ -110,6 +123,46 @@ def test_gen_text_code_semantic_empty():
     with pytest.raises(ValueError) as excinfo:
         sct.gen_text_code_semantic("")
     assert str(excinfo.value) == "Input text cannot be empty."
+
+
+def test_gen_text_code_semantic_granular():
+    result = sct.gen_text_code_semantic(
+        TEXT,
+        features=True,
+        offsets=True,
+        chunks=True,
+    )
+    assert (
+        result
+        == {
+            "characters": 726,
+            "iscc": "ISCC:CAARISHPJHEXQAYL",
+            "features": ["CVUO2TOJPABQW", "SQEMOSONOABQW"],
+            "offsets": [0, 297],
+            "chunks": [
+                "\n"
+                "`iscc-sct` is a **proof of concept implementation** of a semantic "
+                "Text-Code for the\n"
+                "[ISCC](https://core.iscc.codes) (*International Standard Content "
+                "Code*). Semantic Text-Codes are\n"
+                "designed to capture and represent the language agnostic semantic "
+                "content of text for improved\n"
+                "similarity detection.\n"
+                "\n",  # NOTE: end of first chunk (see comma :)
+                "\n"
+                "\n"
+                "The ISCC framework already comes with a Text-Code that is based "
+                "on lexical similarity and can match\n"
+                "near duplicates. The ISCC Semantic Text-Code is planned as a new "
+                "additional ISCC-UNIT focused on\n"
+                "capturing a more abstract and broad semantic similarity. As such "
+                "the Semantic Text-Code is\n"
+                "engineered to be robust against a broader range of variations and "
+                "translations of text that cannot\n"
+                "be matched based on lexical similarity.\n",
+            ],
+        }
+    )
 
 
 def test_gen_text_code_semantic_checks_bits():
