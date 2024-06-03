@@ -25,11 +25,16 @@ class SctMeta(BaseModel):
         if "features" in data:
             features = [
                 SctFeature(
-                    feature=f.get("feature"),
-                    offset=f.get("offset"),
-                    size=f.get("size"),
-                    text=f.get("text")
-                ) for f in data["features"]
+                    feature=feature,
+                    offset=offset,
+                    size=size,
+                    text=text
+                ) for feature, offset, size, text in zip(
+                    data["features"],
+                    data.get("offsets", []),
+                    data.get("sizes", []),
+                    data.get("chunks", [])
+                )
             ]
         return cls(
             iscc=data["iscc"],
