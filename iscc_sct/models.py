@@ -3,8 +3,7 @@ from pydantic import BaseModel
 
 __all__ = [
     "SctFeature",
-    "SctMeta",
-]
+    "SctMeta"
 ]
 
 class SctMeta(BaseModel):
@@ -24,7 +23,6 @@ class SctMeta(BaseModel):
             embedding=data.get("embedding"),
             features=features,
         )
-]
 
 
 class SctFeature(BaseModel):
