@@ -41,6 +41,21 @@ class SctOptions(BaseSettings):
 
     chunks: bool = Field(False, description="ISCC_SCT_CHUNKS - Include granular text chunks")
 
+    max_tokens: int = Field(
+        127,
+        description="ISCC_SCT_MAX_TOKENS - Max tokens per chunk (Default 127)",
+        le=127,
+    )
+
+    overlap: int = Field(
+        48,
+        description="ISCC_SCT_OVERLAP - Max tokens allowed to overlap between chunks (Default 48)",
+    )
+
+    trim: bool = Field(
+        False, description="ISCC_SCT_TRIM - Trim whitespace from chunks (Default False)"
+    )
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

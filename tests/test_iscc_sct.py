@@ -159,6 +159,16 @@ def test_split_text(text_en):
     assert chunks[-1][1][:8] == "\n (Laugh"
 
 
+def test_split_text_override():
+    text = "Try some very small and granular text splitting. Use options override for it."
+    chunks = split_text(text, max_tokens=8, overlap=4)
+    assert chunks == [
+        (0, "Try some very small and granular text "),
+        (20, "and granular text splitting. "),
+        (49, "Use options override for it."),
+    ]
+
+
 def test_tokenize_chunks():
     chunks = ["Hello World", "These are chunks"]
     result = tokenize_chunks(chunks)

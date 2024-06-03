@@ -52,9 +52,6 @@ BIT_LEN_MAP = {
 
 
 TOKENIZER_PATH = HERE / "tokenizer.json"
-CAPACITY = 127  # Maximum number of tokens per chunk
-OVERLAP = 48  # Maximum number of allowed tokens to overlap between chunks
-TRIM = False  # Trim whitespace from chunks
 MAINTYPE = "0001"  # SEMANTIC
 SUBTYPE = "0000"  # TEXT
 SCT_VERSION = "0000"  # V0
@@ -93,6 +90,9 @@ def gen_text_code_semantic(text, **options):
     :key features (bool): Return granular document features (Default False).
     :key offsets (bool): Return character offsets for granular features (Default False).
     :key chunks (bool): Return text chunks (Default False).
+    :key mak_tokens (int): Max tokens per chunk (Default 127).
+    :key overlap (int): Max tokens allowed to overlap between chunks (Default 48).
+    :key trim (int): Trim whitespace from chunks (Default False).
     :return: Dict with ISCC processing results
     """
 
@@ -107,7 +107,7 @@ def gen_text_code_semantic(text, **options):
         result["characters"] = len(text)
 
     # Text splitting
-    splits = split_text(text)
+    splits = split_text(text, **opts.dict())
     offsets, chunks = [list(item) for item in zip(*splits)]
     if opts.chunks:
         result["chunks"] = chunks
@@ -136,15 +136,20 @@ def gen_text_code_semantic(text, **options):
     return result
 
 
-def split_text(text):
+def split_text(text, **options):
     # type: (str) -> List[Tuple[int,str]]
     """
     Split text into semantically coherent chunks for embedding.
 
     :param str text: Text to split.
+    :param options: Custom processing options for overriding global options
+    :key mak_tokens (int): Max tokens per chunk (Default 127).
+    :key overlap (int): Max tokens allowed to overlap between chunks (Default 48).
+    :key trim (int): Trim whitespace from chunks (Default False).
     :return: A list of offset, chunk tuples [(offset,chunk), ...]
     """
-    return splitter().chunk_indices(text)
+    opts = sct.sct_opts.override(options)
+    return splitter(**opts.dict()).chunk_indices(text)
 
 
 @cache
@@ -161,17 +166,22 @@ def tokenizer():
 
 
 @cache
-def splitter():
-    # type: () -> TextSplitter
+def splitter(**options):
+    # type: (Any) -> TextSplitter
     """
-    Load and cache the text splitter, initialized with a tokenizer.
+    Load and cache the text splitter, initialized with tokenizer.
 
+    :param options: Custom processing options for overriding global options
+    :key mak_tokens (int): Max tokens per chunk (Default 127).
+    :key overlap (int): Max tokens allowed to overlap between chunks (Default 48).
+    :key trim (int): Trim whitespace from chunks (Default False).
     :return: An instance of TextSplitter.
     :rtype: TextSplitter
     """
+    opts = sct.sct_opts.override(options)
     with sct.timer("TEXTSPLITTER load time"):
         return TextSplitter.from_huggingface_tokenizer(
-            tokenizer(), capacity=CAPACITY, overlap=OVERLAP, trim=TRIM
+            tokenizer(), capacity=opts.max_tokens, overlap=opts.overlap, trim=opts.trim
         )
 
 
