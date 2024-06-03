@@ -23,7 +23,14 @@ class SctMeta(BaseModel):
     def from_dict(cls, data: Dict[str, Any]) -> "SctMeta":
         features = None
         if "features" in data:
-            features = [SctFeature(feature=f) for f in data["features"]]
+            features = [
+                SctFeature(
+                    feature=f.get("feature"),
+                    offset=f.get("offset"),
+                    size=f.get("size"),
+                    text=f.get("text")
+                ) for f in data["features"]
+            ]
         return cls(
             iscc=data["iscc"],
             characters=data.get("characters"),
