@@ -67,8 +67,8 @@ class SctOptions(BaseSettings):
     def override(self, update=None):
         # type: (dict|None) -> SctOptions
         """Returns an updated and validated deep copy of the current settings instance."""
-        if not update:
-            return self
+
+        update = update or {}  # sets {} if update is None
 
         opts = self.model_copy(deep=True)
         # We need update fields individually so validation gets triggered
