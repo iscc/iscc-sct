@@ -51,11 +51,15 @@ length of the code to control the level of granularity in the semantic represent
 ```python
 import iscc_sct as sci
 
-# Generate a 64-bit ISCC Semantic Image-Code for an image file
+# Generate a 64-bit ISCC Semantic Text-Code for an image file
 text = "This is some sample text. It can be a longer document or even an entire book."
-semantic_code = sci.code_text_semantic(text, bits=64)
+semantic_code = sci.gen_text_code_semantic(text, bits=64)
 
 print(semantic_code)
+```
+
+```shell
+{'iscc': 'ISCC:CAAV3GG6JH3XEVRN', 'characters': 77}
 ```
 
 ## How It Works

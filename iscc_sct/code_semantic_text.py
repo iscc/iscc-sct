@@ -107,7 +107,7 @@ def gen_text_code_semantic(text, **options):
         result["characters"] = len(text)
 
     # Text splitting
-    splits = split_text(text, **opts.dict())
+    splits = split_text(text, **opts.model_dump())
     offsets, chunks = [list(item) for item in zip(*splits)]
     if opts.chunks:
         result["chunks"] = chunks
@@ -149,7 +149,7 @@ def split_text(text, **options):
     :return: A list of offset, chunk tuples [(offset,chunk), ...]
     """
     opts = sct.sct_opts.override(options)
-    return splitter(**opts.dict()).chunk_indices(text)
+    return splitter(**opts.model_dump()).chunk_indices(text)
 
 
 @cache
