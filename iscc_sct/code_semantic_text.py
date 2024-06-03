@@ -113,6 +113,8 @@ def gen_text_code_semantic(text, **options):
         result["chunks"] = chunks
     if opts.offsets:
         result["offsets"] = offsets
+    if opts.sizes:
+        result["sizes"] = [len(chunk) for chunk in chunks]
 
     # Chunk embedding
     embeddings = embed_chunks(chunks)

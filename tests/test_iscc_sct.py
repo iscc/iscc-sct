@@ -58,51 +58,22 @@ def test_code_text_semantic_embedding():
 def test_code_text_semantic_features():
     fp = HERE / "en.txt"
     result = sct.code_text_semantic(fp, features=True)
+    # fmt: off
     assert result == {
         "iscc": "ISCC:CAA636IXQD736IGJ",
         "characters": 12076,
         "features": [
-            "44ERPEPRGHRFC",
-            "N5SRLQPXG7BAS",
-            "VL4VLULOW6Z52",
-            "UM6BG4DRT6ZFQ",
-            "U34VPVDTQ6JNY",
-            "424ZPBD7A6JP2",
-            "7IOQ3Z6VV5BW2",
-            "556U7RFZW6R7S",
-            "5POV7RHLW7QPG",
-            "5NOR7QFPV6YHO",
-            "BX6D7BX3U6JX2",
-            "4IYVPEMRWORVS",
-            "7ZRRORV3WBJUS",
-            "HR6RPEXXVDAG6",
-            "FTOSNUNFHTQAK",
-            "PRBCJUHNXU2CC",
-            "HXEQ5QC5DIRIW",
-            "3562MRA3DYQIW",
-            "7XNQERLLWYQIE",
-            "VW3YAAMLDYRMU",
-            "PFV3ECTKGYQAW",
-            "7R3QGS3OX3AAW",
-            "7F7QOFUVXIAAG",
-            "6HWQJF4VDYQYW",
-            "LPWC7B5UFYQIS",
-            "FT3ZFEJQFYAIC",
-            "7IIQEUTUFBA6S",
-            "7OI2DMAWCAG7A",
-            "RX2IPIKWMEUPG",
-            "VT2K7ELVXKQXS",
-            "BRPP6AMVCASPS",
-            "JVN5NI7NCE2OO",
-            "JTNRPM3LA4YKG",
-            "VHAQKQDZCQQYC",
-            "QHIRKAD3CUUKS",
-            "JXPZJA7LS5QOS",
-            "HTNRP5PBTFAEW",
-            "PRMTOM3LXFBES",
-            "JT5ZPM3LCG3E6",
+            "44ERPEPRGHRFC", "N5SRLQPXG7BAS", "VL4VLULOW6Z52", "UM6BG4DRT6ZFQ", "U34VPVDTQ6JNY",
+            "424ZPBD7A6JP2", "7IOQ3Z6VV5BW2", "556U7RFZW6R7S", "5POV7RHLW7QPG", "5NOR7QFPV6YHO",
+            "BX6D7BX3U6JX2", "4IYVPEMRWORVS", "7ZRRORV3WBJUS", "HR6RPEXXVDAG6", "FTOSNUNFHTQAK",
+            "PRBCJUHNXU2CC", "HXEQ5QC5DIRIW", "3562MRA3DYQIW", "7XNQERLLWYQIE", "VW3YAAMLDYRMU",
+            "PFV3ECTKGYQAW", "7R3QGS3OX3AAW", "7F7QOFUVXIAAG", "6HWQJF4VDYQYW", "LPWC7B5UFYQIS",
+            "FT3ZFEJQFYAIC", "7IIQEUTUFBA6S", "7OI2DMAWCAG7A", "RX2IPIKWMEUPG", "VT2K7ELVXKQXS",
+            "BRPP6AMVCASPS", "JVN5NI7NCE2OO", "JTNRPM3LA4YKG", "VHAQKQDZCQQYC", "QHIRKAD3CUUKS",
+            "JXPZJA7LS5QOS", "HTNRP5PBTFAEW", "PRMTOM3LXFBES", "JT5ZPM3LCG3E6",
         ],
     }
+    # fmt: on
 
 
 def test_code_text_semantic_offsets():
@@ -117,6 +88,18 @@ def test_code_text_semantic_chunks():
     assert len(result["chunks"]) == 39
     assert result["chunks"][0].startswith("\n Thank ")
     assert result["chunks"][-1].endswith("(Applause)\n")
+
+
+def test_code_text_semantic_sizes():
+    fp = HERE / "en.txt"
+    result = sct.code_text_semantic(fp, sizes=True)
+    # fmt: off
+    assert result["sizes"] == [
+        440, 396, 431, 385, 440, 380, 406, 477, 415, 536, 280, 449, 446, 442, 443, 444, 451, 485,
+        477, 439, 517, 430, 468, 394, 531, 448, 421, 503, 376, 403, 513, 477, 393, 375, 555, 533,
+        312, 455, 413
+    ]
+    # fmt: on
 
 
 def test_gen_text_code_semantic_empty():

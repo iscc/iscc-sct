@@ -34,6 +34,11 @@ class SctOptions(BaseSettings):
     offsets: bool = Field(
         False, description="ISCC_SCT_OFFSETS - Include offsets of granular features"
     )
+
+    sizes: bool = Field(
+        False, description="ISCC_SCT_SIZES - Include sizes of granular features (number of chars)"
+    )
+
     chunks: bool = Field(False, description="ISCC_SCT_CHUNKS - Include granular text chunks")
 
     model_config = SettingsConfigDict(
