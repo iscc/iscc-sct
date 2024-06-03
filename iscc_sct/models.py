@@ -6,6 +6,13 @@ __all__ = [
     "SctMeta"
 ]
 
+class SctFeature(BaseModel):
+    feature: Optional[str] = None
+    offset: Optional[int] = None
+    size: Optional[int] = None
+    text: Optional[str] = None
+
+
 class SctMeta(BaseModel):
     iscc: str
     characters: Optional[int] = None
@@ -23,18 +30,4 @@ class SctMeta(BaseModel):
             embedding=data.get("embedding"),
             features=features,
         )
-
-
-class SctFeature(BaseModel):
-    feature: Optional[str] = None
-    offset: Optional[int] = None
-    size: Optional[int] = None
-    text: Optional[str] = None
-
-
-class SctMeta(BaseModel):
-    iscc: str
-    characters: Optional[int] = None
-    embedding: Optional[List[float]] = None
-    features: Optional[List[SctFeature]] = None
 
