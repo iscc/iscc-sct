@@ -40,7 +40,7 @@ classifiers=[
 sct = 'iscc_sct.cli:main'
 
 [tool.poetry.dependencies]
-python = ">3.9.7,<3.13"
+python = ">=3.8,<3.13"
 semantic-text-splitter = "*"
 onnxruntime = { version = "*", optional = true }
 onnxruntime-gpu = { version = "*", optional = true }
@@ -48,7 +48,7 @@ loguru = "*"
 blake3 = "*"
 platformdirs = "*"
 tokenizers = "*"
-pydantic-settings = "^2.2.1"
+pydantic-settings = "*"
 
 [tool.poetry.extras]
 cpu = ["onnxruntime"]
@@ -62,15 +62,7 @@ pytest-cov = "*"
 [tool.poetry.group.dev.dependencies]
 poethepoet = "*"
 ruff = "*"
-mdformat = "*"
 mdformat-gfm = "*"
-
-[tool.poetry.group.aider]
-optional = true
-
-[tool.poetry.group.aider.dependencies]
-streamlit = "*"
-aider-chat = {git = "https://github.com/paul-gauthier/aider.git"}
 
 [tool.ruff]
 line-length = 100
@@ -80,7 +72,7 @@ line-ending = "lf"
 
 [tool.poe.tasks]
 format-code = { cmd = "poetry run ruff format", help = "Code style formating with ruff" }
-format-markdown = { cmd = "mdformat --wrap 100 --end-of-line lf .", help = "Markdown formating with mdformat" }
+format-markdown = { cmd = "mdformat --wrap 100 --end-of-line lf README.md", help = "Markdown formating with mdformat" }
 test = { cmd = "poetry run pytest --cov=iscc_sct --cov-fail-under=100 --cov-report=term-missing", help = "Run tests with coverage" }
 all = ["format-code", "format-markdown", "test"]
 
