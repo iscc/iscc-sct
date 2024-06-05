@@ -22,6 +22,8 @@ def test_check_integrity_failure(tmp_path):
 
     # Check that the exception message contains expected text
     assert "Failed integrity check" in str(exc_info.value)
+
+
 def test_hamming_distance_identical():
     a = b"abc"
     b = b"abc"
