@@ -13,9 +13,7 @@ def sample_text_file(tmp_path):
 
 
 def test_cli_module():
-    result = subprocess.run(
-        ["python", "-m", "iscc_sct.cli"], capture_output=True, text=True, shell=True
-    )
+    result = subprocess.run(["python", "-m", "iscc_sct.cli"], capture_output=True, text=True, shell=True)
     assert result.returncode != 0
     assert "usage:" in result.stderr
 
@@ -33,9 +31,7 @@ def test_cli_generate_sct(sample_text_file):
 
 
 def test_cli_generate_sct_granular(sample_text_file):
-    result = subprocess.run(
-        [sct, str(sample_text_file), "--granular"], capture_output=True, text=True
-    )
+    result = subprocess.run([sct, str(sample_text_file), "--granular"], capture_output=True, text=True)
     assert result.returncode == 0
     assert "iscc" in result.stdout
 
