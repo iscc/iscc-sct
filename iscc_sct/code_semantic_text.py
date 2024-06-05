@@ -37,6 +37,7 @@ HERE = Path(__file__).parent.absolute()
 __all__ = [
     "code_text_semantic",
     "gen_text_code_semantic",
+    "soft_hash_text_semantic",
 ]
 
 BIT_LEN_MAP = {
@@ -134,6 +135,16 @@ def gen_text_code_semantic(text, **options):
     code = sct.encode_base32(header + digest)
     result["iscc"] = "ISCC:" + code
     return result
+
+
+def soft_hash_text_semantic(text):
+    # type: (str) -> bytes
+    """Creates a 256-bit semantic similarity preserving hash for text input."""
+    chunks = [item[1] for item in split_text(text)]
+    embeddings = embed_chunks(chunks)
+    embedding = mean_pooling(embeddings)
+    digest = binarize(embedding)
+    return digest
 
 
 def split_text(text, **options):

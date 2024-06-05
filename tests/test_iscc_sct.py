@@ -217,3 +217,22 @@ def test_tokenizer_integrity(text_en):
         hasher.update(chunk.encode("utf-8"))
     checksum = hasher.hexdigest()
     assert checksum == "7a7ad1ce83c36f853d31390150403e225bac7825a5573dd5c9e326b0917c7b52"
+
+
+def test_soft_hash_text_semantic():
+    result = sct.soft_hash_text_semantic("Hello World")
+    assert (
+        result.hex()
+        == "f36789d8d1bbe351106bdf8e9b5006a3fc4cb1eb4042c75ea26b5058857c9177705429237858e9940e133c8b12ee1a3d"
+    )
+
+
+def test_shift_resistance(text_en):
+    a = sct.soft_hash_text_semantic(text_en)
+    shifted = "Just put another sentence in the begginging of the text!\n" + text_en
+    b = sct.soft_hash_text_semantic(shifted)
+    # TODO improve algorithm with more shift resistant semantic chunking
+    # On 256-bit code
+    assert sct.hamming_distance(a, b) == 6
+    # On 64-bit code
+    assert sct.hamming_distance(b[:16], a[:16]) == 1

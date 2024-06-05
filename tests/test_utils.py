@@ -29,15 +29,18 @@ def test_hamming_distance_identical():
     b = b"abc"
     assert utils.hamming_distance(a, b) == 0
 
+
 def test_hamming_distance_different():
     a = b"abc"
     b = b"abd"
     assert utils.hamming_distance(a, b) == 3
 
+
 def test_hamming_distance_completely_different():
     a = b"\x00"
     b = b"\xff"
     assert utils.hamming_distance(a, b) == 8
+
 
 def test_hamming_distance_raises_value_error():
     a = b"abc"

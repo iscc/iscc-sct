@@ -19,6 +19,7 @@ __all__ = [
     "timer",
     "get_model",
     "encode_base32",
+    "hamming_distance",
 ]
 
 
@@ -89,3 +90,24 @@ def encode_base32(data):
     :return: Base32 encoded str
     """
     return b32encode(data).decode("ascii").rstrip("=")
+
+
+def hamming_distance(a, b):
+    # type: (bytes, bytes) -> int
+    """
+    Calculate the bitwise Hamming distance between two bytes objects.
+
+    :param a: The first bytes object.
+    :param b: The second bytes object.
+    :return:  The Hamming distance between two bytes objects.
+    :raise ValueError: If a and b are not the same length.
+    """
+    if len(a) != len(b):
+        raise ValueError("The lengths of the two bytes objects must be the same")
+
+    distance = 0
+    for b1, b2 in zip(a, b):
+        xor_result = b1 ^ b2
+        distance += bin(xor_result).count("1")
+
+    return distance
