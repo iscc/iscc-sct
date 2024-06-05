@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-"""*A semantic similarity preserving hash for plain-text content (soft hash).*
+"""*A cross-lingual semantic similarity preserving hash for plain-text content (soft hash).*
 
-The ISCC Text-Code Semantic is generated from plain-text that has been extracted from a media asset.
+The ISCC Text-Code Semantic is a content-based compact binary code generated from multilingual text.
 
 !!! Warning
 
+    This is a non-standard Proof of Concept implementation.
     Plain-text extraction from documents in various formats (especially PDF) may
     yield diffent results depending on the extraction tools being used.
     The [iscc-sdk](https://github.com/iscc/iscc-sdk) uses [Apache Tika](https://tika.apache.org)
@@ -15,8 +16,7 @@ The ISCC Text-Code Semantic is generated from plain-text that has been extracted
 - Split text into semantically coherent overlapping chunks.
 - Create vector embeddings of the chunks.
 - Average and binarize the chunk embeddings.
-- Count characters of collapsed text
-- Apply [`soft_hash_text_v0`][iscc_core.code_content_text.soft_hash_text_v0] to collapsed text
+- Encode as ISCC-UNIT of MainType SEMANTIC and SubType TEXT
 """
 
 from loguru import logger as log
@@ -72,9 +72,14 @@ def code_text_semantic(fp, **options):
     :param options: Custom processing options for overriding global options
     :key bits (int): Length of generated Semantic Text-Code in bits (default 64)
     :key characters (bool): Return document character count (default True).
+    :key embedding (bool): Return global document embedding (default False).
+    :key precistion (int): Max fractional digits for embeddings (default 8).
     :key features (bool): Return granular document features (default False).
     :key offsets (bool): Return character offsets for granular features (default False).
     :key chunks (bool): Return text chunks (default False).
+    :key mak_tokens (int): Max tokens per chunk (default 127).
+    :key overlap (int): Max tokens allowed to overlap between chunks (default 48).
+    :key trim (int): Trim whitespace from chunks (default False).
     :return: Dict with ISCC processing results
     """
     return gen_text_code_semantic(fp.read_text(encoding="utf-8"), **options)
@@ -155,7 +160,7 @@ def split_text(text, **options):
     """
     Split text into semantically coherent chunks for embedding.
 
-    :param str text: Text to split.
+    :param text: Text to split.
     :param options: Custom processing options for overriding global options
     :key mak_tokens (int): Max tokens per chunk (default 127).
     :key overlap (int): Max tokens allowed to overlap between chunks (default 48).
@@ -173,7 +178,6 @@ def tokenizer():
     Load and cache the tokenizer model based on the predefined model name.
 
     :return: An instance of the Tokenizer.
-    :rtype: Tokenizer
     """
     with sct.timer("TOKENIZER load time"):
         return Tokenizer.from_file(TOKENIZER_PATH.as_posix())
@@ -190,7 +194,6 @@ def splitter(**options):
     :key overlap (int): Max tokens allowed to overlap between chunks (default 48).
     :key trim (int): Trim whitespace from chunks (default False).
     :return: An instance of TextSplitter.
-    :rtype: TextSplitter
     """
     opts = sct.sct_opts.override(options)
     with sct.timer("TEXTSPLITTER load time"):
@@ -206,7 +209,6 @@ def model():
     Load and cache the ONNX inference model from a specified path.
 
     :return: An ONNX inference session.
-    :rtype: rt.InferenceSession
     """
     with sct.timer("ONNXMODEL aquisition time"):
         model_path = sct.get_model()
@@ -228,9 +230,8 @@ def tokenize_chunks(chunks):
     """
     Tokenize text chunks into model-compatible formats.
 
-    :param List[str] chunks: Text chunks to tokenize.
+    :param chunks: Text chunks to tokenize.
     :return: Dictionary of tokenized data including input IDs, attention masks, and type IDs.
-    :rtype: dict
     """
     encodings = tokenizer().encode_batch(chunks)
     input_ids = np.array([encoding.ids for encoding in encodings], dtype=np.int64)
@@ -244,9 +245,8 @@ def embed_chunks(chunks):
     """
     Embed text chunks and return vector embeddings.
 
-    :param List[str] chunks: Text chunks to embed.
+    :param chunks: Text chunks to embed.
     :return: An array of embeddings for each chunk.
-    :rtype: NDArray[np.float32]
     """
     tokens = tokenize_chunks(chunks)
     token_embeddings = embed_tokens(tokens)
@@ -258,9 +258,8 @@ def embed_tokens(tokens):
     """
     Create embeddings from tokenized text chunks using the model.
 
-    :param dict tokens: Tokenized text data.
+    :param tokens: Tokenized text data.
     :return: An array of embeddings.
-    :rtype: NDArray
     """
     result = model().run(None, tokens)
     return np.array(result[0])
@@ -271,10 +270,9 @@ def attention_pooling(token_embeddings, attention_mask):
     """
     Apply attention mask based mean pooling to the token embeddings.
 
-    :param np.array token_embeddings: Raw token embeddings from the model.
-    :param np.array attention_mask: Attention masks for the embeddings.
+    :param token_embeddings: Raw token embeddings from the model.
+    :param attention_mask: Attention masks for the embeddings.
     :return: An array of pooled and normalized embeddings.
-    :rtype: np.array
     """
     input_mask_expanded = attention_mask[:, :, None].astype(np.float32)
     sum_embeddings = np.sum(token_embeddings * input_mask_expanded, axis=1)
@@ -290,9 +288,8 @@ def mean_pooling(embeddings):
     """
     Calculate the document vector from chunk embeddings using mean pooling.
 
-    :param NDArray[np.float32] embeddings: Chunk embeddings.
+    :param embeddings: Chunk embeddings.
     :return: A normalized document vector.
-    :rtype: NDArray
     """
     document_vector = embeddings.mean(axis=0)
     return document_vector / np.linalg.norm(document_vector)
@@ -303,9 +300,8 @@ def binarize(vec):
     """
     Binarize an embedding vector into a hash digest.
 
-    :param NDArray vec: Vector to be binarized.
+    :param vec: Vector to be binarized.
     :return: A bytes object representing the binary hash.
-    :rtype: bytes
     """
     return bytes((np.packbits(np.array(vec) >= 0)))
 
