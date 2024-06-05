@@ -9,6 +9,7 @@ from iscc_sct.code_semantic_text import (
     tokenize_chunks,
     embed_tokens,
     embed_chunks,
+    compress,
 )
 import numpy as np
 
@@ -236,3 +237,16 @@ def test_shift_resistance(text_en):
     assert sct.hamming_distance(a, b) == 6
     # On 64-bit code
     assert sct.hamming_distance(b[:16], a[:16]) == 1
+
+
+def test_compress():
+    arr1 = np.array([3.0, 15294.7789, 32977.7])
+    arr2 = np.array([3.0, 15294.7789, 32977.7], dtype=np.float32)
+    expected = [3.0, 15294.8, 32977.7]
+    assert compress(arr1, 1) == expected
+    assert compress(arr2, 1) == expected
+
+
+def test_embedding_precision():
+    d16 = sct.gen_text_code_semantic("Hello World", embedding=True, precision=4)
+    assert d16["embedding"][0] == 0.0087

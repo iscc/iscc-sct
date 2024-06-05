@@ -28,6 +28,11 @@ class SctOptions(BaseSettings):
     embedding: bool = Field(
         False, description="ISCC_SCT_EMBEDDING - Include global document embedding"
     )
+
+    precision: int = Field(
+        8, description="ISCC_SCT_PRECISION - Max fractional digits for embeddings (default 8)"
+    )
+
     features: bool = Field(
         False, description="ISCC_SCT_FEATURES - Include granular feature simprints"
     )

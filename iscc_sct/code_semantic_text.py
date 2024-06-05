@@ -38,6 +38,7 @@ __all__ = [
     "code_text_semantic",
     "gen_text_code_semantic",
     "soft_hash_text_semantic",
+    "embed_chunks",
 ]
 
 BIT_LEN_MAP = {
@@ -69,11 +70,11 @@ def code_text_semantic(fp, **options):
 
     :param fp: File path of plaintext file to process
     :param options: Custom processing options for overriding global options
-    :key bits (int): Length of generated Semantic Text-Code in bits (Default 64)
-    :key characters (bool): Return document character count (Default True).
-    :key features (bool): Return granular document features (Default False).
-    :key offsets (bool): Return character offsets for granular features (Default False).
-    :key chunks (bool): Return text chunks (Default False).
+    :key bits (int): Length of generated Semantic Text-Code in bits (default 64)
+    :key characters (bool): Return document character count (default True).
+    :key features (bool): Return granular document features (default False).
+    :key offsets (bool): Return character offsets for granular features (default False).
+    :key chunks (bool): Return text chunks (default False).
     :return: Dict with ISCC processing results
     """
     return gen_text_code_semantic(fp.read_text(encoding="utf-8"), **options)
@@ -86,14 +87,16 @@ def gen_text_code_semantic(text, **options):
 
     :param str text: Plaint text for ISCC processing
     :param options: Custom processing options for overriding global options
-    :key bits (int): Length of generated Semantic Text-Code in bits (Default 64)
-    :key characters (bool): Return document character count (Default True).
-    :key features (bool): Return granular document features (Default False).
-    :key offsets (bool): Return character offsets for granular features (Default False).
-    :key chunks (bool): Return text chunks (Default False).
-    :key mak_tokens (int): Max tokens per chunk (Default 127).
-    :key overlap (int): Max tokens allowed to overlap between chunks (Default 48).
-    :key trim (int): Trim whitespace from chunks (Default False).
+    :key bits (int): Length of generated Semantic Text-Code in bits (default 64)
+    :key characters (bool): Return document character count (default True).
+    :key embedding (bool): Return global document embedding (default False).
+    :key precistion (int): Max fractional digits for embeddings (default 8).
+    :key features (bool): Return granular document features (default False).
+    :key offsets (bool): Return character offsets for granular features (default False).
+    :key chunks (bool): Return text chunks (default False).
+    :key mak_tokens (int): Max tokens per chunk (default 127).
+    :key overlap (int): Max tokens allowed to overlap between chunks (default 48).
+    :key trim (int): Trim whitespace from chunks (default False).
     :return: Dict with ISCC processing results
     """
 
@@ -126,7 +129,7 @@ def gen_text_code_semantic(text, **options):
     # Create global document embedding
     embedding = mean_pooling(embeddings)
     if opts.embedding:
-        result["embedding"] = embedding.tolist()
+        result["embedding"] = compress(embedding, opts.precision)
 
     # Encode global document embedding
     length = BIT_LEN_MAP[opts.bits]
@@ -154,9 +157,9 @@ def split_text(text, **options):
 
     :param str text: Text to split.
     :param options: Custom processing options for overriding global options
-    :key mak_tokens (int): Max tokens per chunk (Default 127).
-    :key overlap (int): Max tokens allowed to overlap between chunks (Default 48).
-    :key trim (int): Trim whitespace from chunks (Default False).
+    :key mak_tokens (int): Max tokens per chunk (default 127).
+    :key overlap (int): Max tokens allowed to overlap between chunks (default 48).
+    :key trim (int): Trim whitespace from chunks (default False).
     :return: A list of offset, chunk tuples [(offset,chunk), ...]
     """
     opts = sct.sct_opts.override(options)
@@ -183,9 +186,9 @@ def splitter(**options):
     Load and cache the text splitter, initialized with tokenizer.
 
     :param options: Custom processing options for overriding global options
-    :key mak_tokens (int): Max tokens per chunk (Default 127).
-    :key overlap (int): Max tokens allowed to overlap between chunks (Default 48).
-    :key trim (int): Trim whitespace from chunks (Default False).
+    :key mak_tokens (int): Max tokens per chunk (default 127).
+    :key overlap (int): Max tokens allowed to overlap between chunks (default 48).
+    :key trim (int): Trim whitespace from chunks (default False).
     :return: An instance of TextSplitter.
     :rtype: TextSplitter
     """
@@ -305,3 +308,17 @@ def binarize(vec):
     :rtype: bytes
     """
     return bytes((np.packbits(np.array(vec) >= 0)))
+
+
+def compress(vec, precision):
+    # type: (NDArray, int) -> List[float]
+    """
+    Round down vector values to specified precision to reduce storage requirements.
+
+    :param vec: Embedding vector.
+    :param precision: Max number of fractional decimal places.
+    :return: Vector as native python list of rounded floats.
+    """
+    rounded_array = np.around(vec, decimals=precision)
+    compress_list = [round(x, precision) for x in rounded_array.tolist()]
+    return compress_list
