@@ -205,6 +205,7 @@ def model():
     so = rt.SessionOptions()
     so.graph_optimization_level = rt.GraphOptimizationLevel.ORT_ENABLE_ALL
     with sct.timer("ONNXMODEL load time"):
+        # TODO assume model exists - and download onnx on failure - add environment info/check command
         return rt.InferenceSession(model_path, sess_options=so, providers=selected_onnx_providers)
 
 
