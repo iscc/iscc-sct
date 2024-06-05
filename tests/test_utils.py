@@ -22,3 +22,23 @@ def test_check_integrity_failure(tmp_path):
 
     # Check that the exception message contains expected text
     assert "Failed integrity check" in str(exc_info.value)
+def test_hamming_distance_identical():
+    a = b"abc"
+    b = b"abc"
+    assert utils.hamming_distance(a, b) == 0
+
+def test_hamming_distance_different():
+    a = b"abc"
+    b = b"abd"
+    assert utils.hamming_distance(a, b) == 2
+
+def test_hamming_distance_completely_different():
+    a = b"\x00"
+    b = b"\xff"
+    assert utils.hamming_distance(a, b) == 8
+
+def test_hamming_distance_raises_value_error():
+    a = b"abc"
+    b = b"abcd"
+    with pytest.raises(ValueError):
+        utils.hamming_distance(a, b)
