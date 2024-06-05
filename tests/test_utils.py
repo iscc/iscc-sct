@@ -32,7 +32,7 @@ def test_hamming_distance_identical():
 def test_hamming_distance_different():
     a = b"abc"
     b = b"abd"
-    assert utils.hamming_distance(a, b) == 2
+    assert utils.hamming_distance(a, b) == 3
 
 def test_hamming_distance_completely_different():
     a = b"\x00"
