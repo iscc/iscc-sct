@@ -7,7 +7,7 @@ The ISCC Text-Code Semantic is a content-based compact binary code generated fro
 
     This is a non-standard Proof of Concept implementation.
     Plain-text extraction from documents in various formats (especially PDF) may
-    yield diffent results depending on the extraction tools being used.
+    yield different results depending on the extraction tools being used.
     The [iscc-sdk](https://github.com/iscc/iscc-sdk) uses [Apache Tika](https://tika.apache.org)
     to extract text from documents for Text-Code generation.
 
@@ -23,7 +23,7 @@ from loguru import logger as log
 from semantic_text_splitter import TextSplitter
 from tokenizers import Tokenizer
 from pathlib import Path
-from typing import List, Tuple, Any, Dict
+from typing import Any
 import numpy as np
 import onnxruntime as rt
 from numpy.typing import NDArray
@@ -60,7 +60,7 @@ SCT_VERSION = "0000"  # V0
 
 
 def code_text_semantic(fp, **options):
-    # type: (Path|str, Any) -> Dict[str, Any]
+    # type: (Path|str, Any) -> dict[str, Any]
     """
     Generate ISCC Semantic-Code Text from a text file.
 
@@ -73,20 +73,21 @@ def code_text_semantic(fp, **options):
     :key bits (int): Length of generated Semantic Text-Code in bits (default 64)
     :key characters (bool): Return document character count (default True).
     :key embedding (bool): Return global document embedding (default False).
-    :key precistion (int): Max fractional digits for embeddings (default 8).
+    :key precision (int): Max fractional digits for embeddings (default 8).
     :key features (bool): Return granular document features (default False).
     :key offsets (bool): Return character offsets for granular features (default False).
     :key chunks (bool): Return text chunks (default False).
-    :key mak_tokens (int): Max tokens per chunk (default 127).
+    :key max_tokens (int): Max tokens per chunk (default 127).
     :key overlap (int): Max tokens allowed to overlap between chunks (default 48).
     :key trim (int): Trim whitespace from chunks (default False).
     :return: Dict with ISCC processing results
     """
+    fp = Path(fp)
     return gen_text_code_semantic(fp.read_text(encoding="utf-8"), **options)
 
 
 def gen_text_code_semantic(text, **options):
-    # type: (str, int) -> dict
+    # type: (str, Any) -> dict
     """
     Create an ISCC Semantic-Code Text from plaintext.
 
@@ -95,11 +96,11 @@ def gen_text_code_semantic(text, **options):
     :key bits (int): Length of generated Semantic Text-Code in bits (default 64)
     :key characters (bool): Return document character count (default True).
     :key embedding (bool): Return global document embedding (default False).
-    :key precistion (int): Max fractional digits for embeddings (default 8).
+    :key precision (int): Max fractional digits for embeddings (default 8).
     :key features (bool): Return granular document features (default False).
     :key offsets (bool): Return character offsets for granular features (default False).
     :key chunks (bool): Return text chunks (default False).
-    :key mak_tokens (int): Max tokens per chunk (default 127).
+    :key max_tokens (int): Max tokens per chunk (default 127).
     :key overlap (int): Max tokens allowed to overlap between chunks (default 48).
     :key trim (int): Trim whitespace from chunks (default False).
     :return: Dict with ISCC processing results
@@ -156,13 +157,13 @@ def soft_hash_text_semantic(text):
 
 
 def split_text(text, **options):
-    # type: (str) -> List[Tuple[int,str]]
+    # type: (str) -> list[tuple[int,str]]
     """
     Split text into semantically coherent chunks for embedding.
 
     :param text: Text to split.
     :param options: Custom processing options for overriding global options
-    :key mak_tokens (int): Max tokens per chunk (default 127).
+    :key max_tokens (int): Max tokens per chunk (default 127).
     :key overlap (int): Max tokens allowed to overlap between chunks (default 48).
     :key trim (int): Trim whitespace from chunks (default False).
     :return: A list of offset, chunk tuples [(offset,chunk), ...]
@@ -190,7 +191,7 @@ def splitter(**options):
     Load and cache the text splitter, initialized with tokenizer.
 
     :param options: Custom processing options for overriding global options
-    :key mak_tokens (int): Max tokens per chunk (default 127).
+    :key max_tokens (int): Max tokens per chunk (default 127).
     :key overlap (int): Max tokens allowed to overlap between chunks (default 48).
     :key trim (int): Trim whitespace from chunks (default False).
     :return: An instance of TextSplitter.
@@ -226,7 +227,7 @@ def model():
 
 
 def tokenize_chunks(chunks):
-    # type: (List[str]) -> dict
+    # type: (list[str]) -> dict
     """
     Tokenize text chunks into model-compatible formats.
 
@@ -241,7 +242,7 @@ def tokenize_chunks(chunks):
 
 
 def embed_chunks(chunks):
-    # type: (List[str]) -> NDArray[np.float32]
+    # type: (list[str]) -> NDArray[np.float32]
     """
     Embed text chunks and return vector embeddings.
 
@@ -307,7 +308,7 @@ def binarize(vec):
 
 
 def compress(vec, precision):
-    # type: (NDArray, int) -> List[float]
+    # type: (NDArray, int) -> list[float]
     """
     Round down vector values to specified precision to reduce storage requirements.
 
