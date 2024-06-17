@@ -42,7 +42,7 @@ sct = 'iscc_sct.cli:main'
 [tool.poetry.dependencies]
 python = ">=3.8,<3.13"
 semantic-text-splitter = "*"
-onnxruntime = { version = "*", optional = true }
+onnxruntime = "*"
 onnxruntime-gpu = { version = "*", optional = true }
 loguru = "*"
 blake3 = "*"
@@ -51,7 +51,6 @@ tokenizers = "*"
 pydantic-settings = "*"
 
 [tool.poetry.extras]
-cpu = ["onnxruntime"]
 gpu = ["onnxruntime-gpu"]
 
 [tool.poetry.group.test.dependencies]
