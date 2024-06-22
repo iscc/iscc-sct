@@ -178,7 +178,7 @@ files = [
 name = "coloredlogs"
 version = "15.0.1"
 description = "Colored terminal output for Python's logging module"
-optional = true
+optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 files = [
     {file = "coloredlogs-15.0.1-py2.py3-none-any.whl", hash = "sha256:612ee75c546f53e92e70049c9dbfcc18c935a2b9a53b66085ce9ef6a6e5c0934"},
@@ -274,25 +274,25 @@ test = ["pytest (>=6)"]
 
 [[package]]
 name = "filelock"
-version = "3.15.1"
+version = "3.15.3"
 description = "A platform independent file lock."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "filelock-3.15.1-py3-none-any.whl", hash = "sha256:71b3102950e91dfc1bb4209b64be4dc8854f40e5f534428d8684f953ac847fac"},
-    {file = "filelock-3.15.1.tar.gz", hash = "sha256:58a2549afdf9e02e10720eaa4d4470f56386d7a6f72edd7d0596337af8ed7ad8"},
+    {file = "filelock-3.15.3-py3-none-any.whl", hash = "sha256:0151273e5b5d6cf753a61ec83b3a9b7d8821c39ae9af9d7ecf2f9e2f17404103"},
+    {file = "filelock-3.15.3.tar.gz", hash = "sha256:e1199bf5194a2277273dacd50269f0d87d0682088a3c561c15674ea9005d8635"},
 ]
 
 [package.extras]
 docs = ["furo (>=2023.9.10)", "sphinx (>=7.2.6)", "sphinx-autodoc-typehints (>=1.25.2)"]
-testing = ["covdefaults (>=2.3)", "coverage (>=7.3.2)", "diff-cover (>=8.0.1)", "pytest (>=7.4.3)", "pytest-asyncio (>=0.21)", "pytest-cov (>=4.1)", "pytest-mock (>=3.12)", "pytest-timeout (>=2.2)"]
+testing = ["covdefaults (>=2.3)", "coverage (>=7.3.2)", "diff-cover (>=8.0.1)", "pytest (>=7.4.3)", "pytest-asyncio (>=0.21)", "pytest-cov (>=4.1)", "pytest-mock (>=3.12)", "pytest-timeout (>=2.2)", "virtualenv (>=20.26.2)"]
 typing = ["typing-extensions (>=4.8)"]
 
 [[package]]
 name = "flatbuffers"
 version = "24.3.25"
 description = "The FlatBuffers serialization format for Python"
-optional = true
+optional = false
 python-versions = "*"
 files = [
     {file = "flatbuffers-24.3.25-py2.py3-none-any.whl", hash = "sha256:8dbdec58f935f3765e4f7f3cf635ac3a77f83568138d6a2311f524ec96364812"},
@@ -376,7 +376,7 @@ typing = ["types-PyYAML", "types-requests", "types-simplejson", "types-toml", "t
 name = "humanfriendly"
 version = "10.0"
 description = "Human friendly output for text interfaces using Python"
-optional = true
+optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 files = [
     {file = "humanfriendly-10.0-py2.py3-none-any.whl", hash = "sha256:1697e1a8a8f550fd43c2865cd84542fc175a61dcb779b6fee18cf6b6ccba1477"},
@@ -399,22 +399,22 @@ files = [
 
 [[package]]
 name = "importlib-metadata"
-version = "7.1.0"
+version = "7.2.0"
 description = "Read metadata from Python packages"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "importlib_metadata-7.1.0-py3-none-any.whl", hash = "sha256:30962b96c0c223483ed6cc7280e7f0199feb01a0e40cfae4d4450fc6fab1f570"},
-    {file = "importlib_metadata-7.1.0.tar.gz", hash = "sha256:b78938b926ee8d5f020fc4772d487045805a55ddbad2ecf21c6d60938dc7fcd2"},
+    {file = "importlib_metadata-7.2.0-py3-none-any.whl", hash = "sha256:04e4aad329b8b948a5711d394fa8759cb80f009225441b4f2a02bd4d8e5f426c"},
+    {file = "importlib_metadata-7.2.0.tar.gz", hash = "sha256:3ff4519071ed42740522d494d04819b666541b9752c43012f85afb2cc220fcc6"},
 ]
 
 [package.dependencies]
 zipp = ">=0.5"
 
 [package.extras]
-docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
+doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
 perf = ["ipython"]
-testing = ["flufl.flake8", "importlib-resources (>=1.3)", "jaraco.test (>=5.4)", "packaging", "pyfakefs", "pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-mypy", "pytest-perf (>=0.9.2)", "pytest-ruff (>=0.2.1)"]
+test = ["flufl.flake8", "importlib-resources (>=1.3)", "jaraco.test (>=5.4)", "packaging", "pyfakefs", "pytest (>=6,!=8.1.*)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-mypy", "pytest-perf (>=0.9.2)", "pytest-ruff (>=0.2.1)"]
 
 [[package]]
 name = "iniconfig"
@@ -574,7 +574,7 @@ files = [
 name = "mpmath"
 version = "1.3.0"
 description = "Python library for arbitrary-precision floating-point arithmetic"
-optional = true
+optional = false
 python-versions = "*"
 files = [
     {file = "mpmath-1.3.0-py3-none-any.whl", hash = "sha256:a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c"},
@@ -591,7 +591,7 @@ tests = ["pytest (>=4.6)"]
 name = "numpy"
 version = "1.24.4"
 description = "Fundamental package for array computing in Python"
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
     {file = "numpy-1.24.4-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:c0bfb52d2169d58c1cdb8cc1f16989101639b34c7d3ce60ed70b19c63eba0b64"},
@@ -628,7 +628,7 @@ files = [
 name = "onnxruntime"
 version = "1.18.0"
 description = "ONNX Runtime is a runtime accelerator for Machine Learning models"
-optional = true
+optional = false
 python-versions = "*"
 files = [
     {file = "onnxruntime-1.18.0-cp310-cp310-macosx_11_0_universal2.whl", hash = "sha256:5a3b7993a5ecf4a90f35542a4757e29b2d653da3efe06cdd3164b91167bbe10d"},
@@ -768,7 +768,7 @@ poetry-plugin = ["poetry (>=1.0,<2.0)"]
 name = "protobuf"
 version = "5.27.1"
 description = ""
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
     {file = "protobuf-5.27.1-cp310-abi3-win32.whl", hash = "sha256:3adc15ec0ff35c5b2d0992f9345b04a540c1e73bfee3ff1643db43cc1d734333"},
@@ -917,7 +917,7 @@ yaml = ["pyyaml (>=6.0.1)"]
 name = "pyreadline3"
 version = "3.4.1"
 description = "A python implementation of GNU readline."
-optional = true
+optional = false
 python-versions = "*"
 files = [
     {file = "pyreadline3-3.4.1-py3-none-any.whl", hash = "sha256:b0efb6516fd4fb07b45949053826a62fa4cb353db5be2bbb4a7aa1fdd1e345fb"},
@@ -1060,48 +1060,48 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "ruff"
-version = "0.4.9"
+version = "0.4.10"
 description = "An extremely fast Python linter and code formatter, written in Rust."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "ruff-0.4.9-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:b262ed08d036ebe162123170b35703aaf9daffecb698cd367a8d585157732991"},
-    {file = "ruff-0.4.9-py3-none-macosx_11_0_arm64.whl", hash = "sha256:98ec2775fd2d856dc405635e5ee4ff177920f2141b8e2d9eb5bd6efd50e80317"},
-    {file = "ruff-0.4.9-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:4555056049d46d8a381f746680db1c46e67ac3b00d714606304077682832998e"},
-    {file = "ruff-0.4.9-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:e91175fbe48f8a2174c9aad70438fe9cb0a5732c4159b2a10a3565fea2d94cde"},
-    {file = "ruff-0.4.9-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:0e8e7b95673f22e0efd3571fb5b0cf71a5eaaa3cc8a776584f3b2cc878e46bff"},
-    {file = "ruff-0.4.9-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:2d45ddc6d82e1190ea737341326ecbc9a61447ba331b0a8962869fcada758505"},
-    {file = "ruff-0.4.9-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:78de3fdb95c4af084087628132336772b1c5044f6e710739d440fc0bccf4d321"},
-    {file = "ruff-0.4.9-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:06b60f91bfa5514bb689b500a25ba48e897d18fea14dce14b48a0c40d1635893"},
-    {file = "ruff-0.4.9-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:88bffe9c6a454bf8529f9ab9091c99490578a593cc9f9822b7fc065ee0712a06"},
-    {file = "ruff-0.4.9-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:673bddb893f21ab47a8334c8e0ea7fd6598ecc8e698da75bcd12a7b9d0a3206e"},
-    {file = "ruff-0.4.9-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:8c1aff58c31948cc66d0b22951aa19edb5af0a3af40c936340cd32a8b1ab7438"},
-    {file = "ruff-0.4.9-py3-none-musllinux_1_2_i686.whl", hash = "sha256:784d3ec9bd6493c3b720a0b76f741e6c2d7d44f6b2be87f5eef1ae8cc1d54c84"},
-    {file = "ruff-0.4.9-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:732dd550bfa5d85af8c3c6cbc47ba5b67c6aed8a89e2f011b908fc88f87649db"},
-    {file = "ruff-0.4.9-py3-none-win32.whl", hash = "sha256:8064590fd1a50dcf4909c268b0e7c2498253273309ad3d97e4a752bb9df4f521"},
-    {file = "ruff-0.4.9-py3-none-win_amd64.whl", hash = "sha256:e0a22c4157e53d006530c902107c7f550b9233e9706313ab57b892d7197d8e52"},
-    {file = "ruff-0.4.9-py3-none-win_arm64.whl", hash = "sha256:5d5460f789ccf4efd43f265a58538a2c24dbce15dbf560676e430375f20a8198"},
-    {file = "ruff-0.4.9.tar.gz", hash = "sha256:f1cb0828ac9533ba0135d148d214e284711ede33640465e706772645483427e3"},
+    {file = "ruff-0.4.10-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:5c2c4d0859305ac5a16310eec40e4e9a9dec5dcdfbe92697acd99624e8638dac"},
+    {file = "ruff-0.4.10-py3-none-macosx_11_0_arm64.whl", hash = "sha256:a79489607d1495685cdd911a323a35871abfb7a95d4f98fc6f85e799227ac46e"},
+    {file = "ruff-0.4.10-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b1dd1681dfa90a41b8376a61af05cc4dc5ff32c8f14f5fe20dba9ff5deb80cd6"},
+    {file = "ruff-0.4.10-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:c75c53bb79d71310dc79fb69eb4902fba804a81f374bc86a9b117a8d077a1784"},
+    {file = "ruff-0.4.10-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:18238c80ee3d9100d3535d8eb15a59c4a0753b45cc55f8bf38f38d6a597b9739"},
+    {file = "ruff-0.4.10-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:d8f71885bce242da344989cae08e263de29752f094233f932d4f5cfb4ef36a81"},
+    {file = "ruff-0.4.10-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:330421543bd3222cdfec481e8ff3460e8702ed1e58b494cf9d9e4bf90db52b9d"},
+    {file = "ruff-0.4.10-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:9e9b6fb3a37b772628415b00c4fc892f97954275394ed611056a4b8a2631365e"},
+    {file = "ruff-0.4.10-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0f54c481b39a762d48f64d97351048e842861c6662d63ec599f67d515cb417f6"},
+    {file = "ruff-0.4.10-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:67fe086b433b965c22de0b4259ddfe6fa541c95bf418499bedb9ad5fb8d1c631"},
+    {file = "ruff-0.4.10-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:acfaaab59543382085f9eb51f8e87bac26bf96b164839955f244d07125a982ef"},
+    {file = "ruff-0.4.10-py3-none-musllinux_1_2_i686.whl", hash = "sha256:3cea07079962b2941244191569cf3a05541477286f5cafea638cd3aa94b56815"},
+    {file = "ruff-0.4.10-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:338a64ef0748f8c3a80d7f05785930f7965d71ca260904a9321d13be24b79695"},
+    {file = "ruff-0.4.10-py3-none-win32.whl", hash = "sha256:ffe3cd2f89cb54561c62e5fa20e8f182c0a444934bf430515a4b422f1ab7b7ca"},
+    {file = "ruff-0.4.10-py3-none-win_amd64.whl", hash = "sha256:67f67cef43c55ffc8cc59e8e0b97e9e60b4837c8f21e8ab5ffd5d66e196e25f7"},
+    {file = "ruff-0.4.10-py3-none-win_arm64.whl", hash = "sha256:dd1fcee327c20addac7916ca4e2653fbbf2e8388d8a6477ce5b4e986b68ae6c0"},
+    {file = "ruff-0.4.10.tar.gz", hash = "sha256:3aa4f2bc388a30d346c56524f7cacca85945ba124945fe489952aadb6b5cd804"},
 ]
 
 [[package]]
 name = "semantic-text-splitter"
-version = "0.13.3"
+version = "0.14.0"
 description = "Split text into semantic chunks, up to a desired chunk size. Supports calculating length by characters and tokens, and is callable from Rust and Python."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "semantic_text_splitter-0.13.3-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:726b61139f69b64c4824b14ea9f8f92855fa245615c198cea3f855c8c98f868b"},
-    {file = "semantic_text_splitter-0.13.3-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:d0b0bbdb8774c646aa228ce44d188f7f778904506cdcf28e6908ec21111bb887"},
-    {file = "semantic_text_splitter-0.13.3-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7212fd008ab05240657aff6ce943cffbf691163d4b5f514ac6f25f5a59f1c609"},
-    {file = "semantic_text_splitter-0.13.3-cp38-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:3820fb39955866840afb8c036f0ec2c99cf301fc3f5325ccc0adce31e5731707"},
-    {file = "semantic_text_splitter-0.13.3-cp38-abi3-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:f6bf3ccf463d70a7afb185eac8c770de1ac42625043de1f97c42098d24c0cfec"},
-    {file = "semantic_text_splitter-0.13.3-cp38-abi3-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:eef47993620f3991512a2df40610b3ebe84a016452f6b2f0f35f30be26b3c745"},
-    {file = "semantic_text_splitter-0.13.3-cp38-abi3-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:486216929540d83b783a06cf6b814e113b003fa92db7ce4591cb322a59b7a1dd"},
-    {file = "semantic_text_splitter-0.13.3-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6b5bd5e7d753e60886cde9cbc88cdc04fd11744662745efeda35ee111ea8767f"},
-    {file = "semantic_text_splitter-0.13.3-cp38-abi3-win32.whl", hash = "sha256:77e5bce62185b21fe329cd841c8ad72a0441a7997ae5784d95e4305677bf7815"},
-    {file = "semantic_text_splitter-0.13.3-cp38-abi3-win_amd64.whl", hash = "sha256:0f3d276702f10e0ea8d18c40ed474083d53848b888a3876922a3c472b8af2019"},
-    {file = "semantic_text_splitter-0.13.3.tar.gz", hash = "sha256:4a27cd1dfffd67041680e6921ea4f08caff5d4d1f943f2ef8603658215c0b2ea"},
+    {file = "semantic_text_splitter-0.14.0-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:9618b50b046dfa7d2b29324705855ee9387a9ebcb87d4c6c83456b99854dcd2e"},
+    {file = "semantic_text_splitter-0.14.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:50a3d3ebe5adff60e951104c5f5ed8a5825179bac54b149c1dfec4361e087327"},
+    {file = "semantic_text_splitter-0.14.0-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1000cc8efbfb5ddab31792dc1a68544beeda8a204ae041b13fec259b126047a7"},
+    {file = "semantic_text_splitter-0.14.0-cp38-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:75ba58029adc54a8a4cb13c93ec2aaf60dc251331a518621077746b0bb1604e5"},
+    {file = "semantic_text_splitter-0.14.0-cp38-abi3-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:8676b465c680ca195effb7925360791203323af0bfc464ed51782a5bd4d8747b"},
+    {file = "semantic_text_splitter-0.14.0-cp38-abi3-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:07d78f49c548acf096a668d5ec458b841d02b5304ba5898dbeb3f64d4be77600"},
+    {file = "semantic_text_splitter-0.14.0-cp38-abi3-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:0d9ab11b58afb64c029c4df35cf4b55ee9233bede02766e4f5c2bf2c65663955"},
+    {file = "semantic_text_splitter-0.14.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3166bf9af1b41af31fc6176d9dcb0b3fbb155187b8e739bdf881cf14faa9e6d8"},
+    {file = "semantic_text_splitter-0.14.0-cp38-abi3-win32.whl", hash = "sha256:4b5df36de7b3ad81d32d40577d1bc72d49dd11eb0a214b3a8af84654156a002b"},
+    {file = "semantic_text_splitter-0.14.0-cp38-abi3-win_amd64.whl", hash = "sha256:fff438f1239c11d376d09a4704c9b194926cc3d5c270127e42904fa69d07b2ee"},
+    {file = "semantic_text_splitter-0.14.0.tar.gz", hash = "sha256:26b02c7eb84a584908af9bd94429b3c47b2d175696332860a56cd758722234e3"},
 ]
 
 [package.extras]
@@ -1112,7 +1112,7 @@ test = ["black", "mypy", "pytest", "tokenizers", "tree-sitter", "tree-sitter-pyt
 name = "sympy"
 version = "1.12.1"
 description = "Computer algebra system (CAS) in Python"
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
     {file = "sympy-1.12.1-py3-none-any.whl", hash = "sha256:9b2cbc7f1a640289430e13d2a56f02f867a1da0190f2f99d8968c2f74da0e515"},
@@ -1297,13 +1297,13 @@ test = ["coverage", "pytest", "pytest-cov"]
 
 [[package]]
 name = "urllib3"
-version = "2.2.1"
+version = "2.2.2"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "urllib3-2.2.1-py3-none-any.whl", hash = "sha256:450b20ec296a467077128bff42b73080516e71b56ff59a60a02bef2232c4fa9d"},
-    {file = "urllib3-2.2.1.tar.gz", hash = "sha256:d0570876c61ab9e520d776c38acbbb5b05a776d3f9ff98a5c8fd5162a444cf19"},
+    {file = "urllib3-2.2.2-py3-none-any.whl", hash = "sha256:a448b2f64d686155468037e1ace9f2d2199776e17f0a46610480d311f73e3472"},
+    {file = "urllib3-2.2.2.tar.gz", hash = "sha256:dd505485549a7a552833da5e6063639d0d177c04f23bc3864e41e5dc5f612168"},
 ]
 
 [package.extras]
@@ -1342,10 +1342,9 @@ doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linke
 test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-itertools", "pytest (>=6,!=8.1.*)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy", "pytest-ruff (>=0.2.1)"]
 
 [extras]
-cpu = ["onnxruntime"]
 gpu = ["onnxruntime-gpu"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.13"
-content-hash = "b536a2b60a859b3507e1f55283041e1d89056a65113c5794656f9075ebe1b0b0"
+content-hash = "5103ab1957ed8b71be0c46d915081bab74e7644684f0cf27f52d63dec2e6db20"
