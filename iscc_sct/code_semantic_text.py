@@ -216,7 +216,7 @@ def model():
     available_onnx_providers = rt.get_available_providers()
     log.debug(f"Available ONNX providers {', '.join(available_onnx_providers)}")
     selected_onnx_providers = ["CPUExecutionProvider"]
-    if "CUDAExecutionProvider" in available_onnx_providers:
+    if "CUDAExecutionProvider" in available_onnx_providers:  # pragma: no cover
         selected_onnx_providers.insert(0, "CUDAExecutionProvider")
     log.debug(f"Using ONNX providers {', '.join(selected_onnx_providers)}")
     so = rt.SessionOptions()
