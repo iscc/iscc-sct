@@ -31,7 +31,7 @@ be matched based on lexical similarity.
 
 
 def test_version():
-    assert sct.__version__ == "0.1.1"
+    assert sct.__version__ == "0.1.2"
 
 
 def test_code_text_semantic_default():
