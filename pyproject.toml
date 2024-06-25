@@ -55,7 +55,9 @@ blake3 = "*"
 platformdirs = "*"
 tokenizers = "*"
 pydantic-settings = "*"
+charset-normalizer = "*"
 numpy = "<2.0.0"
+
 
 [tool.poetry.extras]
 gpu = ["onnxruntime-gpu"]
