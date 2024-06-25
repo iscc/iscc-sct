@@ -7,7 +7,8 @@
 (*International Standard Content Code*). Semantic Text-Codes are designed to capture and represent the language
 agnostic semantic content of text for improved similarity detection.
 
-> \[!CAUTION\] This is an early proof of concept. All releases with release numbers below v1.0.0 may break backward
+> [!CAUTION]
+> This is an early proof of concept. All releases with release numbers below v1.0.0 may break backward
 > compatibility and produce incompatible Semantic Text-Codes.
 
 ## What is ISCC Semantic Text-Code
