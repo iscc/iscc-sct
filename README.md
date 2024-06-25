@@ -113,6 +113,11 @@ poetry install
 Contributions are welcome! If you have suggestions for improvements or bug fixes, please open an issue or pull request.
 For major changes, please open an issue first to discuss what you would like to change.
 
+## Acknowledgements
+
+- Text Chunking by: [semantic-text-splitter](https://github.com/benbrandt/text-splitter)
+- Text Embedding by: [Sentence-Transformer](https://www.sbert.net/docs/sentence_transformer/pretrained_models.html#original-models)
+
 ## License
 
 This project is licensed under the CC-BY-NC-SA-4.0 International License.
