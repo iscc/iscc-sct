@@ -1,14 +1,11 @@
 # ISCC - Semantic Text-Code
 
-[![Version](https://img.shields.io/pypi/v/iscc-sct.svg)](https://pypi.python.org/pypi/iscc-sct/)
-[![Downloads](https://pepy.tech/badge/iscc-sct)](https://pepy.tech/project/iscc-sct)
-
 `iscc-sct` is a **proof of concept implementation** of a semantic Text-Code for the [ISCC](https://core.iscc.codes)
 (*International Standard Content Code*). Semantic Text-Codes are designed to capture and represent the language
 agnostic semantic content of text for improved similarity detection.
 
 > [!CAUTION]
-> This is an early proof of concept. All releases with release numbers below v1.0.0 may break backward
+> **This is an early proof of concept.** All releases with release numbers below v1.0.0 may break backward
 > compatibility and produce incompatible Semantic Text-Codes.
 
 ## What is ISCC Semantic Text-Code
@@ -43,22 +40,41 @@ pip install iscc-sct[gpu]
 
 ## Usage
 
-To generate a Semantic Text-Code use the `code_text_semantic` function. You can specify the bit length of the code to
+To generate a Semantic Text-Code use the `create` function.
+
+```python-repl
+>>> import iscc_sct as sci
+>>> text = "This is some sample text. It can be a longer document or even an entire book."
+>>> sci.create(text, bits=64)
+{
+  "iscc": "ISCC:CAAVZHGOJH3XUFRF",
+  "characters": 89
+}
+```
+
+You can also generate granular (per chunk) feature outputs:
+
+```python-repl
+>>> import iscc_sct as sci
+>>> text = "This is some sample text. It can be a longer document or even an entire book."
+>>> sci.create(text, granular=True)
+{
+  "iscc": "ISCC:CAAV3GG6JH3XEVRN",
+  "characters": 77,
+  "features": [
+    {
+      "feature": "LWMN4SPXOJLC2",
+      "offset": 0,
+      "size": 77,
+      "text": "This is some sample text. It can be a longer document or even an entire book."
+    }
+  ]
+}
+```
+
 control the level of granularity in the semantic representation.
+For mo
 
-```python
-import iscc_sct as sci
-
-# Generate a 64-bit ISCC Semantic Text-Code for an image file
-text = "This is some sample text. It can be a longer document or even an entire book."
-semantic_code = sci.gen_text_code_semantic(text, bits=64)
-
-print(semantic_code)
-```
-
-```shell
-{'iscc': 'ISCC:CAAV3GG6JH3XEVRN', 'characters': 77}
-```
 
 ## How It Works
 
@@ -75,7 +91,7 @@ the broader ISCC ecosystem. For development, you'll need to install the project 
 ```shell
 git clone https://github.com/iscc/iscc-sct.git
 cd iscc-sct
-poetry install -E cpu
+poetry install
 ```
 
 ## Contributing

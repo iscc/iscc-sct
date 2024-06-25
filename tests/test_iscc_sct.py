@@ -59,10 +59,10 @@ def test_code_text_semantic_embedding():
 def test_code_text_semantic_features():
     fp = HERE / "en.txt"
     result = sct.code_text_semantic(fp, features=True)
-    assert result['iscc'] == "ISCC:CAA636IXQD736IGJ"
-    assert result['characters'] == 12076
-    assert result['features'][:3] == ["44ERPEPRGHRFC", "N5SRLQPXG7BAS", "VL4VLULOW6Z52"]
-    assert result['features'][-3:] == ["HTNRP5PBTFAEW", "PRMTOM3LXFBES", "JT5ZPM3LCG3E6"]
+    assert result["iscc"] == "ISCC:CAA636IXQD736IGJ"
+    assert result["characters"] == 12076
+    assert result["features"][:3] == ["44ERPEPRGHRFC", "N5SRLQPXG7BAS", "VL4VLULOW6Z52"]
+    assert result["features"][-3:] == ["HTNRP5PBTFAEW", "PRMTOM3LXFBES", "JT5ZPM3LCG3E6"]
 
 
 def test_code_text_semantic_offsets():

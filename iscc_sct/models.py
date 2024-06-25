@@ -1,17 +1,26 @@
+import json
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 
 __all__ = ["SctFeature", "SctMeta"]
 
 
-class SctFeature(BaseModel):
+class PrettyBaseModel(BaseModel):
+    def __repr__(self):
+        return self.pretty_repr()
+
+    def pretty_repr(self):
+        return self.model_dump_json(exclude_unset=True, exclude_none=True, indent=2)
+
+
+class SctFeature(PrettyBaseModel):
     feature: Optional[str] = None
     offset: Optional[int] = None
     size: Optional[int] = None
     text: Optional[str] = None
 
 
-class SctMeta(BaseModel):
+class SctMeta(PrettyBaseModel):
     iscc: str
     characters: Optional[int] = None
     embedding: Optional[List[float]] = None
