@@ -18,8 +18,3 @@ max_line_length = 119
 # YAML files
 [*.{yml,yaml}]
 indent_size = 2
-
-
-# Windows scripts
-[*.{bat,cmd,ps1}]
-end_of_line = crlf
