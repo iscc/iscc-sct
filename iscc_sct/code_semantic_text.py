@@ -241,17 +241,22 @@ def tokenize_chunks(chunks):
     return {"input_ids": input_ids, "attention_mask": attention_mask, "token_type_ids": type_ids}
 
 
-def embed_chunks(chunks):
-    # type: (list[str]) -> NDArray[np.float32]
+def embed_chunks(chunks, batch_size=100):
     """
     Embed text chunks and return vector embeddings.
 
     :param chunks: Text chunks to embed.
+    :param batch_size: Number of chunks to process in each batch.
     :return: An array of embeddings for each chunk.
     """
-    tokens = tokenize_chunks(chunks)
-    token_embeddings = embed_tokens(tokens)
-    return attention_pooling(token_embeddings, tokens["attention_mask"])
+    embeddings = []
+    for start_idx in range(0, len(chunks), batch_size):
+        batch_chunks = chunks[start_idx : start_idx + batch_size]
+        tokens = tokenize_chunks(batch_chunks)
+        token_embeddings = embed_tokens(tokens)
+        batch_embeddings = attention_pooling(token_embeddings, tokens["attention_mask"])
+        embeddings.append(batch_embeddings)
+    return np.vstack(embeddings)
 
 
 def embed_tokens(tokens):
