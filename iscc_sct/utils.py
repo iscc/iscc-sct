@@ -20,6 +20,7 @@ __all__ = [
     "get_model",
     "encode_base32",
     "hamming_distance",
+    "MODEL_PATH",
 ]
 
 

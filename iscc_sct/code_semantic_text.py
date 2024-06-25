@@ -20,6 +20,7 @@ The ISCC Text-Code Semantic is a content-based compact binary code generated fro
 """
 
 from loguru import logger as log
+from onnxruntime.capi.onnxruntime_pybind11_state import NoSuchFile
 from semantic_text_splitter import TextSplitter
 from tokenizers import Tokenizer
 from pathlib import Path
@@ -211,8 +212,6 @@ def model():
 
     :return: An ONNX inference session.
     """
-    with sct.timer("ONNXMODEL aquisition time"):
-        model_path = sct.get_model()
     available_onnx_providers = rt.get_available_providers()
     log.debug(f"Available ONNX providers {', '.join(available_onnx_providers)}")
     selected_onnx_providers = ["CPUExecutionProvider"]
@@ -221,9 +220,13 @@ def model():
     log.debug(f"Using ONNX providers {', '.join(selected_onnx_providers)}")
     so = rt.SessionOptions()
     so.graph_optimization_level = rt.GraphOptimizationLevel.ORT_ENABLE_ALL
-    with sct.timer("ONNXMODEL load time"):
-        # TODO assume model exists - and download onnx on failure - add environment info/check command
-        return rt.InferenceSession(model_path, sess_options=so, providers=selected_onnx_providers)
+    try:
+        with sct.timer("ONNXMODEL load time"):
+            return rt.InferenceSession(sct.MODEL_PATH, sess_options=so, providers=selected_onnx_providers)
+    except NoSuchFile:  # pragma: no cover
+        with sct.timer("ONNXMODEL aquisition/load time"):
+            model_path = sct.get_model()
+            return rt.InferenceSession(model_path, sess_options=so, providers=selected_onnx_providers)
 
 
 def tokenize_chunks(chunks):

@@ -13,7 +13,6 @@ load_dotenv()
 
 
 class SctOptions(BaseSettings):
-    # TODO: This affects the ISCC-UNIT and the granular IDs - Should we have separate options?
     bits: int = Field(
         64,
         description="ISCC_SCT_BITS - Default bit-length of generated Semantic Text-Code in bits",

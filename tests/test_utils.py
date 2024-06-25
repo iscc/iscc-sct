@@ -3,7 +3,7 @@ from iscc_sct import utils
 from blake3 import blake3
 
 
-def test_check_integrity_failure(tmp_path):
+def test_check_integrity(tmp_path):
     # Create a temporary file with known content
     file_path = tmp_path / "testfile.txt"
     content = "This is a test file."
@@ -14,6 +14,8 @@ def test_check_integrity_failure(tmp_path):
     hasher = blake3()
     hasher.update(content.encode())
     correct_checksum = hasher.hexdigest()
+    assert utils.check_integrity(file_path, correct_checksum) == file_path
+
     wrong_checksum = correct_checksum + "wrong"  # Deliberately incorrect checksum
 
     # Test the function with the wrong checksum
