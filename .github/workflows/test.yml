@@ -20,6 +20,18 @@ jobs:
         with:
           poetry-version: 1.7.1
 
+      - name: Get model cache directory
+        id: model-cache-dir
+        run: echo "dir=$(python -c "from platformdirs import PlatformDirs; print(PlatformDirs(appname='iscc-sct', appauthor='iscc').user_data_dir)")" >> $GITHUB_OUTPUT
+
+      - name: Cache ONNX model
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.model-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-onnx-model-${{ hashFiles('**/utils.py') }}
+          restore-keys: |
+            ${{ runner.os }}-onnx-model-
+
       - name: Install Dependencies
         run: poetry install
 
