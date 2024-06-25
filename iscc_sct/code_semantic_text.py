@@ -129,7 +129,7 @@ def gen_text_code_semantic(text, **options):
     # Chunk embedding
     embeddings = embed_chunks(chunks)
     if opts.features:
-        feature_digests = [binarize(vec)[: opts.bits // 8] for vec in embeddings]
+        feature_digests = [binarize(vec)[: opts.bits_granular // 8] for vec in embeddings]
         result["features"] = [sct.encode_base32(digest) for digest in feature_digests]
 
     # Create global document embedding

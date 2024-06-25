@@ -42,7 +42,7 @@ def main():
                     text = str(charset_match)
                 sct_meta = create(text, granular=args.granular, bits=args.bits)
                 if args.granular:
-                    print(sct_meta.model_dump_json(indent=2, exclude_none=True))
+                    print(repr(sct_meta))
                 else:
                     print(sct_meta.iscc)
 

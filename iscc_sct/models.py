@@ -9,7 +9,7 @@ class PrettyBaseModel(BaseModel):
         return self.pretty_repr()
 
     def pretty_repr(self):
-        return self.model_dump_json(exclude_unset=True, exclude_none=True, indent=2)
+        return self.model_dump_json(indent=2, exclude_unset=True, exclude_none=True)
 
 
 class SctFeature(PrettyBaseModel):

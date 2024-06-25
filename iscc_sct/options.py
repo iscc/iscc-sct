@@ -16,7 +16,15 @@ class SctOptions(BaseSettings):
     # TODO: This affects the ISCC-UNIT and the granular IDs - Should we have separate options?
     bits: int = Field(
         64,
-        description="ISCC_SCT_BITS - Default length of generated Semantic Text-Code in bits",
+        description="ISCC_SCT_BITS - Default bit-length of generated Semantic Text-Code in bits",
+        ge=32,
+        le=256,
+        multiple_of=32,
+    )
+
+    bits_granular: int = Field(
+        64,
+        description="ISCC_SCT_BITS_GRANULAR - Default bit-length of granular features",
         ge=32,
         le=256,
         multiple_of=32,
