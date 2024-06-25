@@ -20,6 +20,19 @@ jobs:
         with:
           poetry-version: 1.8.3
 
+      - name: Get Poetry cache directory
+        id: poetry-cache
+        run: |
+          echo "dir=$(poetry config cache-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.poetry-cache.outputs.dir }}
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
       - name: Get model cache directory
         id: model-cache-dir
         shell: python
