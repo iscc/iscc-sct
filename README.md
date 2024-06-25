@@ -112,3 +112,7 @@ poetry install
 
 Contributions are welcome! If you have suggestions for improvements or bug fixes, please open an issue or pull request.
 For major changes, please open an issue first to discuss what you would like to change.
+
+## License
+
+This project is licensed under the CC-BY-NC-SA-4.0 International License.
