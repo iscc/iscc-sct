@@ -22,7 +22,14 @@ jobs:
 
       - name: Get model cache directory
         id: model-cache-dir
-        run: echo "dir=$(python -c "from platformdirs import PlatformDirs; print(PlatformDirs(appname='iscc-sct', appauthor='iscc').user_data_dir)")" >> $GITHUB_OUTPUT
+        shell: python
+        run: |
+          from platformdirs import PlatformDirs
+          import os
+          cache_dir = PlatformDirs(appname='iscc-sct', appauthor='iscc').user_data_dir
+          print(f"dir={cache_dir}")
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+              print(f"dir={cache_dir}", file=fh)
 
       - name: Cache ONNX model
         uses: actions/cache@v4
