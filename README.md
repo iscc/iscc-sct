@@ -1,38 +1,46 @@
 # ISCC - Semantic Text-Code
 
+[![Tests](https://github.com/iscc/iscc-sct/actions/workflows/tests.yml/badge.svg)](https://github.com/iscc/iscc-core/actions/workflows/tests.yml)
+[![Version](https://img.shields.io/pypi/v/iscc-sct.svg)](https://pypi.python.org/pypi/iscc-sct/)
+[![Downloads](https://pepy.tech/badge/iscc-sct)](https://pepy.tech/project/iscc-sct)
+
 `iscc-sct` is a **proof of concept implementation** of a semantic Text-Code for the [ISCC](https://core.iscc.codes)
 (*International Standard Content Code*). Semantic Text-Codes are designed to capture and represent the language
 agnostic semantic content of text for improved similarity detection.
 
 > [!CAUTION]
-> **This is an early proof of concept.** All releases with release numbers below v1.0.0 may break backward
+> **This is an early proof of concept.** All releases with version numbers below v1.0.0 may break backward
 > compatibility and produce incompatible Semantic Text-Codes.
 
-## What is ISCC Semantic Text-Code
+## What is ISCC Semantic Text-Code?
 
-The ISCC framework already comes with a Text-Code that is based on lexical similarity and can match near duplicates.
-The ISCC Semantic Text-Code is planned as a new additional ISCC-UNIT focused on capturing a more abstract and broad
-semantic similarity. As such the Semantic Text-Code is engineered to be robust against a broader range of variations
-and translations of text that cannot be matched based on lexical similarity.
+The ISCC framework already includes a Text-Code based on lexical similarity for near-duplicate matching.
+The ISCC Semantic Text-Code is a planned additional ISCC-UNIT focused on capturing a more abstract and broader
+semantic similarity. It is engineered to be robust against a wide range of variations and, most remarkably,
+translations of text that cannot be matched based on lexical similarity alone.
 
-## Features
+### Translation Matching
 
-- **Semantic Similarity**: Leverages deep learning models to generate codes that reflect the semantic content of text.
-- **Bit-Length Flexibility**: Supports generating codes of various bit lengths (up to 256 bits), allowing for
-  adjustable granularity in similarity detection.
-- **ISCC Compatible**: Generates codes that are fully compatible with the ISCC specification, facilitating integration
-  with existing ISCC-based systems.
+One of the most interesting aspects of the Semantic Text-Code is its ability to generate **(near)-identical codes
+for translations of the same text**. This means that the same content, expressed in different languages, can be
+identified and linked, opening up new possibilities for cross-lingual content identification and similarity detection.
+
+## Key Features
+
+- **Semantic Similarity**: Utilizes deep learning models to generate codes that reflect the semantic essence of text.
+- **Translation Matching**: Creates nearly identical codes for text translations, enabling cross-lingual content identification.
+- **Bit-Length Flexibility**: Supports generating codes of various bit lengths (up to 256 bits), allowing for adjustable granularity in similarity detection.
+- **ISCC Compatible**: Generates codes fully compatible with the ISCC specification, facilitating seamless integration with existing ISCC-based systems.
 
 ## Installation
 
-Before you can install `iscc-sct`, you need to have Python 3.8 or newer installed on your system. Install the library
-as follows:
+Ensure you have Python 3.9 or newer installed on your system. Install the library using:
 
 ```bash
 pip install iscc-sct
 ```
 
-If your system has GPU CUDA support you can improve perfomance by installing with GPU support:
+For systems with GPU CUDA support, enhance performance by installing with:
 
 ```bash
 pip install iscc-sct[gpu]
@@ -40,7 +48,7 @@ pip install iscc-sct[gpu]
 
 ## Usage
 
-To generate a Semantic Text-Code use the `create` function.
+Generate a Semantic Text-Code using the create function:
 
 ```python-repl
 >>> import iscc_sct as sci
@@ -52,7 +60,7 @@ To generate a Semantic Text-Code use the `create` function.
 }
 ```
 
-You can also generate granular (per chunk) feature outputs:
+For granular (per chunk) feature outputs:
 
 ```python-repl
 >>> import iscc_sct as sci
@@ -72,7 +80,7 @@ You can also generate granular (per chunk) feature outputs:
 }
 ```
 
-Installation also creates a simple `sct` command line tool in you python bin/Scripts folder:
+The installation also provides a sct command-line tool:
 
 ```shell
 sct --help
@@ -92,15 +100,20 @@ options:
 
 ## How It Works
 
-`iscc-sct` splits the text into chunks and uses a pre-trained deep learning model for text embedding. The model
-generates a feature vector that captures the essential characteristics of the chunks. These vectors are aggregated and
-then binarized to produce a Semantic Text-Code that is robust to variations/translations of the text.
+`iscc-sct` employs the following process:
 
-## Development
+1. Splits the text into semantically coherent chunks.
+2. Uses a pre-trained deep learning model for text embedding.
+3. Generates feature vectors capturing essential characteristics of the chunks.
+4. Aggregates these vectors and binarizes them to produce a Semantic Text-Code.
 
-This is a proof of concept and welcomes contributions to enhance its capabilities, efficiency, and compatibility with
-the broader ISCC ecosystem. For development, you'll need to install the project in development mode using
-[Poetry](https://python-poetry.org).
+This process ensures robustness to variations and translations, enabling cross-lingual matching.
+
+
+## Development and Contributing
+
+We welcome contributions to enhance the capabilities, efficiency, and compatibility of this proof of concept with the
+broader ISCC ecosystem. For development, install the project in development mode using [Poetry](https://python-poetry.org):
 
 ```shell
 git clone https://github.com/iscc/iscc-sct.git
@@ -108,15 +121,14 @@ cd iscc-sct
 poetry install
 ```
 
-## Contributing
+If you have suggestions for improvements or bug fixes, please open an issue or pull request. For major changes, please
+open an issue first to discuss your ideas.
 
-Contributions are welcome! If you have suggestions for improvements or bug fixes, please open an issue or pull request.
-For major changes, please open an issue first to discuss what you would like to change.
 
 ## Acknowledgements
 
-- Text Chunking by: [semantic-text-splitter](https://github.com/benbrandt/text-splitter)
-- Text Embedding by: [Sentence-Transformer](https://www.sbert.net/docs/sentence_transformer/pretrained_models.html#original-models)
+- Text Chunking: [semantic-text-splitter](https://github.com/benbrandt/text-splitter)
+- Text Embedding: [Sentence-Transformer](https://www.sbert.net/docs/sentence_transformer/pretrained_models.html#original-models)
 
 ## License
 
