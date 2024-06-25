@@ -7,7 +7,8 @@ license = "CC-BY-NC-SA-4.0"
 readme = "README.md"
 homepage = "https://iscc.codes"
 repository = "https://github.com/iscc/iscc-sct"
-keywords=["iscc", "semantic", "hash", "text", "similarity"]
+documentation = "https://github.com/iscc/iscc-sct"
+keywords=["iscc", "text similarity", "cross lingual", "semantic similarity"]
 classifiers=[
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -15,7 +16,6 @@ classifiers=[
     "License :: OSI Approved :: Apache Software License",
     "Natural Language :: English",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -35,6 +35,12 @@ classifiers=[
     "Topic :: System :: Clustering",
     "Topic :: System :: Distributed Computing",
 ]
+
+[tool.poetry.urls]
+"Changelog" = "https://github.com/iscc/iscc-sct/blob/main/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/iscc/iscc-sct/issues"
+"Twitter" = "https://twitter.com/iscc_foundation"
+"Donate" = "https://iscc.foundation/support"
 
 [tool.poetry.scripts]
 sct = 'iscc_sct.cli:main'
