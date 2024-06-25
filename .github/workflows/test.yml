@@ -25,7 +25,7 @@ jobs:
         run: echo "dir=$(python -c "from platformdirs import PlatformDirs; print(PlatformDirs(appname='iscc-sct', appauthor='iscc').user_data_dir)")" >> $GITHUB_OUTPUT
 
       - name: Cache ONNX model
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.model-cache-dir.outputs.dir }}
           key: ${{ runner.os }}-onnx-model-${{ hashFiles('**/utils.py') }}
@@ -37,9 +37,3 @@ jobs:
 
       - name: Run Tests
         run: poetry run pytest --cov=iscc_sci --cov-report=xml -v tests
-
-      - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
