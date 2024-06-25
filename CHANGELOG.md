@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.1.1] - Unreleased
+## [0.1.1] - 2024-06-25
 - Handle text decoding errors gracefully
 - Handle feature bit-lengths independently
 - Improve model load time
