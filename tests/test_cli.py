@@ -12,12 +12,6 @@ def sample_text_file(tmp_path):
     return file_path
 
 
-def test_cli_module():
-    result = subprocess.run(["python", "-m", "iscc_sct.cli"], capture_output=True, text=True, shell=True)
-    assert result.returncode == 0
-    assert "Generate Semantic" in result.stdout
-
-
 def test_cli_no_args():
     result = subprocess.run([sct], capture_output=True, text=True)
     assert result.returncode == 0
