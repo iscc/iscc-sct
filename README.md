@@ -51,23 +51,23 @@ pip install iscc-sct[gpu]
 Generate a Semantic Text-Code using the create function:
 
 ```python-repl
->>> import iscc_sct as sci
+>>> import iscc_sct as sct
 >>> text = "This is some sample text. It can be a longer document or even an entire book."
->>> sci.create(text)
+>>> sct.create(text, bits=256)
 {
-  "iscc": "ISCC:CAAVZHGOJH3XUFRF",
-  "characters": 89
+  "iscc": "ISCC:CADV3GG6JH3XEVRNSVYGCLJ7AAV3BOT5J7EHEZKPFXEGRJ2CTWACGZI",
+  "characters": 77
 }
 ```
 
 For granular (per chunk) feature outputs:
 
 ```python-repl
->>> import iscc_sct as sci
+>>> import iscc_sct as sct
 >>> text = "This is some sample text. It can be a longer document or even an entire book."
->>> sci.create(text, granular=True)
+>>> sct.create(text, bits=256, granular=True)
 {
-  "iscc": "ISCC:CAAV3GG6JH3XEVRN",
+  "iscc": "ISCC:CADV3GG6JH3XEVRNSVYGCLJ7AAV3BOT5J7EHEZKPFXEGRJ2CTWACGZI",
   "characters": 77,
   "features": [
     {
