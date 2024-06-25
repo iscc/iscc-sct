@@ -29,7 +29,7 @@ Before you can install `iscc-sct`, you need to have Python 3.8 or newer installe
 as follows:
 
 ```bash
-pip install iscc-sct[cpu]
+pip install iscc-sct
 ```
 
 If your system has GPU CUDA support you can improve perfomance by installing with GPU support:
@@ -45,7 +45,7 @@ To generate a Semantic Text-Code use the `create` function.
 ```python-repl
 >>> import iscc_sct as sci
 >>> text = "This is some sample text. It can be a longer document or even an entire book."
->>> sci.create(text, bits=64)
+>>> sci.create(text)
 {
   "iscc": "ISCC:CAAVZHGOJH3XUFRF",
   "characters": 89
@@ -72,9 +72,23 @@ You can also generate granular (per chunk) feature outputs:
 }
 ```
 
-control the level of granularity in the semantic representation.
-For mo
+Installation also creates a simple `sct` command line tool in you python bin/Scripts folder:
 
+```shell
+sct --help
+usage: sct [-h] [-b BITS] [-g] [-d] [path]
+
+Generate Semantic Text-Codes for text files.
+
+positional arguments:
+  path                  Path to text files (supports glob patterns).
+
+options:
+  -h, --help            show this help message and exit
+  -b BITS, --bits BITS  Bit-Length of Code (default 256)
+  -g, --granular        Activate granular processing.
+  -d, --debug           Show debugging messages.
+````
 
 ## How It Works
 
