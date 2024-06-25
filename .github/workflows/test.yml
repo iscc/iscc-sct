@@ -14,24 +14,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.0.0
+      - uses: Gr1N/setup-poetry@v8
         with:
-          poetry-version: 1.8.3
-
-      - name: Get Poetry cache directory
-        id: poetry-cache
-        run: |
-          echo "dir=$(poetry config cache-dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache Poetry dependencies
-        uses: actions/cache@v4
+          poetry-version: "1.8.3"
+      - uses: actions/cache@v4
         with:
-          path: ${{ steps.poetry-cache.outputs.dir }}
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-poetry-
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
 
       - name: Get model cache directory
         id: model-cache-dir
