@@ -1,5 +1,7 @@
 # Changelog
 
+## [0.1.2] - Unreleased
+
 ## [0.1.1] - 2024-06-25
 - Handle text decoding errors gracefully
 - Handle feature bit-lengths independently

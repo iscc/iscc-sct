@@ -14,23 +14,26 @@ agnostic semantic content of text for improved similarity detection.
 
 ## What is ISCC Semantic Text-Code?
 
-The ISCC framework already includes a Text-Code based on lexical similarity for near-duplicate matching.
-The ISCC Semantic Text-Code is a planned additional ISCC-UNIT focused on capturing a more abstract and broader
-semantic similarity. It is engineered to be robust against a wide range of variations and, most remarkably,
-translations of text that cannot be matched based on lexical similarity alone.
+The ISCC framework already includes a Text-Code based on lexical similarity for near-duplicate matching. The ISCC
+Semantic Text-Code is a planned additional ISCC-UNIT focused on capturing a more abstract and broader semantic
+similarity. It is engineered to be robust against a wide range of variations and, most remarkably, translations of text
+that cannot be matched based on lexical similarity alone.
 
 ### Translation Matching
 
-One of the most interesting aspects of the Semantic Text-Code is its ability to generate **(near)-identical codes
-for translations of the same text**. This means that the same content, expressed in different languages, can be
-identified and linked, opening up new possibilities for cross-lingual content identification and similarity detection.
+One of the most interesting aspects of the Semantic Text-Code is its ability to generate **(near)-identical codes for
+translations of the same text**. This means that the same content, expressed in different languages, can be identified
+and linked, opening up new possibilities for cross-lingual content identification and similarity detection.
 
 ## Key Features
 
 - **Semantic Similarity**: Utilizes deep learning models to generate codes that reflect the semantic essence of text.
-- **Translation Matching**: Creates nearly identical codes for text translations, enabling cross-lingual content identification.
-- **Bit-Length Flexibility**: Supports generating codes of various bit lengths (up to 256 bits), allowing for adjustable granularity in similarity detection.
-- **ISCC Compatible**: Generates codes fully compatible with the ISCC specification, facilitating seamless integration with existing ISCC-based systems.
+- **Translation Matching**: Creates nearly identical codes for text translations, enabling cross-lingual content
+  identification.
+- **Bit-Length Flexibility**: Supports generating codes of various bit lengths (up to 256 bits), allowing for
+  adjustable granularity in similarity detection.
+- **ISCC Compatible**: Generates codes fully compatible with the ISCC specification, facilitating seamless integration
+  with existing ISCC-based systems.
 
 ## Installation
 
@@ -60,7 +63,7 @@ Generate a Semantic Text-Code using the create function:
 }
 ```
 
-For granular (per chunk) feature outputs:
+poet For granular (per chunk) feature outputs:
 
 ```python-repl
 >>> import iscc_sct as sct
@@ -96,24 +99,24 @@ options:
   -b BITS, --bits BITS  Bit-Length of Code (default 256)
   -g, --granular        Activate granular processing.
   -d, --debug           Show debugging messages.
-````
+```
 
 ## How It Works
 
 `iscc-sct` employs the following process:
 
 1. Splits the text into semantically coherent chunks.
-2. Uses a pre-trained deep learning model for text embedding.
-3. Generates feature vectors capturing essential characteristics of the chunks.
-4. Aggregates these vectors and binarizes them to produce a Semantic Text-Code.
+1. Uses a pre-trained deep learning model for text embedding.
+1. Generates feature vectors capturing essential characteristics of the chunks.
+1. Aggregates these vectors and binarizes them to produce a Semantic Text-Code.
 
 This process ensures robustness to variations and translations, enabling cross-lingual matching.
-
 
 ## Development and Contributing
 
 We welcome contributions to enhance the capabilities, efficiency, and compatibility of this proof of concept with the
-broader ISCC ecosystem. For development, install the project in development mode using [Poetry](https://python-poetry.org):
+broader ISCC ecosystem. For development, install the project in development mode using
+[Poetry](https://python-poetry.org):
 
 ```shell
 git clone https://github.com/iscc/iscc-sct.git
@@ -124,11 +127,11 @@ poetry install
 If you have suggestions for improvements or bug fixes, please open an issue or pull request. For major changes, please
 open an issue first to discuss your ideas.
 
-
 ## Acknowledgements
 
 - Text Chunking: [semantic-text-splitter](https://github.com/benbrandt/text-splitter)
-- Text Embedding: [Sentence-Transformer](https://www.sbert.net/docs/sentence_transformer/pretrained_models.html#original-models)
+- Text Embedding:
+  [Sentence-Transformer](https://www.sbert.net/docs/sentence_transformer/pretrained_models.html#original-models)
 
 ## License
 
