@@ -128,7 +128,8 @@ def gen_text_code_semantic(text, **options):
         result["sizes"] = [len(chunk) for chunk in chunks]
 
     # Chunk embedding
-    embeddings = embed_chunks(chunks)
+    with sct.timer("EMBEDDING time"):
+        embeddings = embed_chunks(chunks)
     if opts.features:
         feature_digests = [binarize(vec)[: opts.bits_granular // 8] for vec in embeddings]
         result["features"] = [sct.encode_base32(digest) for digest in feature_digests]
