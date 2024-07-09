@@ -1,7 +1,6 @@
 from html import escape
 import iscc_sct as ict
 
-
 def generate_html(fingerprint_data):
     chunks = fingerprint_data["features"]
 
@@ -26,7 +25,7 @@ def generate_html(fingerprint_data):
             <div class="text-sm mb-4">
                 <span class="font-semibold">Characters:</span> {fingerprint_data['characters']}
             </div>
-            <div class="relative text-base leading-relaxed">
+            <div class="relative text-base leading-relaxed whitespace-pre-wrap">
     """
 
     chunk_color = "bg-yellow-100"
@@ -38,16 +37,20 @@ def generate_html(fingerprint_data):
         end = chunk["offset"] + chunk["size"]
 
         if start < end:
+            # Function to escape text and preserve line breaks
+            def escape_and_preserve_breaks(text):
+                return escape(text).replace('\n', '<br>')
+
             # Non-overlapping part
-            html_content += f'<span class="{overlap_color}">{escape(chunk["text"][current_pos - chunk["offset"]:start - chunk["offset"]])}'
+            html_content += f'<span class="{overlap_color}">{escape_and_preserve_breaks(chunk["text"][current_pos - chunk["offset"]:start - chunk["offset"]])}'
 
             # Overlapping part (if any)
             if i < len(chunks) - 1 and end > chunks[i + 1]["offset"]:
                 overlap_end = chunks[i + 1]["offset"]
-                html_content += f'<span class="{chunk_color}">{escape(chunk["text"][start - chunk["offset"]:overlap_end - chunk["offset"]])}</span>'
-                html_content += escape(chunk["text"][overlap_end - chunk["offset"] :])
+                html_content += f'<span class="{chunk_color}">{escape_and_preserve_breaks(chunk["text"][start - chunk["offset"]:overlap_end - chunk["offset"]])}</span>'
+                html_content += escape_and_preserve_breaks(chunk["text"][overlap_end - chunk["offset"] :])
             else:
-                html_content += escape(chunk["text"][start - chunk["offset"] :])
+                html_content += escape_and_preserve_breaks(chunk["text"][start - chunk["offset"] :])
 
             # Fingerprint badge
             html_content += f'<span class="inline-block bg-gray-800 text-white text-xs px-2 py-1 rounded ml-1">{chunk["feature"]}</span>'
@@ -64,9 +67,8 @@ def generate_html(fingerprint_data):
     """
     return html_content
 
-
 def main():
-    with open("en.txt", "rb") as f:
+    with open("../README.md", "rb") as f:
         data = f.read()
 
     text = data.decode("utf-8")
@@ -78,9 +80,8 @@ def main():
     html_content = generate_html(result.model_dump())
 
     # Write the HTML content to a file
-    with open("fingerprint_visualization_en.html", "wt", encoding="utf-8") as f:
+    with open("readme.html", "wt", encoding="utf-8") as f:
         f.write(html_content)
-
 
 if __name__ == "__main__":
     main()
