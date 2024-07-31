@@ -1,6 +1,7 @@
 from html import escape
 import iscc_sct as ict
 
+
 def generate_html(fingerprint_data):
     chunks = fingerprint_data["features"]
 
@@ -39,7 +40,7 @@ def generate_html(fingerprint_data):
         if start < end:
             # Function to escape text and preserve line breaks
             def escape_and_preserve_breaks(text):
-                return escape(text).replace('\n', '<br>')
+                return escape(text).replace("\n", "<br>")
 
             # Non-overlapping part
             html_content += f'<span class="{overlap_color}">{escape_and_preserve_breaks(chunk["text"][current_pos - chunk["offset"]:start - chunk["offset"]])}'
@@ -67,6 +68,7 @@ def generate_html(fingerprint_data):
     """
     return html_content
 
+
 def main():
     with open("../README.md", "rb") as f:
         data = f.read()
@@ -82,6 +84,7 @@ def main():
     # Write the HTML content to a file
     with open("readme.html", "wt", encoding="utf-8") as f:
         f.write(html_content)
+
 
 if __name__ == "__main__":
     main()
