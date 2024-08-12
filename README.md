@@ -61,6 +61,7 @@ Generate a Semantic Text-Code using the create function:
   "iscc": "ISCC:CADV3GG6JH3XEVRNSVYGCLJ7AAV3BOT5J7EHEZKPFXEGRJ2CTWACGZI",
   "characters": 77
 }
+
 ```
 
 poet For granular (per chunk) feature outputs:
@@ -74,13 +75,14 @@ poet For granular (per chunk) feature outputs:
   "characters": 77,
   "features": [
     {
-      "feature": "LWMN4SPXOJLC2",
+      "feature": "XZjeSfdyVi0",
       "offset": 0,
       "size": 77,
       "text": "This is some sample text. It can be a longer document or even an entire book."
     }
   ]
 }
+
 ```
 
 The installation also provides a sct command-line tool:
