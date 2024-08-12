@@ -17,7 +17,7 @@ def test_create_granular():
         iscc="ISCC:CAA7GZ4J3DI3XY2R",
         characters=11,
         embedding=None,
-        features=[sct.SctFeature(feature="6NTYTWGRXPRVC", offset=0, size=11, text="Hello World")],
+        features=[sct.SctFeature(feature="82eJ2NG741E", offset=0, size=11, text="Hello World")],
     )
 
 

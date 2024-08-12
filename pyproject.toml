@@ -57,6 +57,7 @@ tokenizers = "*"
 pydantic-settings = "*"
 charset-normalizer = "*"
 numpy = "<2.0.0"
+pybase64 = "^1.4.0"
 
 
 [tool.poetry.extras]

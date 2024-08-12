@@ -1,5 +1,5 @@
 from base64 import b32encode
-
+from pybase64 import urlsafe_b64encode
 from loguru import logger as log
 import os
 import time
@@ -19,6 +19,7 @@ __all__ = [
     "timer",
     "get_model",
     "encode_base32",
+    "encode_base64",
     "hamming_distance",
     "MODEL_PATH",
 ]
@@ -91,6 +92,15 @@ def encode_base32(data):
     :return: Base32 encoded str
     """
     return b32encode(data).decode("ascii").rstrip("=")
+
+
+def encode_base64(data):
+    # type: (bytes) -> str
+    """
+    Standard RFC4648 base64url encoding without padding.
+    """
+    code = urlsafe_b64encode(data).decode("ascii")
+    return code.rstrip("=")
 
 
 def hamming_distance(a, b):

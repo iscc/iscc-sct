@@ -54,7 +54,7 @@ def test_cli_generate_sct(sample_text_file):
 def test_cli_generate_sct_granular(sample_text_file):
     result = subprocess.run([sct, str(sample_text_file), "--granular"], capture_output=True, text=True)
     assert result.returncode == 0
-    assert "iscc" in result.stdout
+    assert "features" in result.stdout
 
 
 def test_cli_debug_mode(sample_text_file):

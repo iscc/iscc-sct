@@ -61,8 +61,8 @@ def test_code_text_semantic_features():
     result = sct.code_text_semantic(fp, features=True)
     assert result["iscc"] == "ISCC:CAA636IXQD736IGJ"
     assert result["characters"] == 12076
-    assert result["features"][:3] == ["44ERPEPRGHRFC", "N5SRLQPXG7BAS", "VL4VLULOW6Z52"]
-    assert result["features"][-3:] == ["HTNRP5PBTFAEW", "PRMTOM3LXFBES", "JT5ZPM3LCG3E6"]
+    assert result["features"][:3] == ["5wkXkfEx4lE", "b2UVwfc3wgk", "qvlV0W63s90"]
+    assert result["features"][-3:] == ["PNsX9eGZQEs", "fFk3M2u5Qkk", "TPuXs2sRtk8"]
 
 
 def test_code_text_semantic_offsets():
@@ -109,7 +109,7 @@ def test_gen_text_code_semantic_granular():
         == {
             "characters": 726,
             "iscc": "ISCC:CAARISHPJHEXQAYL",
-            "features": ["CVUO2TOJPABQW", "SQEMOSONOABQW"],
+            "features": ["FWjtTcl4Aws", "lAjHSc1wAws"],
             "offsets": [0, 297],
             "chunks": [
                 "\n"
