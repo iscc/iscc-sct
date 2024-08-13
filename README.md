@@ -1,16 +1,44 @@
+---
+title: ISCC-LAB - Semantic-Code Text
+emoji: ▶️
+colorFrom: red
+colorTo: blue
+sdk: gradio
+sdk_version: 4.41.0
+app_file: ./iscc_sct/demo.py
+pinned: true
+license: CC-BY-NC-SA-4.0
+short_description: Cross Lingual Similarity Preserving Text Simprints
+---
+
 # ISCC - Semantic Text-Code
 
 [![Tests](https://github.com/iscc/iscc-sct/actions/workflows/tests.yml/badge.svg)](https://github.com/iscc/iscc-core/actions/workflows/tests.yml)
 [![Version](https://img.shields.io/pypi/v/iscc-sct.svg)](https://pypi.python.org/pypi/iscc-sct/)
 [![Downloads](https://pepy.tech/badge/iscc-sct)](https://pepy.tech/project/iscc-sct)
 
-`iscc-sct` is a **proof of concept implementation** of a semantic Text-Code for the [ISCC](https://core.iscc.codes)
-(*International Standard Content Code*). Semantic Text-Codes are designed to capture and represent the language
-agnostic semantic content of text for improved similarity detection.
-
 > [!CAUTION]
-> **This is an early proof of concept.** All releases with version numbers below v1.0.0 may break backward
-> compatibility and produce incompatible Semantic Text-Codes.
+> **This is a proof of concept.** All releases with version numbers below v1.0.0 may break backward compatibility and
+> produce incompatible Semantic Text-Codes. The algorithms of this `iscc-sct` repository are experimental and not part
+> of the official [ISO 24138:2024](https://www.iso.org/standard/77899.html) standard.
+
+`iscc-sct` is a semantic Text-Code for the [ISCC](https://core.iscc.codes) (*International Standard Content Code*).
+Semantic Text-Codes are short identifiers created from text documents that preserve similarity (in hamming distance)
+for semantically similar cross-lingual text inputs.
+
+## What is the ISCC
+
+The ISCC is a combination of various similarity preserving fingerprints and an identifier for digital media content.
+
+ISCCs are generated algorithmically from digital content, just like cryptographic hashes. However, instead of using a
+single cryptographic hash function to identify data only, the ISCC uses various algorithms to create a composite
+identifier that exhibits similarity-preserving properties (soft hash or Simprint).
+
+The component-based structure of the ISCC identifies content at multiple levels of abstraction. Each component is
+self-describing, modular, and can be used separately or with others to aid in various content identification tasks. The
+algorithmic design supports content deduplication, database synchronization, indexing, integrity verification,
+timestamping, versioning, data provenance, similarity clustering, anomaly detection, usage tracking, allocation of
+royalties, fact-checking and general digital asset management use-cases.
 
 ## What is ISCC Semantic Text-Code?
 

@@ -76,6 +76,7 @@ poethepoet = "*"
 ruff = "*"
 mdformat-gfm = "*"
 mdformat-gfm-alerts = "*"
+mdformat-frontmatter = "*"
 
 [tool.ruff]
 line-length = 119
