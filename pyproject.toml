@@ -58,6 +58,7 @@ pydantic-settings = "*"
 charset-normalizer = "*"
 numpy = "<2.0.0"
 pybase64 = "^1.4.0"
+certifi = ">=2024.07.04"
 
 
 [tool.poetry.extras]
