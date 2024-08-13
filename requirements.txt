@@ -1,0 +1,11 @@
+semantic-text-splitter
+onnxruntime
+loguru
+blake3
+platformdirs
+tokenizers
+pydantic-settings
+charset-normalizer
+numpy<2.0.0
+pybase64
+certifi
