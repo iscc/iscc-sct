@@ -4,7 +4,7 @@
 This module provides the pydantic metadata schema for Semantic Text Code results.
 The schema is conformant with https://schema.iscc.codes/
 
-The `features` property of the top level Metadata Object support two different formats for
+The `features` property of the top level Metadata Object supports two different formats for
 representing granular (per text chunk) features: the **Index-Format** and the **Object-Format**.
 These formats are designed to offer flexibility in how feature data is structured and processed,
 catering to different use cases where either performance or clarity is prioritized.
@@ -112,3 +112,57 @@ class Metadata(PrettyBaseModel):
     iscc: str
     characters: Optional[int] = None
     features: Optional[List[FeatureSet]] = None
+
+    def to_index_format(self) -> "Metadata":
+        """
+        Convert the Metadata object to use the Index-Format for features.
+        Returns a new Metadata object.
+        """
+        if not self.features:
+            return self.model_copy()
+
+        new_features = []
+        for feature_set in self.features:
+            if isinstance(feature_set.simprints[0], str):
+                new_features.append(feature_set.model_copy())
+            else:
+                new_feature_set = feature_set.model_copy()
+                new_feature_set.simprints = [f.simprint for f in feature_set.simprints]
+                new_feature_set.offsets = [f.offset for f in feature_set.simprints if f.offset is not None]
+                new_feature_set.sizes = [f.size for f in feature_set.simprints if f.size is not None]
+                new_feature_set.contents = [f.content for f in feature_set.simprints if f.content is not None]
+                new_features.append(new_feature_set)
+
+        return Metadata(iscc=self.iscc, characters=self.characters, features=new_features)
+
+    def to_object_format(self) -> "Metadata":
+        """
+        Convert the Metadata object to use the Object-Format for features.
+        Returns a new Metadata object.
+        """
+        if not self.features:
+            return self.model_copy()
+
+        new_features = []
+        for feature_set in self.features:
+            if isinstance(feature_set.simprints[0], Feature):
+                new_features.append(feature_set.model_copy())
+            else:
+                new_feature_set = feature_set.model_copy()
+                new_simprints = []
+                for i, simprint in enumerate(feature_set.simprints):
+                    feature = Feature(simprint=simprint)
+                    if feature_set.offsets and i < len(feature_set.offsets):
+                        feature.offset = feature_set.offsets[i]
+                    if feature_set.sizes and i < len(feature_set.sizes):
+                        feature.size = feature_set.sizes[i]
+                    if feature_set.contents and i < len(feature_set.contents):
+                        feature.content = feature_set.contents[i]
+                    new_simprints.append(feature)
+                new_feature_set.simprints = new_simprints
+                new_feature_set.offsets = None
+                new_feature_set.sizes = None
+                new_feature_set.contents = None
+                new_features.append(new_feature_set)
+
+        return Metadata(iscc=self.iscc, characters=self.characters, features=new_features)
