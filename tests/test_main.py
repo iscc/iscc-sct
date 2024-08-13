@@ -21,10 +21,7 @@ def test_create_granular():
                 "maintype": "semantic",
                 "subtype": "text",
                 "version": 0,
-                "simprints": ["82eJ2NG741E"],
-                "offsets": [0],
-                "sizes": [11],
-                "contents": ["Hello World"],
+                "simprints": [{"content": "Hello World", "offset": 0, "simprint": "82eJ2NG741E", "size": 11}],
             }
         ],
     }

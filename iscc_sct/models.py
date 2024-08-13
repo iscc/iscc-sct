@@ -123,10 +123,14 @@ class Metadata(PrettyBaseModel):
 
         new_features = []
         for feature_set in self.features:
+            new_feature_set = feature_set.model_copy()
+            if feature_set.simprints is None:
+                new_features.append(new_feature_set)
+                continue
+
             if isinstance(feature_set.simprints[0], str):
-                new_features.append(feature_set.model_copy())
+                new_features.append(new_feature_set)
             else:
-                new_feature_set = feature_set.model_copy()
                 new_feature_set.simprints = [f.simprint for f in feature_set.simprints]
                 new_feature_set.offsets = [f.offset for f in feature_set.simprints if f.offset is not None]
                 new_feature_set.sizes = [f.size for f in feature_set.simprints if f.size is not None]
@@ -145,10 +149,14 @@ class Metadata(PrettyBaseModel):
 
         new_features = []
         for feature_set in self.features:
+            new_feature_set = feature_set.model_copy()
+            if feature_set.simprints is None:
+                new_features.append(new_feature_set)
+                continue
+
             if isinstance(feature_set.simprints[0], Feature):
-                new_features.append(feature_set.model_copy())
+                new_features.append(new_feature_set)
             else:
-                new_feature_set = feature_set.model_copy()
                 new_simprints = []
                 for i, simprint in enumerate(feature_set.simprints):
                     feature = Feature(simprint=simprint)

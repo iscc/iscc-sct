@@ -64,7 +64,7 @@ Generate a Semantic Text-Code using the create function:
 
 ```
 
-poet For granular (per chunk) feature outputs:
+For granular (per chunk) feature outputs:
 
 ```python-repl
 >>> import iscc_sct as sct
@@ -79,16 +79,12 @@ poet For granular (per chunk) feature outputs:
       "subtype": "text",
       "version": 0,
       "simprints": [
-        "XZjeSfdyVi0"
-      ],
-      "offsets": [
-        0
-      ],
-      "sizes": [
-        77
-      ],
-      "contents": [
-        "This is some sample text. It can be a longer document or even an entire book."
+        {
+          "simprint": "XZjeSfdyVi0",
+          "offset": 0,
+          "size": 77,
+          "content": "This is some sample text. It can be a longer document or even an entire book."
+        }
       ]
     }
   ]

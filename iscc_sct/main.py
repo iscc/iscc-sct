@@ -9,7 +9,7 @@ __all__ = [
 
 
 def create(text, granular=False, **options):
-    # type (str, bool) -> SctMeta
+    # type (str, bool) -> Metadata
     """
     Create Semantic Text-Code
 
@@ -18,6 +18,7 @@ def create(text, granular=False, **options):
     :param text: Text used for creating Semantic Text-Code.
     :param granular: Activate options for granular processing (Default: False).
     :param options: Override individual options for creating Semantic Text-Code.
+    :return: Semantic Text-Code `Metadata` object in Object-Format
     """
 
     # Override global options with individual options derived from `granular` parameter
@@ -28,4 +29,4 @@ def create(text, granular=False, **options):
     opts = opts.override(options)
 
     data = gen_text_code_semantic(text, **opts.model_dump())
-    return Metadata(**data)
+    return Metadata(**data).to_object_format()
