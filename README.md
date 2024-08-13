@@ -5,7 +5,6 @@ colorFrom: red
 colorTo: blue
 sdk: gradio
 sdk_version: 4.41.0
-app_file: iscc_sct/demo.py
 pinned: true
 license: CC-BY-NC-SA-4.0
 short_description: Cross Lingual Similarity Preserving Text Simprints
