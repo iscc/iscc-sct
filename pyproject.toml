@@ -66,6 +66,7 @@ gpu = ["onnxruntime-gpu"]
 
 [tool.poetry.group.test.dependencies]
 pytest = "*"
+pytest-xdist = "*"
 coverage = "*"
 pytest-cov = "*"
 
@@ -84,7 +85,7 @@ line-ending = "lf"
 [tool.poe.tasks]
 format-code = { cmd = "ruff format", help = "Code style formating with ruff" }
 format-markdown = { cmd = "mdformat --wrap 119 --end-of-line lf README.md", help = "Markdown formating with mdformat" }
-test = { cmd = "pytest --cov=iscc_sct --cov-fail-under=100 --cov-report=term-missing", help = "Run tests with coverage" }
+test = { cmd = "pytest -n auto --cov=iscc_sct --cov-fail-under=100 --cov-report=term-missing --color=yes", help = "Run tests with coverage" }
 all = ["format-code", "format-markdown", "test"]
 
 [build-system]

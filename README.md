@@ -136,9 +136,31 @@ poetry install
 If you have suggestions for improvements or bug fixes, please open an issue or pull request. For major changes, please
 open an issue first to discuss your ideas.
 
+## Future Work
+
+### Shift Resistant Semantic Chunking
+
+The current chunking strategy uses tries to maximize chunk sizes (up to 127 tokens) wheil still splitting at lexically
+sensible boundaries with an overlap of up to 48 tokens. See
+[text-splitter](https://github.com/benbrandt/text-splitter).
+
+Cross document chunk matching via granular Simprints can likely be improved significantly with a semantically aware and
+shift resistant chunking strategy. Better shift resistance would improve the chances that the bounderies detected for
+semantically similar text sequences in different documents are aligned.
+
+### MRL based Embeddings
+
+A text embedding model trained with [Matryoshka Representation Learning](https://arxiv.org/pdf/2205.13147) may yield
+better results with short 64-bit Semantic Text-Codes.
+
+### Larger Chunk Sizes
+
+A text embedding model with support for a larger `max_token` size (currently 128) may yield higher-order granular
+simprints based on larger chunks of text.
+
 ## Acknowledgements
 
-- Text Chunking: [semantic-text-splitter](https://github.com/benbrandt/text-splitter)
+- Text Chunking: [text-splitter](https://github.com/benbrandt/text-splitter)
 - Text Embedding:
   [Sentence-Transformer](https://www.sbert.net/docs/sentence_transformer/pretrained_models.html#original-models)
 

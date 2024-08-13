@@ -58,4 +58,4 @@ jobs:
         run: poetry install
 
       - name: Run Tests
-        run: poetry run pytest --cov=iscc_sci --cov-report=xml -v tests
+        run: poetry run pytest -n auto --cov=iscc_sct --cov-report=xml -v tests
