@@ -84,6 +84,16 @@ def test_metadata_to_object_format():
     assert object_meta2.model_dump() == object_meta.model_dump()
 
 
+def test_metadata_to_index_format_with_none_simprints():
+    # Test conversion when feature_set.simprints is None
+    features = [FeatureSet(simprints=None, embedding=[0.1, 0.2])]
+    meta = Metadata(iscc="ISCC1234567890", features=features)
+    index_meta = meta.to_index_format()
+    assert index_meta.features[0].simprints is None
+    assert index_meta.features[0].embedding == [0.1, 0.2]
+    assert index_meta.model_dump() == meta.model_dump()
+
+
 def test_metadata_format_conversion_with_no_features():
     meta = Metadata(iscc="ISCC1234567890")
     index_meta = meta.to_index_format()
