@@ -55,7 +55,7 @@ jobs:
             ${{ runner.os }}-onnx-model-
 
       - name: Install Dependencies
-        run: poetry install
+        run: poetry install -E demo
 
       - name: Run Tests
-        run: poetry run pytest -n auto --cov=iscc_sct --cov-report=xml -v tests
+        run: poetry run pytest --cov=iscc_sct --cov-report=xml -v tests

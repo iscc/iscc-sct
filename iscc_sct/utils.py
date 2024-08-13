@@ -1,5 +1,6 @@
-from base64 import b32encode
-from pybase64 import urlsafe_b64encode
+import math
+from base64 import b32encode, b32decode
+from pybase64 import urlsafe_b64encode, urlsafe_b64decode
 from loguru import logger as log
 import os
 import time
@@ -21,6 +22,7 @@ __all__ = [
     "encode_base32",
     "encode_base64",
     "hamming_distance",
+    "iscc_distance",
     "MODEL_PATH",
 ]
 
@@ -94,6 +96,18 @@ def encode_base32(data):
     return b32encode(data).decode("ascii").rstrip("=")
 
 
+def decode_base32(code):
+    # type: (str) -> bytes
+    """
+    Standard RFC4648 base32 decoding without padding and with casefolding.
+    """
+    # python stdlib does not support base32 without padding, so we have to re-pad.
+    cl = len(code)
+    pad_length = math.ceil(cl / 8) * 8 - cl
+
+    return bytes(b32decode(code + "=" * pad_length, casefold=True))
+
+
 def encode_base64(data):
     # type: (bytes) -> str
     """
@@ -101,6 +115,16 @@ def encode_base64(data):
     """
     code = urlsafe_b64encode(data).decode("ascii")
     return code.rstrip("=")
+
+
+def decode_base64(code):
+    # type: (str) -> bytes
+    """
+    Standard RFC4648 base64url decoding without padding.
+    """
+    padding = 4 - (len(code) % 4)
+    string = code + ("=" * padding)
+    return urlsafe_b64decode(string)
 
 
 def hamming_distance(a, b):
@@ -122,3 +146,33 @@ def hamming_distance(a, b):
         distance += bin(xor_result).count("1")
 
     return distance
+
+
+def iscc_distance(iscc1, iscc2):
+    # type: (str, str) -> int
+    """
+    Calculate the Hamming distance between two ISCC Semantic Text Codes.
+
+    :param iscc1: The first ISCC Semantic Text Code.
+    :param iscc2: The second ISCC Semantic Text Code.
+    :return: The Hamming distance between the two ISCC codes.
+    :raise ValueError: If the input ISCCs are not valid or of different lengths.
+    """
+    # Remove the "ISCC:" prefix if present
+    iscc1 = iscc1[5:] if iscc1.startswith("ISCC:") else iscc1
+    iscc2 = iscc2[5:] if iscc2.startswith("ISCC:") else iscc2
+
+    # Decode the base32-encoded ISCCs
+    decoded1 = decode_base32(iscc1)
+    decoded2 = decode_base32(iscc2)
+
+    # Check if the decoded ISCCs have the same length
+    if len(decoded1) != len(decoded2):
+        raise ValueError("The input ISCCs must have the same length")
+
+    # Remove the 2-byte header from each decoded ISCC
+    content1 = decoded1[2:]
+    content2 = decoded2[2:]
+
+    # Calculate and return the Hamming distance
+    return hamming_distance(content1, content2)
