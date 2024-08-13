@@ -1,4 +1,4 @@
-from iscc_sct.models import SctMeta
+from iscc_sct.models import Metadata
 from iscc_sct.code_semantic_text import gen_text_code_semantic
 from iscc_sct.options import sct_opts
 
@@ -21,11 +21,11 @@ def create(text, granular=False, **options):
     """
 
     # Override global options with individual options derived from `granular` parameter
-    granular = dict(features=True, offsets=True, sizes=True, chunks=True) if granular else {}
+    granular = dict(simprints=True, offsets=True, sizes=True, contents=True) if granular else {}
     opts = sct_opts.override(granular)
 
     # Override local options with individual options form additional keyword arguments
     opts = opts.override(options)
 
     data = gen_text_code_semantic(text, **opts.model_dump())
-    return SctMeta.from_dict(data)
+    return Metadata(**data)

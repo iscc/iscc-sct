@@ -53,37 +53,37 @@ def test_code_text_semantic_embedding():
     fp = HERE / "en.txt"
     result = sct.code_text_semantic(fp, embedding=True)
     assert result["iscc"] == "ISCC:CAA636IXQD736IGJ"
-    assert len(result["embedding"]) == 384
+    assert len(result["features"][0]["embedding"]) == 384
 
 
 def test_code_text_semantic_features():
     fp = HERE / "en.txt"
-    result = sct.code_text_semantic(fp, features=True)
+    result = sct.code_text_semantic(fp, simprints=True)
     assert result["iscc"] == "ISCC:CAA636IXQD736IGJ"
     assert result["characters"] == 12076
-    assert result["features"][:3] == ["5wkXkfEx4lE", "b2UVwfc3wgk", "qvlV0W63s90"]
-    assert result["features"][-3:] == ["PNsX9eGZQEs", "fFk3M2u5Qkk", "TPuXs2sRtk8"]
+    assert result["features"][0]["simprints"][:3] == ["5wkXkfEx4lE", "b2UVwfc3wgk", "qvlV0W63s90"]
+    assert result["features"][0]["simprints"][-3:] == ["PNsX9eGZQEs", "fFk3M2u5Qkk", "TPuXs2sRtk8"]
 
 
 def test_code_text_semantic_offsets():
     fp = HERE / "en.txt"
     result = sct.code_text_semantic(fp, offsets=True)
-    assert result["offsets"][:3] == [0, 277, 612]
+    assert result["features"][0]["offsets"][:3] == [0, 277, 612]
 
 
 def test_code_text_semantic_chunks():
     fp = HERE / "en.txt"
-    result = sct.code_text_semantic(fp, chunks=True)
-    assert len(result["chunks"]) == 39
-    assert result["chunks"][0].startswith("\n Thank ")
-    assert result["chunks"][-1].endswith("(Applause)\n")
+    result = sct.code_text_semantic(fp, contents=True)
+    assert len(result["features"][0]["contents"]) == 39
+    assert result["features"][0]["contents"][0].startswith("\n Thank ")
+    assert result["features"][0]["contents"][-1].endswith("(Applause)\n")
 
 
 def test_code_text_semantic_sizes():
     fp = HERE / "en.txt"
     result = sct.code_text_semantic(fp, sizes=True)
     # fmt: off
-    assert result["sizes"] == [
+    assert result["features"][0]["sizes"] == [
         440, 396, 431, 385, 440, 380, 406, 477, 415, 536, 280, 449, 446, 442, 443, 444, 451, 485,
         477, 439, 517, 430, 468, 394, 531, 448, 421, 503, 376, 403, 513, 477, 393, 375, 555, 533,
         312, 455, 413
@@ -100,38 +100,45 @@ def test_gen_text_code_semantic_empty():
 def test_gen_text_code_semantic_granular():
     result = sct.gen_text_code_semantic(
         TEXT,
-        features=True,
+        simprints=True,
         offsets=True,
-        chunks=True,
+        contents=True,
     )
     assert (
         result
         == {
             "characters": 726,
             "iscc": "ISCC:CAARISHPJHEXQAYL",
-            "features": ["FWjtTcl4Aws", "lAjHSc1wAws"],
-            "offsets": [0, 297],
-            "chunks": [
-                "\n"
-                "`iscc-sct` is a **proof of concept implementation** of a semantic "
-                "Text-Code for the\n"
-                "[ISCC](https://core.iscc.codes) (*International Standard Content "
-                "Code*). Semantic Text-Codes are\n"
-                "designed to capture and represent the language agnostic semantic "
-                "content of text for improved\n"
-                "similarity detection.\n"
-                "\n",  # NOTE: end of first chunk (see comma :)
-                "\n"
-                "\n"
-                "The ISCC framework already comes with a Text-Code that is based "
-                "on lexical similarity and can match\n"
-                "near duplicates. The ISCC Semantic Text-Code is planned as a new "
-                "additional ISCC-UNIT focused on\n"
-                "capturing a more abstract and broad semantic similarity. As such "
-                "the Semantic Text-Code is\n"
-                "engineered to be robust against a broader range of variations and "
-                "translations of text that cannot\n"
-                "be matched based on lexical similarity.\n",
+            "features": [
+                {
+                    "maintype": "semantic",
+                    "subtype": "text",
+                    "version": 0,
+                    "simprints": ["FWjtTcl4Aws", "lAjHSc1wAws"],
+                    "offsets": [0, 297],
+                    "contents": [
+                        "\n"
+                        "`iscc-sct` is a **proof of concept implementation** of a semantic "
+                        "Text-Code for the\n"
+                        "[ISCC](https://core.iscc.codes) (*International Standard Content "
+                        "Code*). Semantic Text-Codes are\n"
+                        "designed to capture and represent the language agnostic semantic "
+                        "content of text for improved\n"
+                        "similarity detection.\n"
+                        "\n",  # NOTE: end of first chunk (see comma :)
+                        "\n"
+                        "\n"
+                        "The ISCC framework already comes with a Text-Code that is based "
+                        "on lexical similarity and can match\n"
+                        "near duplicates. The ISCC Semantic Text-Code is planned as a new "
+                        "additional ISCC-UNIT focused on\n"
+                        "capturing a more abstract and broad semantic similarity. As such "
+                        "the Semantic Text-Code is\n"
+                        "engineered to be robust against a broader range of variations and "
+                        "translations of text that cannot\n"
+                        "be matched based on lexical similarity.\n",
+                    ],
+                }
             ],
         }
     )
@@ -184,7 +191,7 @@ def test_embed_chunks():
 def test_gen_text_code_semantic(text_en):
     result = sct.gen_text_code_semantic(text_en, embedding=True)
     assert result["iscc"] == "ISCC:CAA636IXQD736IGJ"
-    assert result["embedding"][:3] == pytest.approx(
+    assert result["features"][0]["embedding"][:3] == pytest.approx(
         [0.03241169825196266, 0.022712377831339836, 0.050273094326257706],
         rel=1e-3,
     )
@@ -235,4 +242,4 @@ def test_compress():
 
 def test_embedding_precision():
     d16 = sct.gen_text_code_semantic("Hello World", embedding=True, precision=4)
-    assert d16["embedding"][0] == 0.0087
+    assert d16["features"][0]["embedding"][0] == 0.0087

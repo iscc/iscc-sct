@@ -34,12 +34,12 @@ class SctOptions(BaseSettings):
 
     precision: int = Field(8, description="ISCC_SCT_PRECISION - Max fractional digits for embeddings (default 8)")
 
-    features: bool = Field(False, description="ISCC_SCT_FEATURES - Include granular feature simprints")
+    simprints: bool = Field(False, description="ISCC_SCT_SIMPRINTS - Include granular feature simprints")
     offsets: bool = Field(False, description="ISCC_SCT_OFFSETS - Include offsets of granular features")
 
     sizes: bool = Field(False, description="ISCC_SCT_SIZES - Include sizes of granular features (number of chars)")
 
-    chunks: bool = Field(False, description="ISCC_SCT_CHUNKS - Include granular text chunks")
+    contents: bool = Field(False, description="ISCC_SCT_CONTENTS - Include granular text chunks")
 
     max_tokens: int = Field(
         127,

@@ -104,7 +104,7 @@ def gen_text_code_semantic(text, **options):
     :key max_tokens (int): Max tokens per chunk (default 127).
     :key overlap (int): Max tokens allowed to overlap between chunks (default 48).
     :key trim (int): Trim whitespace from chunks (default False).
-    :return: Dict with ISCC processing results
+    :return: Dict with ISCC processing results (using Index-Format for granular features)
     """
 
     if not text:
@@ -112,7 +112,7 @@ def gen_text_code_semantic(text, **options):
 
     opts = sct.sct_opts.override(options)
 
-    result = {"iscc": None}  # Initialize first so `iscc` key is first in dict
+    result = {"iscc": None}  # Initialize first so `iscc` key is "first" in dict
 
     if opts.characters:
         result["characters"] = len(text)
@@ -120,24 +120,32 @@ def gen_text_code_semantic(text, **options):
     # Text splitting
     splits = split_text(text, **opts.model_dump())
     offsets, chunks = [list(item) for item in zip(*splits)]
-    if opts.chunks:
-        result["chunks"] = chunks
-    if opts.offsets:
-        result["offsets"] = offsets
-    if opts.sizes:
-        result["sizes"] = [len(chunk) for chunk in chunks]
 
     # Chunk embedding
     with sct.timer("EMBEDDING time"):
         embeddings = embed_chunks(chunks)
-    if opts.features:
-        feature_digests = [binarize(vec)[: opts.bits_granular // 8] for vec in embeddings]
-        result["features"] = [sct.encode_base64(digest) for digest in feature_digests]
 
     # Create global document embedding
     embedding = mean_pooling(embeddings)
-    if opts.embedding:
-        result["embedding"] = compress(embedding, opts.precision)
+
+    if any([opts.simprints, opts.offsets, opts.sizes, opts.contents, opts.embedding]):
+        feature_set = {
+            "maintype": "semantic",
+            "subtype": "text",
+            "version": 0,
+        }
+        if opts.embedding:
+            feature_set["embedding"] = compress(embedding, opts.precision)
+        if opts.simprints:
+            feature_digests = [binarize(vec)[: opts.bits_granular // 8] for vec in embeddings]
+            feature_set["simprints"] = [sct.encode_base64(digest) for digest in feature_digests]
+        if opts.offsets:
+            feature_set["offsets"] = offsets
+        if opts.sizes:
+            feature_set["sizes"] = [len(chunk) for chunk in chunks]
+        if opts.contents:
+            feature_set["contents"] = chunks
+        result["features"] = [feature_set]
 
     # Encode global document embedding
     length = BIT_LEN_MAP[opts.bits]
