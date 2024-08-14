@@ -106,6 +106,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
 
             gr.Examples(label="Sample Text", examples=[sample_text_en], inputs=[in_text_a])
             out_code_a = gr.Textbox(label="ISCC Code for Text A")
+            gr.ClearButton(components=[in_text_a])
         with gr.Column(variant="panel"):
             in_text_b = gr.TextArea(
                 label="Text",
@@ -116,9 +117,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
 
             gr.Examples(label="Sample Text", examples=[sample_text_de], inputs=[in_text_b])
             out_code_b = gr.Textbox(label="ISCC Code for Text B")
-
-    with gr.Row():
-        gr.ClearButton(components=[in_text_a, in_text_b])
+            gr.ClearButton(components=[in_text_b])
 
     with gr.Row(variant="panel"):
         with gr.Column(variant="panel"):
