@@ -15,6 +15,7 @@ Text Codes for the Texts. Below the result outputs we show the similarity of the
 from loguru import logger as log
 import gradio as gr
 import iscc_sct as sct
+import textwrap
 
 
 def compute_iscc_code(text1, text2, bit_length):
@@ -27,6 +28,10 @@ def compute_iscc_code(text1, text2, bit_length):
 def compare_codes(code_a, code_b, bits):
     if all([code_a, code_b]):
         return generate_similarity_bar(hamming_to_cosine(sct.iscc_distance(code_a, code_b), bits))
+
+
+def truncate_text(text, max_length=70):
+    return textwrap.shorten(text, width=max_length, placeholder="...")
 
 
 def hamming_to_cosine(hamming_distance: int, dim: int) -> float:
@@ -63,8 +68,27 @@ def generate_similarity_bar(similarity):
 
 
 # Sample texts
-sample_text_en = "This is a sample text in English to demonstrate the ISCC-CODE generation."
-sample_text_de = "Dies ist ein Beispieltext auf Deutsch, um die Erzeugung von ISCC-CODES zu demonstrieren."
+sample_text_en = """
+This document specifies the syntax and structure of the International Standard Content Code (ISCC),
+as an identification system for digital assets (including encodings of text, images, audio, video or other content
+across all media sectors). It also describes ISCC metadata and the use of ISCC in conjunction with other schemes, such
+as DOI, ISAN, ISBN, ISRC, ISSN and ISWC.
+
+An ISCC applies to a specific digital asset and is a data-descriptor deterministically constructed from multiple hash
+digests using the algorithms and rules in this document. This document does not provide information on registration of
+ISCCs.
+""".rstrip()
+
+sample_text_de = """
+Dieses Dokument spezifiziert die Syntax und Struktur des International Standard Content Code (ISCC) als
+Identifizierungssystem für digitale Inhalte (einschließlich Kodierungen von Text, Bildern, Audio, Video oder anderen
+Inhalten in allen Medienbereichen). Sie beschreibt auch ISCC-Metadaten und die Verwendung von ISCC in Verbindung mit
+anderen Systemen wie DOI, ISAN, ISBN, ISRC, ISSN und ISWC.
+
+Ein ISCC bezieht sich auf ein bestimmtes digitales Gut und ist ein Daten-Deskriptor, der deterministisch aus mehreren
+Hash-Digests unter Verwendung der Algorithmen und Regeln in diesem Dokument erstellt wird. Dieses Dokument enthält
+keine Informationen über die Registrierung von ISCCs.
+""".rstrip()
 
 custom_css = """
 #chunked-text span.label {
@@ -85,6 +109,15 @@ custom_css = """
     font-weight: bold;
     color: #4a90e2;
 }
+
+.truncate-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+    display: inline-block;
+}
+
 """
 
 iscc_theme = gr.themes.Default(
@@ -121,8 +154,9 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
 
             gr.Examples(
                 label="Click to use sample text",
-                examples=[sample_text_en],
+                examples=[[truncate_text(sample_text_en)]],
                 inputs=[in_text_a],
+                examples_per_page=1,
             )
             out_code_a = gr.Textbox(label="ISCC Code for Text A")
             gr.ClearButton(components=[in_text_a])
@@ -136,8 +170,9 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
 
             gr.Examples(
                 label="Click to use sample text",
-                examples=[sample_text_de],
+                examples=[[truncate_text(sample_text_de)]],
                 inputs=[in_text_b],
+                examples_per_page=1,
             )
             out_code_b = gr.Textbox(label="ISCC Code for Text B")
             gr.ClearButton(components=[in_text_b])
@@ -149,11 +184,17 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
     def process_text(text, nbits, suffix):
         log.debug(f"{text[:20]}")
         if not text:
-            return
-        out_code_func = globals().get(f"out_code_{suffix}")
-        iscc = sct.Metadata(**sct.gen_text_code_semantic(text, bits=nbits))
-        result = {out_code_func: gr.Textbox(value=iscc.iscc)}
-        return result
+            return None, text
+        # Use the full sample text if it matches the truncated version
+        full_text = (
+            sample_text_en
+            if text == truncate_text(sample_text_en)
+            else sample_text_de
+            if text == truncate_text(sample_text_de)
+            else text
+        )
+        iscc = sct.Metadata(**sct.gen_text_code_semantic(full_text, bits=nbits))
+        return iscc.iscc, full_text
 
     def recalculate_iscc(text_a, text_b, nbits):
         code_a = sct.gen_text_code_semantic(text_a, bits=nbits)["iscc"] if text_a else None
@@ -171,15 +212,15 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         )
 
     in_text_a.change(
-        lambda text, nbits: process_text(text, nbits, "a"),
+        process_text,
         inputs=[in_text_a, in_iscc_bits],
-        outputs=[out_code_a],
+        outputs=[out_code_a, in_text_a],
         show_progress="full",
     )
     in_text_b.change(
-        lambda text, nbits: process_text(text, nbits, "b"),
+        process_text,
         inputs=[in_text_b, in_iscc_bits],
-        outputs=[out_code_b],
+        outputs=[out_code_b, in_text_b],
         show_progress="full",
     )
 
