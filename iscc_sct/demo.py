@@ -130,6 +130,21 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         result = {out_code_func: gr.Textbox(value=iscc.iscc)}
         return result
 
+    def recalculate_iscc(text_a, text_b, nbits):
+        code_a = sct.gen_text_code_semantic(text_a, bits=nbits)["iscc"] if text_a else None
+        code_b = sct.gen_text_code_semantic(text_b, bits=nbits)["iscc"] if text_b else None
+
+        if code_a and code_b:
+            similarity = compare_codes(code_a, code_b, nbits)
+        else:
+            similarity = None
+
+        return (
+            gr.Textbox(value=code_a) if code_a else gr.Textbox(),
+            gr.Textbox(value=code_b) if code_b else gr.Textbox(),
+            similarity,
+        )
+
     in_text_a.change(
         lambda text, nbits: process_text(text, nbits, "a"),
         inputs=[in_text_a, in_iscc_bits],
@@ -140,6 +155,13 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         lambda text, nbits: process_text(text, nbits, "b"),
         inputs=[in_text_b, in_iscc_bits],
         outputs=[out_code_b],
+        show_progress="full",
+    )
+
+    in_iscc_bits.change(
+        recalculate_iscc,
+        inputs=[in_text_a, in_text_b, in_iscc_bits],
+        outputs=[out_code_a, out_code_b, out_similarity],
         show_progress="full",
     )
 
