@@ -117,6 +117,9 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
             gr.Examples(label="Sample Text", examples=[sample_text_de], inputs=[in_text_b])
             out_code_b = gr.Textbox(label="ISCC Code for Text B")
 
+    with gr.Row():
+        gr.ClearButton(components=[in_text_a, in_text_b])
+
     with gr.Row(variant="panel"):
         with gr.Column(variant="panel"):
             out_similarity = gr.HTML(label="Similarity")
@@ -167,9 +170,39 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
 
     out_code_a.change(compare_codes, inputs=[out_code_a, out_code_b, in_iscc_bits], outputs=[out_similarity])
     out_code_b.change(compare_codes, inputs=[out_code_a, out_code_b, in_iscc_bits], outputs=[out_similarity])
-    with gr.Row():
-        gr.ClearButton(components=[in_text_a, in_text_b])
 
+    gr.Markdown(
+        """
+        ## Understanding ISCC Semantic Text-Codes
+
+        ### What is an ISCC Semantic Text-Code?
+        An ISCC Semantic Text-Code is a digital fingerprint for text content. It captures the meaning of the text, not
+        just the exact words.
+
+        ### How does it work?
+        1. **Input**: You provide a text in any language.
+        2. **Processing**: Our system analyzes the meaning of the text.
+        3. **Output**: A unique code is generated that represents the text's content.
+
+        ### What can it do?
+        - **Cross-language matching**: It can recognize similar content across different languages.
+        - **Similarity detection**: It can measure how similar two texts are in meaning, not just in words.
+        - **Content identification**: It can help identify texts with similar content, even if the wording is different.
+
+        ### How to use this demo:
+        1. **Enter text**: Type or paste text into either or both text boxes.
+        2. **Adjust bit length**: Use the slider to change the detail level of the code (higher = more detailed).
+        3. **View results**: See the generated ISCC code for each text.
+        4. **Compare**: Look at the similarity bar to see how alike the two texts are in meaning.
+
+        ### Why is this useful?
+        - **Content creators**: Find similar content across languages.
+        - **Researchers**: Quickly compare documents or find related texts in different languages.
+        - **Publishers**: Identify potential translations or similar works efficiently.
+
+        This technology opens up new possibilities for understanding and managing text content across language barriers!
+        """
+    )
 
 if __name__ == "__main__":  # pragma: no cover
     demo.launch()
