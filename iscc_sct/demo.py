@@ -151,13 +151,13 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
             minimum=64,
             maximum=256,
             step=32,
-            value=64,
+            value=128,
         )
     with gr.Row(variant="panel"):
         with gr.Column(variant="panel"):
             in_text_a = gr.TextArea(
-                label="Text",
-                placeholder="Paste your text here or select sample from below",
+                label="Text A",
+                placeholder="Click the sample text below or type or paste your text.",
                 lines=12,
                 max_lines=12,
             )
@@ -172,8 +172,8 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
             gr.ClearButton(components=[in_text_a])
         with gr.Column(variant="panel"):
             in_text_b = gr.TextArea(
-                label="Text",
-                placeholder="Paste your text here or select sample from below",
+                label="Text B",
+                placeholder="Click the sample text below or type or paste your text.",
                 lines=12,
                 max_lines=12,
             )
