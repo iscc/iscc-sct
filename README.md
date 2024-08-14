@@ -1,15 +1,3 @@
----
-title: ISCC-LAB - Semantic-Code Text
-emoji: ▶️
-colorFrom: red
-colorTo: blue
-sdk: gradio
-sdk_version: 4.41.0
-pinned: true
-license: CC-BY-NC-SA-4.0
-short_description: Cross Lingual Similarity Preserving Text Simprints
----
-
 # ISCC - Semantic Text-Code
 
 [![Tests](https://github.com/iscc/iscc-sct/actions/workflows/tests.yml/badge.svg)](https://github.com/iscc/iscc-core/actions/workflows/tests.yml)
@@ -188,9 +176,5 @@ simprints based on larger chunks of text.
 ## Acknowledgements
 
 - Text Chunking: [text-splitter](https://github.com/benbrandt/text-splitter)
-- Text Embedding:
-  [Sentence-Transformer](https://www.sbert.net/docs/sentence_transformer/pretrained_models.html#original-models)
-
-## License
-
-This project is licensed under the CC-BY-NC-SA-4.0 International License.
+- Text Embeddings:
+  [Sentence-Transformers](https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2)

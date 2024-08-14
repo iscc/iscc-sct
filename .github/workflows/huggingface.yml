@@ -1,4 +1,4 @@
-name: Publish on Hugging Face Hub
+name: Sync with Hugging Face Space
 on:
   push:
     branches:
@@ -7,12 +7,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Sync with Hugging Face
-      uses: nateraw/huggingface-sync-action@v0.0.5
+    - name: Sync with HF
+      uses: alex-bene/huggingface-space-sync-action@v0.1
       with:
-        github_repo_id: iscc/iscc-sct
-        huggingface_repo_id: iscc/iscc-sct
-        repo_type: space
-        space_sdk: gradio
-        private: false
+        github_repo_id: 'iscc/iscc-sct'
+        github_branch: 'huggingface'
+        yaml_header_path: 'space.yml'
+        huggingface_repo_id: 'iscc/iscc-sct'
+        hf_username: 'titusz'
         hf_token: ${{ secrets.HF_TOKEN }}
