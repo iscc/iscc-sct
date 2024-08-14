@@ -68,7 +68,10 @@ def generate_similarity_bar(similarity):
 
 
 # Sample texts
-sample_text_en = """
+sample_text_en = "\n\n".join(
+    [
+        " ".join(paragraph.split())
+        for paragraph in """
 This document specifies the syntax and structure of the International Standard Content Code (ISCC),
 as an identification system for digital assets (including encodings of text, images, audio, video or other content
 across all media sectors). It also describes ISCC metadata and the use of ISCC in conjunction with other schemes, such
@@ -77,9 +80,14 @@ as DOI, ISAN, ISBN, ISRC, ISSN and ISWC.
 An ISCC applies to a specific digital asset and is a data-descriptor deterministically constructed from multiple hash
 digests using the algorithms and rules in this document. This document does not provide information on registration of
 ISCCs.
-""".rstrip()
+""".strip().split("\n\n")
+    ]
+)
 
-sample_text_de = """
+sample_text_de = "\n\n".join(
+    [
+        " ".join(paragraph.split())
+        for paragraph in """
 Dieses Dokument spezifiziert die Syntax und Struktur des International Standard Content Code (ISCC) als
 Identifizierungssystem für digitale Inhalte (einschließlich Kodierungen von Text, Bildern, Audio, Video oder anderen
 Inhalten in allen Medienbereichen). Sie beschreibt auch ISCC-Metadaten und die Verwendung von ISCC in Verbindung mit
@@ -88,7 +96,9 @@ anderen Systemen wie DOI, ISAN, ISBN, ISRC, ISSN und ISWC.
 Ein ISCC bezieht sich auf ein bestimmtes digitales Gut und ist ein Daten-Deskriptor, der deterministisch aus mehreren
 Hash-Digests unter Verwendung der Algorithmen und Regeln in diesem Dokument erstellt wird. Dieses Dokument enthält
 keine Informationen über die Registrierung von ISCCs.
-""".rstrip()
+""".strip().split("\n\n")
+    ]
+)
 
 custom_css = """
 #chunked-text span.label {
