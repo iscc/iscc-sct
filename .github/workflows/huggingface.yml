@@ -14,5 +14,5 @@ jobs:
         github_branch: 'huggingface'
         yaml_header_path: 'space.yml'
         huggingface_repo_id: 'iscc/iscc-sct'
-        hf_username: 'titusz'
+        hf_username: 'iscc'
         hf_token: ${{ secrets.HF_TOKEN }}
