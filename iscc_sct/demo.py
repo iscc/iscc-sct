@@ -70,6 +70,21 @@ custom_css = """
 #chunked-text span.label {
     text-transform: none !important;
 }
+
+.clickable-example {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.clickable-example:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.02);
+}
+
+.clickable-example .label-wrap {
+    font-weight: bold;
+    color: #4a90e2;
+}
 """
 
 iscc_theme = gr.themes.Default(
@@ -104,7 +119,11 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 max_lines=12,
             )
 
-            gr.Examples(label="Sample Text", examples=[sample_text_en], inputs=[in_text_a])
+            gr.Examples(
+                label="Click to use sample text",
+                examples=[sample_text_en],
+                inputs=[in_text_a],
+            )
             out_code_a = gr.Textbox(label="ISCC Code for Text A")
             gr.ClearButton(components=[in_text_a])
         with gr.Column(variant="panel"):
@@ -115,7 +134,11 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 max_lines=12,
             )
 
-            gr.Examples(label="Sample Text", examples=[sample_text_de], inputs=[in_text_b])
+            gr.Examples(
+                label="Click to use sample text",
+                examples=[sample_text_de],
+                inputs=[in_text_b],
+            )
             out_code_b = gr.Textbox(label="ISCC Code for Text B")
             gr.ClearButton(components=[in_text_b])
 
