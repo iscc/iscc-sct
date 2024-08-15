@@ -85,7 +85,7 @@ line-length = 119
 line-ending = "lf"
 
 [tool.coverage.run]
-omit = ["iscc_sct/dev.py", "tests/"]
+omit = ["iscc_sct/dev.py", "tests/", "iscc_sct/demo.py"]
 
 [tool.poe.tasks]
 format-code = { cmd = "ruff format", help = "Code style formating with ruff" }
