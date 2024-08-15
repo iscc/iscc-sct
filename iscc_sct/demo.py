@@ -6,6 +6,7 @@ from loguru import logger as log
 import gradio as gr
 import iscc_sct as sct
 import textwrap
+from iscc_sct.code_semantic_text import split_text, embed_chunks, binarize
 
 
 def compute_iscc_code(text1, text2, bit_length):
@@ -146,6 +147,11 @@ custom_css = """
     display: inline-block;
 }
 
+#chunked-text-a span.label,
+#chunked-text-b span.label {
+    text-transform: none !important;
+    font-size: 0.8em;
+}
 """
 
 iscc_theme = gr.themes.Default(
@@ -183,6 +189,11 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 choices=["None", "English", "Bulgarian"], label="Select sample for Text A", value="None"
             )
             out_code_a = gr.Textbox(label="ISCC Code for Text A")
+            out_chunks_a = gr.HighlightedText(
+                label="Chunked Text A",
+                interactive=False,
+                elem_id="chunked-text-a",
+            )
         with gr.Column(variant="panel"):
             in_text_b = gr.TextArea(
                 label="Text B",
@@ -194,6 +205,11 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 choices=["None", "German", "Chinese"], label="Select sample for Text B", value="None"
             )
             out_code_b = gr.Textbox(label="ISCC Code for Text B")
+            out_chunks_b = gr.HighlightedText(
+                label="Chunked Text B",
+                interactive=False,
+                elem_id="chunked-text-b",
+            )
 
     def update_sample_text(choice, text_a_or_b):
         if choice == "None":
@@ -219,8 +235,21 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         if not text:
             return
         out_code_func = globals().get(f"out_code_{suffix}")
+        out_chunks_func = globals().get(f"out_chunks_{suffix}")
         iscc = sct.Metadata(**sct.gen_text_code_semantic(text, bits=nbits))
-        result = {out_code_func: gr.Textbox(value=iscc.iscc)}
+
+        # Generate chunked text with simprints
+        chunks = split_text(text)
+        embeddings = embed_chunks([chunk[1] for chunk in chunks])
+        chunk_simprints = [binarize(embedding)[: nbits // 8].hex() for embedding in embeddings]
+        highlighted_chunks = [
+            (chunk[1], f"{len(chunk[1])}:{simprint}") for chunk, simprint in zip(chunks, chunk_simprints)
+        ]
+
+        result = {
+            out_code_func: gr.Textbox(value=iscc.iscc),
+            out_chunks_func: gr.HighlightedText(value=highlighted_chunks),
+        }
         return result
 
     def recalculate_iscc(text_a, text_b, nbits):
@@ -241,14 +270,14 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
     in_text_a.change(
         lambda text, nbits: process_text(text, nbits, "a"),
         inputs=[in_text_a, in_iscc_bits],
-        outputs=[out_code_a],
+        outputs=[out_code_a, out_chunks_a],
         show_progress="full",
         trigger_mode="always_last",
     )
     in_text_b.change(
         lambda text, nbits: process_text(text, nbits, "b"),
         inputs=[in_text_b, in_iscc_bits],
-        outputs=[out_code_b],
+        outputs=[out_code_b, out_chunks_b],
         show_progress="full",
         trigger_mode="always_last",
     )
