@@ -185,37 +185,42 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         with gr.Column(variant="panel"):
             in_text_a = gr.TextArea(
                 label="Text A",
-                placeholder="Choose sample text from below or type or paste your text.",
+                placeholder="Choose sample text from the dropdown or type or paste your text.",
                 lines=12,
                 max_lines=12,
             )
-
-            gr.Examples(
-                label="Click to select a sample text",
-                examples=[sample_text_en, sample_text_bg],
-                inputs=[in_text_a],
-                examples_per_page=10,
-                example_labels=[truncate_text(sample_text_en), truncate_text(sample_text_bg)],
+            sample_dropdown_a = gr.Dropdown(
+                choices=["None", "English", "Bulgarian"], label="Select sample for Text A", value="None"
             )
             out_code_a = gr.Textbox(label="ISCC Code for Text A")
             gr.ClearButton(components=[in_text_a])
         with gr.Column(variant="panel"):
             in_text_b = gr.TextArea(
                 label="Text B",
-                placeholder="Choose sample text from below or type or paste your text.",
+                placeholder="Choose sample text from the dropdown or type or paste your text.",
                 lines=12,
                 max_lines=12,
             )
-
-            gr.Examples(
-                label="Click to select a sample text",
-                examples=[sample_text_de, sample_text_zh],
-                inputs=[in_text_b],
-                examples_per_page=10,
-                example_labels=[truncate_text(sample_text_de), truncate_text(sample_text_zh)],
+            sample_dropdown_b = gr.Dropdown(
+                choices=["None", "German", "Chinese"], label="Select sample for Text B", value="None"
             )
             out_code_b = gr.Textbox(label="ISCC Code for Text B")
             gr.ClearButton(components=[in_text_b])
+
+    def update_sample_text(choice, text_a_or_b):
+        if choice == "None":
+            return ""
+        if text_a_or_b == "A":
+            return sample_text_en if choice == "English" else sample_text_bg
+        else:
+            return sample_text_de if choice == "German" else sample_text_zh
+
+    sample_dropdown_a.change(
+        lambda choice: update_sample_text(choice, "A"), inputs=[sample_dropdown_a], outputs=[in_text_a]
+    )
+    sample_dropdown_b.change(
+        lambda choice: update_sample_text(choice, "B"), inputs=[sample_dropdown_b], outputs=[in_text_b]
+    )
 
     with gr.Row(variant="panel"):
         with gr.Column(variant="panel"):
