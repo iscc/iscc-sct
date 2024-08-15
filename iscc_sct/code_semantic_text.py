@@ -75,9 +75,10 @@ def code_text_semantic(fp, **options):
     :key characters (bool): Return document character count (default True).
     :key embedding (bool): Return global document embedding (default False).
     :key precision (int): Max fractional digits for embeddings (default 8).
-    :key features (bool): Return granular document features (default False).
+    :key simprints (bool): Return granular document features (default False).
     :key offsets (bool): Return character offsets for granular features (default False).
-    :key chunks (bool): Return text chunks (default False).
+    :key sizes (bool): Include sizes of granular features (number of chars, default False).
+    :key contents (bool): Return text chunks (default False).
     :key max_tokens (int): Max tokens per chunk (default 127).
     :key overlap (int): Max tokens allowed to overlap between chunks (default 48).
     :key trim (int): Trim whitespace from chunks (default False).
@@ -98,9 +99,10 @@ def gen_text_code_semantic(text, **options):
     :key characters (bool): Return document character count (default True).
     :key embedding (bool): Return global document embedding (default False).
     :key precision (int): Max fractional digits for embeddings (default 8).
-    :key features (bool): Return granular document features (default False).
+    :key simprints (bool): Return granular document features (default False).
     :key offsets (bool): Return character offsets for granular features (default False).
-    :key chunks (bool): Return text chunks (default False).
+    :key sizes (bool): Include sizes of granular features (number of chars, default False).
+    :key contents (bool): Return text chunks (default False).
     :key max_tokens (int): Max tokens per chunk (default 127).
     :key overlap (int): Max tokens allowed to overlap between chunks (default 48).
     :key trim (int): Trim whitespace from chunks (default False).
