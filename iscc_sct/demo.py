@@ -164,9 +164,10 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
 
             gr.Examples(
                 label="Click to use sample text",
-                examples=[[truncate_text(sample_text_en)]],
+                examples=[sample_text_en],
                 inputs=[in_text_a],
                 examples_per_page=1,
+                example_labels=[truncate_text(sample_text_en)]
             )
             out_code_a = gr.Textbox(label="ISCC Code for Text A")
             gr.ClearButton(components=[in_text_a])
@@ -180,9 +181,10 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
 
             gr.Examples(
                 label="Click to use sample text",
-                examples=[[truncate_text(sample_text_de)]],
+                examples=[sample_text_de],
                 inputs=[in_text_b],
                 examples_per_page=1,
+                example_labels=[truncate_text(sample_text_de)]
             )
             out_code_b = gr.Textbox(label="ISCC Code for Text B")
             gr.ClearButton(components=[in_text_b])
@@ -194,17 +196,11 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
     def process_text(text, nbits, suffix):
         log.debug(f"{text[:20]}")
         if not text:
-            return None, text
-        # Use the full sample text if it matches the truncated version
-        full_text = (
-            sample_text_en
-            if text == truncate_text(sample_text_en)
-            else sample_text_de
-            if text == truncate_text(sample_text_de)
-            else text
-        )
-        iscc = sct.Metadata(**sct.gen_text_code_semantic(full_text, bits=nbits))
-        return iscc.iscc, full_text
+            return
+        out_code_func = globals().get(f"out_code_{suffix}")
+        iscc = sct.Metadata(**sct.gen_text_code_semantic(text, bits=nbits))
+        result = {out_code_func: gr.Textbox(value=iscc.iscc)}
+        return result
 
     def recalculate_iscc(text_a, text_b, nbits):
         code_a = sct.gen_text_code_semantic(text_a, bits=nbits)["iscc"] if text_a else None
@@ -222,16 +218,18 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         )
 
     in_text_a.change(
-        process_text,
+        lambda text, nbits: process_text(text, nbits, "a"),
         inputs=[in_text_a, in_iscc_bits],
-        outputs=[out_code_a, in_text_a],
+        outputs=[out_code_a],
         show_progress="full",
+        trigger_mode="always_last",
     )
     in_text_b.change(
-        process_text,
+        lambda text, nbits: process_text(text, nbits, "b"),
         inputs=[in_text_b, in_iscc_bits],
-        outputs=[out_code_b, in_text_b],
+        outputs=[out_code_b],
         show_progress="full",
+        trigger_mode="always_last",
     )
 
     in_iscc_bits.change(
