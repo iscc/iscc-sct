@@ -193,7 +193,6 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 choices=["None", "English", "Bulgarian"], label="Select sample for Text A", value="None"
             )
             out_code_a = gr.Textbox(label="ISCC Code for Text A")
-            gr.ClearButton(components=[in_text_a])
         with gr.Column(variant="panel"):
             in_text_b = gr.TextArea(
                 label="Text B",
@@ -205,7 +204,6 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 choices=["None", "German", "Chinese"], label="Select sample for Text B", value="None"
             )
             out_code_b = gr.Textbox(label="ISCC Code for Text B")
-            gr.ClearButton(components=[in_text_b])
 
     def update_sample_text(choice, text_a_or_b):
         if choice == "None":
