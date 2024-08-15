@@ -274,6 +274,36 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
 
     out_code_a.change(compare_codes, inputs=[out_code_a, out_code_b, in_iscc_bits], outputs=[out_similarity])
     out_code_b.change(compare_codes, inputs=[out_code_a, out_code_b, in_iscc_bits], outputs=[out_similarity])
+
+    def reset_all():
+        return (
+            gr.Slider(value=128),  # Reset ISCC Bit-Length
+            gr.Dropdown(value="None"),  # Reset sample dropdown A
+            gr.Dropdown(value="None"),  # Reset sample dropdown B
+            gr.TextArea(value=""),  # Reset Text A
+            gr.TextArea(value=""),  # Reset Text B
+            gr.Textbox(value=""),  # Reset ISCC Code for Text A
+            gr.Textbox(value=""),  # Reset ISCC Code for Text B
+            gr.HTML(value=""),  # Reset Similarity
+        )
+
+    with gr.Row(variant="panel"):
+        reset_button = gr.Button("Reset All")
+
+    reset_button.click(
+        reset_all,
+        outputs=[
+            in_iscc_bits,
+            sample_dropdown_a,
+            sample_dropdown_b,
+            in_text_a,
+            in_text_b,
+            out_code_a,
+            out_code_b,
+            out_similarity,
+        ],
+    )
+
     with gr.Row(variant="panel"):
         with gr.Column(variant="panel"):
             gr.Markdown(
