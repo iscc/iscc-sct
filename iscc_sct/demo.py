@@ -1,15 +1,5 @@
 """
 Gradio demo showcasing ISCC Semantic Text Code.
-
-The demo features:
-
-- two side by side text inputs.
-- One sample text per input (One sample in english and the other a german translation of it)
-- One slider to set global bitlength (32-256 bits in steps of 32 with 64 as default)
-- One result output per text input
-
-The user can select the samples or write or paste text into the inputs and generate ISCC Semantic
-Text Codes for the Texts. Below the result outputs we show the similarity of the two codes.
 """
 
 from loguru import logger as log
