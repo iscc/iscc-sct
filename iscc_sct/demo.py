@@ -6,7 +6,12 @@ from loguru import logger as log
 import gradio as gr
 import iscc_sct as sct
 import textwrap
-from iscc_sct.code_semantic_text import split_text, embed_chunks, binarize
+import re
+
+
+def clean_chunk(chunk):
+    """Strip consecutive line breaks in text to a maximum of 2."""
+    return chunk.replace("\n\n", "\n")
 
 
 def compute_iscc_code(text1, text2, bit_length):
@@ -152,6 +157,15 @@ custom_css = """
     text-transform: none !important;
     font-size: 0.8em;
 }
+
+#chunked-text-a, #chunked-text-b {
+    line-height: 1.5;
+}
+
+#chunked-text-a mark, #chunked-text-b mark {
+    padding: 0.2em 0;
+    margin-right: 0.2em;
+}
 """
 
 iscc_theme = gr.themes.Default(
@@ -236,14 +250,15 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
             return
         out_code_func = globals().get(f"out_code_{suffix}")
         out_chunks_func = globals().get(f"out_chunks_{suffix}")
-        iscc = sct.Metadata(**sct.gen_text_code_semantic(text, bits=nbits))
+
+        result = sct.gen_text_code_semantic(text, bits=nbits, simprints=True, offsets=True, sizes=True, contents=True)
+        iscc = sct.Metadata(**result)
 
         # Generate chunked text with simprints
-        chunks = split_text(text)
-        embeddings = embed_chunks([chunk[1] for chunk in chunks])
-        chunk_simprints = [binarize(embedding)[: nbits // 8].hex() for embedding in embeddings]
+        features = result["features"][0]
         highlighted_chunks = [
-            (chunk[1], f"{len(chunk[1])}:{simprint}") for chunk, simprint in zip(chunks, chunk_simprints)
+            (clean_chunk(chunk), f"{size}:{simprint}")
+            for chunk, size, simprint in zip(features["contents"], features["sizes"], features["simprints"])
         ]
 
         result = {
