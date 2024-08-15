@@ -100,6 +100,34 @@ keine Informationen über die Registrierung von ISCCs.
     ]
 )
 
+sample_text_bg = "\n\n".join(
+    [
+        " ".join(paragraph.split())
+        for paragraph in """
+Този документ определя синтаксиса и структурата на Международния стандартен код на съдържанието (ISCC) като система за
+идентификация на цифрови активи (включително кодиране на текст, изображения, аудио, видео или друго съдържание във
+всички медийни сектори). Той описва също метаданните на ISCC и използването на ISCC във връзка с други схеми, като
+DOI, ISAN, ISBN, ISRC, ISSN и ISWC.
+
+ISCC се прилага за конкретен цифров актив и представлява детерминиран дескриптор на данни, конструиран от множество
+хеш-разходи, като се използват алгоритмите и правилата в настоящия документ. Настоящият документ не предоставя
+информация за регистрацията на ISCC.
+""".strip().split("\n\n")
+    ]
+)
+
+sample_text_zh = "\n\n".join(
+    [
+        " ".join(paragraph.split())
+        for paragraph in """
+本文件规定了国际标准内容代码（ISCC）的语法和结构，作为数字资产（包括所有媒 体领域的文本、图像、音频、视频或其他内容的编码）的标识系统。它还介绍了
+ISCC 元数据以及 ISCC 与其他方案（如 DOI、ISAN、ISBN、ISRC、ISSN 和 ISWC）的结合使用。
+
+ISCC 适用于特定的数字资产，是使用本文件中的算法和规则从多个哈希摘要中确定性地建 立起来的数据描述符。本文件不提供有关 ISCC 注册的信息。
+""".strip().split("\n\n")
+    ]
+)
+
 custom_css = """
 #chunked-text span.label {
     text-transform: none !important;
@@ -157,34 +185,34 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         with gr.Column(variant="panel"):
             in_text_a = gr.TextArea(
                 label="Text A",
-                placeholder="Click the sample text below or type or paste your text.",
+                placeholder="Choose sample text from below or type or paste your text.",
                 lines=12,
                 max_lines=12,
             )
 
             gr.Examples(
-                label="Click to use sample text",
-                examples=[sample_text_en],
+                label="Click to select a sample text",
+                examples=[sample_text_en, sample_text_bg],
                 inputs=[in_text_a],
-                examples_per_page=1,
-                example_labels=[truncate_text(sample_text_en)]
+                examples_per_page=10,
+                example_labels=[truncate_text(sample_text_en), truncate_text(sample_text_bg)],
             )
             out_code_a = gr.Textbox(label="ISCC Code for Text A")
             gr.ClearButton(components=[in_text_a])
         with gr.Column(variant="panel"):
             in_text_b = gr.TextArea(
                 label="Text B",
-                placeholder="Click the sample text below or type or paste your text.",
+                placeholder="Choose sample text from below or type or paste your text.",
                 lines=12,
                 max_lines=12,
             )
 
             gr.Examples(
-                label="Click to use sample text",
-                examples=[sample_text_de],
+                label="Click to select a sample text",
+                examples=[sample_text_de, sample_text_zh],
                 inputs=[in_text_b],
-                examples_per_page=1,
-                example_labels=[truncate_text(sample_text_de)]
+                examples_per_page=10,
+                example_labels=[truncate_text(sample_text_de), truncate_text(sample_text_zh)],
             )
             out_code_b = gr.Textbox(label="ISCC Code for Text B")
             gr.ClearButton(components=[in_text_b])
@@ -244,7 +272,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
     with gr.Row(variant="panel"):
         with gr.Column(variant="panel"):
             gr.Markdown(
-"""
+                """
 ## Understanding ISCC Semantic Text-Codes
 
 ### What is an ISCC Semantic Text-Code?
