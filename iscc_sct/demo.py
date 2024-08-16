@@ -252,13 +252,12 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         out_chunks_func = globals().get(f"out_chunks_{suffix}")
 
         result = sct.gen_text_code_semantic(text, bits=nbits, simprints=True, offsets=True, sizes=True, contents=True)
-        iscc = sct.Metadata(**result)
+        iscc = sct.Metadata(**result).to_object_format()
 
         # Generate chunked text with simprints
-        features = result["features"][0]
+        features = iscc.features[0]
         highlighted_chunks = [
-            (clean_chunk(chunk), f"{size}:{simprint}")
-            for chunk, size, simprint in zip(features["contents"], features["sizes"], features["simprints"])
+            (clean_chunk(feature.content), f"{feature.size}:{feature.simprint}") for feature in features.simprints
         ]
 
         result = {
@@ -369,7 +368,8 @@ not just the exact words.
 
 This technology opens up new possibilities for understanding and managing text content across language barriers!
 """
-            )
+)
+
 
 if __name__ == "__main__":  # pragma: no cover
     demo.launch()
