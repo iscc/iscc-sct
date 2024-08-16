@@ -6,7 +6,24 @@ from loguru import logger as log
 import gradio as gr
 import iscc_sct as sct
 import textwrap
-import re
+
+
+newline_symbols = {
+    "\u000a": "⏎",  # Line Feed - Represented by the 'Return' symbol
+    "\u000b": "↨",  # Vertical Tab - Represented by the 'Up Down Arrow' symbol
+    "\u000c": "␌",  # Form Feed - Unicode Control Pictures representation
+    "\u000d": "↵",  # Carriage Return - 'Downwards Arrow with Corner Leftwards' symbol
+    "\u0085": "⤓",  # Next Line - 'Downwards Arrow with Double Stroke' symbol
+    "\u2028": "↲",  # Line Separator - 'Downwards Arrow with Tip Leftwards' symbol
+    "\u2029": "¶",  # Paragraph Separator - Represented by the 'Pilcrow' symbol
+}
+
+
+def no_nl(text):
+    """Replace non-printable newline characters with printable symbols"""
+    for char, symbol in newline_symbols.items():
+        text = text.replace(char, symbol)
+    return text
 
 
 def clean_chunk(chunk):
@@ -125,47 +142,6 @@ ISCC 适用于特定的数字资产，是使用本文件中的算法和规则从
 )
 
 custom_css = """
-#chunked-text span.label {
-    text-transform: none !important;
-}
-
-.clickable-example {
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.clickable-example:hover {
-    background-color: #f0f0f0;
-    transform: scale(1.02);
-}
-
-.clickable-example .label-wrap {
-    font-weight: bold;
-    color: #4a90e2;
-}
-
-.truncate-text {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 300px;
-    display: inline-block;
-}
-
-#chunked-text-a span.label,
-#chunked-text-b span.label {
-    text-transform: none !important;
-    font-size: 0.8em;
-}
-
-#chunked-text-a, #chunked-text-b {
-    line-height: 1.5;
-}
-
-#chunked-text-a mark, #chunked-text-b mark {
-    padding: 0.2em 0;
-    margin-right: 0.2em;
-}
 """
 
 iscc_theme = gr.themes.Default(
@@ -257,12 +233,12 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         # Generate chunked text with simprints
         features = iscc.features[0]
         highlighted_chunks = [
-            (clean_chunk(feature.content), f"{feature.size}:{feature.simprint}") for feature in features.simprints
+            (feature.content, f"{feature.size}:{feature.simprint}") for feature in features.simprints
         ]
 
         result = {
             out_code_func: gr.Textbox(value=iscc.iscc),
-            out_chunks_func: gr.HighlightedText(value=highlighted_chunks),
+            out_chunks_func: gr.HighlightedText(value=highlighted_chunks, elem_id="chunked-text"),
         }
         return result
 
