@@ -121,3 +121,74 @@ def test_metadata_get_content_index_format():
 def test_metadata_get_content_no_content():
     meta = sct.create("Hello World", granular=True, contents=False)
     assert meta.get_content() is None
+
+
+def test_metadata_get_overlaps():
+    # Test with no features
+    meta = Metadata(iscc="ISCC1234567890")
+    assert meta.get_overlaps() == []
+
+    # Test with features but no simprints
+    meta = Metadata(iscc="ISCC1234567890", features=[FeatureSet()])
+    assert meta.get_overlaps() == []
+
+    # Test with non-overlapping chunks
+    features = [
+        FeatureSet(
+            simprints=[
+                Feature(simprint="feature1", offset=0, content="Hello"),
+                Feature(simprint="feature2", offset=5, content="World"),
+            ]
+        )
+    ]
+    meta = Metadata(iscc="ISCC1234567890", features=features)
+    assert meta.get_overlaps() == [""]
+
+    # Test with overlapping chunks
+    features = [
+        FeatureSet(
+            simprints=[
+                Feature(simprint="feature1", offset=0, content="Hello W"),
+                Feature(simprint="feature2", offset=5, content="World"),
+            ]
+        )
+    ]
+    meta = Metadata(iscc="ISCC1234567890", features=features)
+    assert meta.get_overlaps() == [" W"]
+
+    # Test with multiple overlaps
+    features = [
+        FeatureSet(
+            simprints=[
+                Feature(simprint="feature1", offset=0, content="Hello W"),
+                Feature(simprint="feature2", offset=5, content="World!"),
+                Feature(simprint="feature3", offset=10, content="! How are you?"),
+            ]
+        )
+    ]
+    meta = Metadata(iscc="ISCC1234567890", features=features)
+    assert meta.get_overlaps() == [" W", "!"]
+
+    # Test with index format
+    features = [
+        FeatureSet(
+            simprints=["feature1", "feature2", "feature3"],
+            offsets=[0, 5, 10],
+            contents=["Hello W", "World!", "! How are you?"],
+        )
+    ]
+    meta = Metadata(iscc="ISCC1234567890", features=features)
+    assert meta.get_overlaps() == [" W", "!"]
+
+    # Test with missing content or offset
+    features = [
+        FeatureSet(
+            simprints=[
+                Feature(simprint="feature1", offset=0, content="Hello"),
+                Feature(simprint="feature2", content="World"),
+                Feature(simprint="feature3", offset=10),
+            ]
+        )
+    ]
+    meta = Metadata(iscc="ISCC1234567890", features=features)
+    assert meta.get_overlaps() == []
