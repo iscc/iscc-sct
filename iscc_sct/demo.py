@@ -177,9 +177,6 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         )
     with gr.Row(variant="panel"):
         with gr.Column(variant="panel"):
-            out_similarity = gr.HTML(label="Similarity")
-    with gr.Row(variant="panel"):
-        with gr.Column(variant="panel"):
             in_text_a = gr.TextArea(
                 label="Text A",
                 placeholder="Choose sample text from the dropdown or type or paste your text.",
@@ -203,13 +200,17 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
             out_code_b = gr.Textbox(label="ISCC Code for Text B")
 
     with gr.Row(variant="panel"):
+        with gr.Column(variant="panel"):
+            out_similarity = gr.HTML(label="Similarity")
+
+    with gr.Row(variant="panel"):
         in_iscc_bits = gr.Slider(
             label="ISCC Bit-Length",
             info="NUMBER OF BITS FOR OUTPUT ISCC",
             minimum=64,
             maximum=256,
             step=32,
-            value=128,
+            value=64,
         )
 
     with gr.Row(variant="panel"):
