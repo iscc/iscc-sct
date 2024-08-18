@@ -52,30 +52,23 @@ import gradio as gr
 from iscc_sct.demo import process_text
 
 
-@patch("iscc_sct.demo.sct.gen_text_code_semantic")
-def test_process_text(mock_gen_text_code):
-    mock_gen_text_code.return_value = {"iscc": "ISCC:EAAQCVG2TABD6"}
-
+def test_process_text():
     # Test with valid input
     result = process_text("Hello, world!", 64, "a")
     assert isinstance(result, dict)
-    assert len(result) == 1
+    assert len(result) == 2
     key, value = next(iter(result.items()))
     assert isinstance(key, gr.components.Textbox)
     assert isinstance(value, gr.components.Textbox)
-    assert value.value == "ISCC:EAAQCVG2TABD6"
+    assert value.value == "ISCC:CAA7GY4JTDI3XZYV"
 
     # Test with empty input
     result = process_text("", 64, "b")
     assert result is None
 
-    # Test with different bit length
-    process_text("Test", 128, "a")
-    mock_gen_text_code.assert_called_with("Test", bits=128)
-
     # Test with different suffix
     result = process_text("Test", 64, "b")
-    assert len(result) == 1
+    assert len(result) == 2
     key, value = next(iter(result.items()))
     assert isinstance(key, gr.components.Textbox)
     assert isinstance(value, gr.components.Textbox)

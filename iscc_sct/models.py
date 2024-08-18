@@ -139,6 +139,43 @@ class Metadata(PrettyBaseModel):
 
         return Metadata(iscc=self.iscc, characters=self.characters, features=new_features)
 
+    def get_content(self) -> Optional[str]:
+        """
+        Reconstruct and return the original input text if all necessary data is available.
+        This method removes overlaps in adjacent text chunks.
+
+        :return: The reconstructed original text, or None if the necessary data is not available.
+        """
+        if not self.features or not self.features[0].simprints:
+            return None
+
+        feature_set = self.features[0]
+        if isinstance(feature_set.simprints[0], str):
+            # Convert to object format if in index format
+            feature_set = self.to_object_format().features[0]
+
+        if not all(feature.content and feature.offset is not None for feature in feature_set.simprints):
+            return None
+
+        # Sort features by offset
+        sorted_features = sorted(feature_set.simprints, key=lambda x: x.offset)
+
+        reconstructed_text = ""
+        last_end = 0
+
+        for feature in sorted_features:
+            start = feature.offset
+            if start < last_end:
+                # Remove overlap
+                feature_content = feature.content[last_end - start :]
+            else:
+                feature_content = feature.content
+
+            reconstructed_text += feature_content
+            last_end = start + len(feature.content)
+
+        return reconstructed_text
+
     def to_object_format(self) -> "Metadata":
         """
         Convert the Metadata object to use the Object-Format for features.

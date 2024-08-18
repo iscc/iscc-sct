@@ -1,6 +1,7 @@
 import pytest
 from pydantic import ValidationError
 from iscc_sct.models import Metadata, Feature, FeatureSet
+import iscc_sct as sct
 
 
 def test_feature_initialization():
@@ -100,3 +101,23 @@ def test_metadata_format_conversion_with_no_features():
     object_meta = meta.to_object_format()
     assert index_meta.model_dump() == meta.model_dump()
     assert object_meta.model_dump() == meta.model_dump()
+
+
+def test_metadata_get_content(text_en):
+    iscc = sct.create(text_en, granular=True)
+    assert iscc.get_content() == text_en
+
+
+def test_metadata_get_content_no_fetures():
+    meta = Metadata(iscc="ISCC1234567890")
+    assert meta.get_content() is None
+
+
+def test_metadata_get_content_index_format():
+    meta = sct.create("Hello World", granular=True).to_index_format()
+    assert meta.get_content() == "Hello World"
+
+
+def test_metadata_get_content_no_content():
+    meta = sct.create("Hello World", granular=True, contents=False)
+    assert meta.get_content() is None
