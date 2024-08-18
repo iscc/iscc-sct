@@ -176,6 +176,43 @@ class Metadata(PrettyBaseModel):
 
         return reconstructed_text
 
+    def get_overlaps(self) -> List[str]:
+        """
+        Returns a list of overlapping text between consecutive chunks.
+        For non-overlapping consecutive chunks, returns an empty string.
+
+        :return: List of overlapping text or empty strings.
+        """
+        if not self.features or not self.features[0].simprints:
+            return []
+
+        feature_set = self.features[0]
+        if isinstance(feature_set.simprints[0], str):
+            # Convert to object format if in index format
+            feature_set = self.to_object_format().features[0]
+
+        if not all(feature.content and feature.offset is not None for feature in feature_set.simprints):
+            return []
+
+        # Sort features by offset
+        sorted_features = sorted(feature_set.simprints, key=lambda x: x.offset)
+        overlaps = []
+
+        for i in range(len(sorted_features) - 1):
+            current_feature = sorted_features[i]
+            next_feature = sorted_features[i + 1]
+
+            current_end = current_feature.offset + len(current_feature.content)
+            next_start = next_feature.offset
+
+            if current_end > next_start:
+                overlap = current_feature.content[next_start - current_feature.offset :]
+                overlaps.append(overlap)
+            else:
+                overlaps.append("")
+
+        return overlaps
+
     def to_object_format(self) -> "Metadata":
         """
         Convert the Metadata object to use the Object-Format for features.
