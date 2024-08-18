@@ -177,25 +177,29 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         )
     with gr.Row(variant="panel"):
         with gr.Column(variant="panel"):
-            in_text_a = gr.TextArea(
-                label="Text A",
-                placeholder="Choose sample text from the dropdown or type or paste your text.",
-                lines=12,
-                max_lines=12,
-            )
             sample_dropdown_a = gr.Dropdown(
                 choices=["None", "English", "Bulgarian"], label="Select sample for Text A", value="None"
+            )
+        with gr.Column(variant="panel"):
+            sample_dropdown_b = gr.Dropdown(
+                choices=["None", "German", "Chinese"], label="Select sample for Text B", value="None"
+            )
+
+    with gr.Row(variant="panel"):
+        with gr.Column(variant="panel"):
+            in_text_a = gr.TextArea(
+                label="Text A",
+                placeholder="Choose sample text from the dropdown above or type or paste your text.",
+                lines=12,
+                max_lines=12,
             )
             out_code_a = gr.Textbox(label="ISCC Code for Text A")
         with gr.Column(variant="panel"):
             in_text_b = gr.TextArea(
                 label="Text B",
-                placeholder="Choose sample text from the dropdown or type or paste your text.",
+                placeholder="Choose sample text from the dropdown above or type or paste your text.",
                 lines=12,
                 max_lines=12,
-            )
-            sample_dropdown_b = gr.Dropdown(
-                choices=["None", "German", "Chinese"], label="Select sample for Text B", value="None"
             )
             out_code_b = gr.Textbox(label="ISCC Code for Text B")
 
