@@ -230,11 +230,21 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         result = sct.gen_text_code_semantic(text, bits=nbits, simprints=True, offsets=True, sizes=True, contents=True)
         iscc = sct.Metadata(**result).to_object_format()
 
-        # Generate chunked text with simprints
+        # Generate chunked text with simprints, removing overlaps
         features = iscc.features[0]
-        highlighted_chunks = [
-            (feature.content, f"{feature.size}:{feature.simprint}") for feature in features.simprints
-        ]
+        highlighted_chunks = []
+        last_end = 0
+        for feature in features.simprints:
+            start = feature.offset
+            if start < last_end:
+                # Remove overlap from the beginning of this chunk
+                content = feature.content[last_end - start :]
+                size = feature.size - (last_end - start)
+            else:
+                content = feature.content
+                size = feature.size
+            highlighted_chunks.append((content, f"{size}:{feature.simprint}"))
+            last_end = start + len(feature.content)
 
         result = {
             out_code_func: gr.Textbox(value=iscc.iscc),
