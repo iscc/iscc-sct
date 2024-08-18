@@ -20,7 +20,15 @@ newline_symbols = {
 
 
 def no_nl(text):
-    """Replace non-printable newline characters with printable symbols, ignoring leading and trailing newlines"""
+    """Replace non-printable newline characters with printable symbols"""
+    for char, symbol in newline_symbols.items():
+        text = text.replace(char, symbol)
+    return text
+
+
+def no_nl_inner(text):
+    """Replace non-printable newline characters with printable symbols, ignoring leading and
+    trailing newlines"""
     # Strip leading and trailing whitespace
     stripped_text = text.strip()
 
@@ -239,21 +247,20 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         result = sct.gen_text_code_semantic(text, bits=nbits, simprints=True, offsets=True, sizes=True, contents=True)
         iscc = sct.Metadata(**result).to_object_format()
 
-        # Generate chunked text with simprints, removing overlaps
+        # Generate chunked text with simprints and overlaps
         features = iscc.features[0]
         highlighted_chunks = []
-        last_end = 0
-        for feature in features.simprints:
-            start = feature.offset
-            if start < last_end:
-                # Remove overlap from the beginning of this chunk
-                content = feature.content[last_end - start :]
-                size = feature.size - (last_end - start)
-            else:
-                content = feature.content
-                size = feature.size
-            highlighted_chunks.append((no_nl(content), f"{size}:{feature.simprint}"))
-            last_end = start + len(feature.content)
+        overlaps = iscc.get_overlaps()
+
+        for i, feature in enumerate(features.simprints):
+            content = feature.content
+            label = f"{feature.size}:{feature.simprint}"
+            highlighted_chunks.append((no_nl_inner(content), label))
+
+            if i < len(overlaps):
+                overlap = overlaps[i]
+                if overlap:
+                    highlighted_chunks.append((no_nl(overlap), "overlap"))
 
         result = {
             out_code_func: gr.Textbox(value=iscc.iscc),
