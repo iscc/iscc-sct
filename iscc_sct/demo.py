@@ -176,14 +176,8 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         """,
         )
     with gr.Row(variant="panel"):
-        in_iscc_bits = gr.Slider(
-            label="ISCC Bit-Length",
-            info="NUMBER OF BITS FOR OUTPUT ISCC",
-            minimum=64,
-            maximum=256,
-            step=32,
-            value=128,
-        )
+        with gr.Column(variant="panel"):
+            out_similarity = gr.HTML(label="Similarity")
     with gr.Row(variant="panel"):
         with gr.Column(variant="panel"):
             in_text_a = gr.TextArea(
@@ -196,11 +190,6 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 choices=["None", "English", "Bulgarian"], label="Select sample for Text A", value="None"
             )
             out_code_a = gr.Textbox(label="ISCC Code for Text A")
-            out_chunks_a = gr.HighlightedText(
-                label="Chunked Text A",
-                interactive=False,
-                elem_id="chunked-text-a",
-            )
         with gr.Column(variant="panel"):
             in_text_b = gr.TextArea(
                 label="Text B",
@@ -212,6 +201,25 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 choices=["None", "German", "Chinese"], label="Select sample for Text B", value="None"
             )
             out_code_b = gr.Textbox(label="ISCC Code for Text B")
+
+    with gr.Row(variant="panel"):
+        in_iscc_bits = gr.Slider(
+            label="ISCC Bit-Length",
+            info="NUMBER OF BITS FOR OUTPUT ISCC",
+            minimum=64,
+            maximum=256,
+            step=32,
+            value=128,
+        )
+
+    with gr.Row(variant="panel"):
+        with gr.Column(variant="panel"):
+            out_chunks_a = gr.HighlightedText(
+                label="Chunked Text A",
+                interactive=False,
+                elem_id="chunked-text-a",
+            )
+        with gr.Column(variant="panel"):
             out_chunks_b = gr.HighlightedText(
                 label="Chunked Text B",
                 interactive=False,
@@ -232,10 +240,6 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
     sample_dropdown_b.change(
         lambda choice: update_sample_text(choice, "B"), inputs=[sample_dropdown_b], outputs=[in_text_b]
     )
-
-    with gr.Row(variant="panel"):
-        with gr.Column(variant="panel"):
-            out_similarity = gr.HTML(label="Similarity")
 
     def process_text(text, nbits, suffix):
         log.debug(f"{text[:20]}")
