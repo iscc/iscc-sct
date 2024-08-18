@@ -20,10 +20,19 @@ newline_symbols = {
 
 
 def no_nl(text):
-    """Replace non-printable newline characters with printable symbols"""
+    """Replace non-printable newline characters with printable symbols, ignoring leading and trailing newlines"""
+    # Strip leading and trailing whitespace
+    stripped_text = text.strip()
+
+    # Replace newline characters within the text
     for char, symbol in newline_symbols.items():
-        text = text.replace(char, symbol)
-    return text
+        stripped_text = stripped_text.replace(char, symbol)
+
+    # Add back the leading and trailing newlines
+    leading_newlines = len(text) - len(text.lstrip())
+    trailing_newlines = len(text) - len(text.rstrip())
+
+    return "\n" * leading_newlines + stripped_text + "\n" * trailing_newlines
 
 
 def clean_chunk(chunk):
@@ -243,7 +252,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
             else:
                 content = feature.content
                 size = feature.size
-            highlighted_chunks.append((content, f"{size}:{feature.simprint}"))
+            highlighted_chunks.append((no_nl(content), f"{size}:{feature.simprint}"))
             last_end = start + len(feature.content)
 
         result = {
