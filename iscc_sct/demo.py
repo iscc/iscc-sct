@@ -253,14 +253,24 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         overlaps = iscc.get_overlaps()
 
         for i, feature in enumerate(features.simprints):
+            feature: sct.Feature
             content = feature.content
+
+            # Remove leading overlap
+            if i > 0 and overlaps[i - 1]:
+                content = content[len(overlaps[i - 1]) :]
+
+            # Remove trailing overlap
+            if i < len(overlaps) and overlaps[i]:
+                content = content[: -len(overlaps[i])]
+
             label = f"{feature.size}:{feature.simprint}"
             highlighted_chunks.append((no_nl_inner(content), label))
 
             if i < len(overlaps):
                 overlap = overlaps[i]
                 if overlap:
-                    highlighted_chunks.append((no_nl(overlap), "overlap"))
+                    highlighted_chunks.append((f"\n{no_nl(overlap)}\n", "overlap"))
 
         result = {
             out_code_func: gr.Textbox(value=iscc.iscc),
