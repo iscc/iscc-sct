@@ -239,10 +239,14 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
 
     def process_text(text, nbits, suffix):
         log.debug(f"{text[:20]}")
-        if not text:
-            return
         out_code_func = globals().get(f"out_code_{suffix}")
         out_chunks_func = globals().get(f"out_chunks_{suffix}")
+
+        if not text:
+            return {
+                out_code_func: gr.Textbox(value=""),
+                out_chunks_func: gr.HighlightedText(value=[], elem_id="chunked-text"),
+            }
 
         result = sct.gen_text_code_semantic(text, bits=nbits, simprints=True, offsets=True, sizes=True, contents=True)
         iscc = sct.Metadata(**result).to_object_format()
@@ -272,11 +276,10 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 if overlap:
                     highlighted_chunks.append((f"\n{no_nl(overlap)}\n", "overlap"))
 
-        result = {
+        return {
             out_code_func: gr.Textbox(value=iscc.iscc),
             out_chunks_func: gr.HighlightedText(value=highlighted_chunks, elem_id="chunked-text"),
         }
-        return result
 
     def recalculate_iscc(text_a, text_b, nbits):
         code_a = sct.gen_text_code_semantic(text_a, bits=nbits)["iscc"] if text_a else None
@@ -328,6 +331,8 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
             gr.Textbox(value=""),  # Reset ISCC Code for Text A
             gr.Textbox(value=""),  # Reset ISCC Code for Text B
             gr.HTML(value=""),  # Reset Similarity
+            gr.HighlightedText(value=[]),  # Reset Chunked Text A
+            gr.HighlightedText(value=[]),  # Reset Chunked Text B
         )
 
     with gr.Row(variant="panel"):
@@ -344,6 +349,8 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
             out_code_a,
             out_code_b,
             out_similarity,
+            out_chunks_a,
+            out_chunks_b,
         ],
     )
 
