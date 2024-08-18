@@ -244,8 +244,8 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
 
         if not text:
             return {
-                out_code_func: gr.Textbox(value=""),
-                out_chunks_func: gr.HighlightedText(value=[], elem_id="chunked-text"),
+                out_code_func: gr.Textbox(value=None),
+                out_chunks_func: gr.HighlightedText(value=None, elem_id="chunked-text"),
             }
 
         result = sct.gen_text_code_semantic(text, bits=nbits, simprints=True, offsets=True, sizes=True, contents=True)

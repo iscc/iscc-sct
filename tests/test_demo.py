@@ -64,7 +64,11 @@ def test_process_text():
 
     # Test with empty input
     result = process_text("", 64, "b")
-    assert result is None
+    assert isinstance(result, dict)
+    assert len(result) == 2
+    for key, value in result.items():
+        assert isinstance(key, (gr.components.Textbox, gr.components.HighlightedText))
+        assert value.value is None
 
     # Test with different suffix
     result = process_text("Test", 64, "b")
