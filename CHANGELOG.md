@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.1.2] - Unreleased
+## [0.1.2] - 2024-08-19
 - Encode granular features with base64
 - Refactor result format to generic ISCC data model
 - Add optional gradio GUI demo
