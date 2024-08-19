@@ -117,13 +117,12 @@ For granular (per chunk) feature outputs:
 The installation also provides a sct command-line tool:
 
 ```shell
-sct --help
 usage: sct [-h] [-b BITS] [-g] [-d] [path]
 
 Generate Semantic Text-Codes for text files.
 
 positional arguments:
-  path                  Path to text files (supports glob patterns).
+  path                  Path to text files (supports glob patterns) or 'gui' to launch Gradio demo.
 
 options:
   -h, --help            show this help message and exit

@@ -9,7 +9,10 @@ from charset_normalizer import from_bytes
 def main():
     parser = argparse.ArgumentParser(description="Generate Semantic Text-Codes for text files.")
     parser.add_argument(
-        "path", type=str, help="Path to text files (supports glob patterns).", nargs="?"
+        "path",
+        type=str,
+        help="Path to text files (supports glob patterns) or 'gui' to launch Gradio demo.",
+        nargs="?",
     )
     parser.add_argument(
         "-b", "--bits", type=int, default=256, help="Bit-Length of Code (default 256)"
@@ -26,6 +29,17 @@ def main():
 
     if not args.debug:
         logger.remove()
+
+    if args.path == "gui":  # pragma: no cover
+        try:
+            from iscc_sct.demo import demo
+
+            demo.launch(inbrowser=True)
+        except ImportError:
+            print(
+                "Error: Gradio is not installed. Please install it with 'pip install gradio' to use the GUI."
+            )
+        return
 
     for path in glob.glob(args.path):
         path = Path(path)
