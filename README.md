@@ -144,9 +144,8 @@ This process ensures robustness to variations and translations, enabling cross-l
 
 ## Development and Contributing
 
-We welcome contributions to enhance the capabilities, efficiency, and compatibility of this proof of
-concept with the broader ISCC ecosystem. For development, install the project in development mode
-using [Poetry](https://python-poetry.org):
+We welcome contributions to enhance the capabilities and efficiency of this proof of concept. For
+development, install the project in development mode using [Poetry](https://python-poetry.org):
 
 ```shell
 git clone https://github.com/iscc/iscc-sct.git
@@ -156,6 +155,43 @@ poetry install
 
 If you have suggestions for improvements or bug fixes, please open an issue or pull request. For
 major changes, please open an issue first to discuss your ideas.
+
+**We particularly welcome recommendations for other multilingual text embedding models trained with
+Matryoshka Representation Learning (MRL) and optimized for binarization. Such contributions could
+significantly improve the performance and efficiency of the ISCC Semantic Text-Code generation.**
+
+## Gradio Demo
+
+This repository also provides an interactive Gradio demo that allows you to explore the capabilities
+of ISCC Semantic Text-Code. The demo showcases:
+
+- Generation of ISCC Semantic Text-Codes for input texts
+- Comparison of two texts and their similarity based on the generated codes
+- Visualization of text chunking and granular matches
+- Adjustable parameters like ISCC bit-length and maximum tokens per chunk
+
+You can access the live version of the Gradio demo at:
+[https://huggingface.co/spaces/iscc/iscc-sct](https://huggingface.co/spaces/iscc/iscc-sct)
+
+### Running the Gradio Demo Locally
+
+To run the Gradio demo locally, you first need to install the `iscc-sct` package with the optional
+`demo` dependency:
+
+```shell
+pip install iscc-sct[demo]
+```
+
+This will ensure that Gradio and other necessary dependencies for the demo are installed.
+
+After installation, you can use the `sct` command-line tool that comes with the package:
+
+```shell
+sct gui
+```
+
+This command will launch the Gradio interface in your default web browser, allowing you to interact
+with the demo on your local machine.
 
 ## Suported Languages:
 
@@ -190,39 +226,6 @@ short 64-bit Semantic Text-Codes.
 
 A text embedding model with support for a larger `max_token` size (currently 128) may yield
 higher-order granular simprints based on larger chunks of text.
-
-## Gradio Demo
-
-We provide an interactive Gradio demo that allows you to explore the capabilities of ISCC Semantic
-Text-Code. The demo showcases:
-
-- Generation of ISCC Semantic Text-Codes for input texts
-- Comparison of two texts and their similarity based on the generated codes
-- Visualization of text chunking and granular matches
-- Adjustable parameters like ISCC bit-length and maximum tokens per chunk
-
-You can access the live version of the Gradio demo at:
-[https://huggingface.co/spaces/iscc/iscc-sct](https://huggingface.co/spaces/iscc/iscc-sct)
-
-### Running the Gradio Demo Locally
-
-To run the Gradio demo locally, you first need to install the `iscc-sct` package with the optional
-`demo` dependency:
-
-```shell
-pip install iscc-sct[demo]
-```
-
-This will ensure that Gradio and other necessary dependencies for the demo are installed.
-
-After installation, you can use the `sct` command-line tool that comes with the package:
-
-```shell
-sct gui
-```
-
-This command will launch the Gradio interface in your default web browser, allowing you to interact
-with the demo on your local machine.
 
 ## Acknowledgements
 

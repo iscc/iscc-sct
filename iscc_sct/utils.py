@@ -23,11 +23,13 @@ __all__ = [
     "get_model",
     "encode_base32",
     "encode_base64",
+    "decode_base32",
+    "decode_base64",
     "hamming_distance",
     "iscc_distance",
-    "MODEL_PATH",
     "cosine_similarity",
     "granular_similarity",
+    "MODEL_PATH",
 ]
 
 

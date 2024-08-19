@@ -70,7 +70,7 @@ The `FeatureSet` model unifies these two formats by allowing either structure to
 To use the `FeatureSet` model, you can either provide data in the Index-Format or Object-Format.
 """
 
-from typing import List, Optional, Dict, Any, Union
+from typing import List, Optional, Union
 from pydantic import BaseModel
 
 

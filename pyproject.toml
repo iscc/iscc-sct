@@ -57,10 +57,11 @@ tokenizers = "*"
 pydantic-settings = "*"
 charset-normalizer = "*"
 numpy = "<2.0.0"
-pybase64 = "^1.4.0"
+pybase64 = "*"
 certifi = ">=2024.07.04"
 gradio = { version = "*", optional = true }
-pyyaml = "^6.0.2"
+pyyaml = "*"
+pydantic = "*"
 
 
 [tool.poetry.extras]
