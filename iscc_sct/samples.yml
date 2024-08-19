@@ -81,11 +81,12 @@
       und Regeln in diesem Dokument erstellt wird. Dieses Dokument enthält keine Informationen
       über die Registrierung von ISCCs.
     "Chinese": >
-      本文件规定了国际标准内容代码（ISCC）的语法和结构，作为数字资产的识别系统（包括所有媒体领域的文本、图像、音频、视频或其他内容的编码）。它还描述了 ISCC
-      元数据以及 ISCC 与其他方案（例如 DOI、ISAN、ISBN、ISRC、ISSN 和 ISWC）结合使用。
+      本文件規定了國際標準內容編碼 (ISCC) 的語法和結構，作為數位資產 (包括所有媒體領域的文字、影像、音訊、視訊或其他內容的編碼) 的識別系統。它還介紹了
+      ISCC 元資料以及 ISCC 與其他方案（如 DOI、ISAN、ISBN、ISRC、ISSN 和 ISWC）的結合使用。
 
 
-      ISCC 适用于特定的数字资产，是使用本文档中的算法和规则从多个哈希摘要确定性构建的数据描述符。本文件不提供有关 ISCC 注册的信息。
+      ISCC 適用於特定的數位資產，是使用本文件中的演算法和規則，由多個雜湊摘要（hash digests）確定地建構出來的資料描述符（data-descriptor）。本文件不提供
+      ISCC 的註冊資訊。
     "Korean": >
       이 문서는 디지털 자산(모든 미디어 부문의 텍스트, 이미지, 오디오, 비디오 또는 기타 콘텐츠의 인코딩 포함)에 대한 식별 시스템인 ISCC(국제
       표준 콘텐츠 코드)의 구문과 구조를 지정합니다. 또한 ISCC 메타데이터와 DOI, ISAN, ISBN, ISRC, ISSN 및 ISWC와
