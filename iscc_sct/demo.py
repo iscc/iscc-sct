@@ -6,6 +6,7 @@ from loguru import logger as log
 import gradio as gr
 import iscc_sct as sct
 import textwrap
+import yaml
 
 
 newline_symbols = {
@@ -97,66 +98,12 @@ def generate_similarity_bar(similarity):
     return bar_html
 
 
-# Sample texts
-sample_text_en = "\n\n".join(
-    [
-        " ".join(paragraph.split())
-        for paragraph in """
-This document specifies the syntax and structure of the International Standard Content Code (ISCC),
-as an identification system for digital assets (including encodings of text, images, audio, video or other content
-across all media sectors). It also describes ISCC metadata and the use of ISCC in conjunction with other schemes, such
-as DOI, ISAN, ISBN, ISRC, ISSN and ISWC.
+def load_samples():
+    with open("iscc_sct/samples.yml", "r", encoding="utf-8") as file:
+        return yaml.safe_load(file)["samples"]
 
-An ISCC applies to a specific digital asset and is a data-descriptor deterministically constructed from multiple hash
-digests using the algorithms and rules in this document. This document does not provide information on registration of
-ISCCs.
-""".strip().split("\n\n")
-    ]
-)
 
-sample_text_de = "\n\n".join(
-    [
-        " ".join(paragraph.split())
-        for paragraph in """
-Dieses Dokument spezifiziert die Syntax und Struktur des International Standard Content Code (ISCC) als
-Identifizierungssystem für digitale Inhalte (einschließlich Kodierungen von Text, Bildern, Audio, Video oder anderen
-Inhalten in allen Medienbereichen). Sie beschreibt auch ISCC-Metadaten und die Verwendung von ISCC in Verbindung mit
-anderen Systemen wie DOI, ISAN, ISBN, ISRC, ISSN und ISWC.
-
-Ein ISCC bezieht sich auf ein bestimmtes digitales Gut und ist ein Daten-Deskriptor, der deterministisch aus mehreren
-Hash-Digests unter Verwendung der Algorithmen und Regeln in diesem Dokument erstellt wird. Dieses Dokument enthält
-keine Informationen über die Registrierung von ISCCs.
-""".strip().split("\n\n")
-    ]
-)
-
-sample_text_bg = "\n\n".join(
-    [
-        " ".join(paragraph.split())
-        for paragraph in """
-Този документ определя синтаксиса и структурата на Международния стандартен код на съдържанието (ISCC) като система за
-идентификация на цифрови активи (включително кодиране на текст, изображения, аудио, видео или друго съдържание във
-всички медийни сектори). Той описва също метаданните на ISCC и използването на ISCC във връзка с други схеми, като
-DOI, ISAN, ISBN, ISRC, ISSN и ISWC.
-
-ISCC се прилага за конкретен цифров актив и представлява детерминиран дескриптор на данни, конструиран от множество
-хеш-разходи, като се използват алгоритмите и правилата в настоящия документ. Настоящият документ не предоставя
-информация за регистрацията на ISCC.
-""".strip().split("\n\n")
-    ]
-)
-
-sample_text_zh = "\n\n".join(
-    [
-        " ".join(paragraph.split())
-        for paragraph in """
-本文件规定了国际标准内容代码（ISCC）的语法和结构，作为数字资产（包括所有媒 体领域的文本、图像、音频、视频或其他内容的编码）的标识系统。它还介绍了
-ISCC 元数据以及 ISCC 与其他方案（如 DOI、ISAN、ISBN、ISRC、ISSN 和 ISWC）的结合使用。
-
-ISCC 适用于特定的数字资产，是使用本文件中的算法和规则从多个哈希摘要中确定性地建 立起来的数据描述符。本文件不提供有关 ISCC 注册的信息。
-""".strip().split("\n\n")
-    ]
-)
+samples = load_samples()
 
 custom_css = """
 """
@@ -178,11 +125,15 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
     with gr.Row(variant="panel"):
         with gr.Column(variant="panel"):
             sample_dropdown_a = gr.Dropdown(
-                choices=["None", "English", "Bulgarian"], label="Select sample for Text A", value="None"
+                choices=["None"] + [lang for lang in samples["a"]],
+                label="Select sample for Text A",
+                value="None",
             )
         with gr.Column(variant="panel"):
             sample_dropdown_b = gr.Dropdown(
-                choices=["None", "German", "Chinese"], label="Select sample for Text B", value="None"
+                choices=["None"] + [lang for lang in samples["b"]],
+                label="Select sample for Text B",
+                value="None",
             )
 
     with gr.Row(variant="panel"):
@@ -231,19 +182,16 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 elem_id="chunked-text-b",
             )
 
-    def update_sample_text(choice, text_a_or_b):
+    def update_sample_text(choice, group):
         if choice == "None":
             return ""
-        if text_a_or_b == "A":
-            return sample_text_en if choice == "English" else sample_text_bg
-        else:
-            return sample_text_de if choice == "German" else sample_text_zh
+        return samples[group][choice]
 
     sample_dropdown_a.change(
-        lambda choice: update_sample_text(choice, "A"), inputs=[sample_dropdown_a], outputs=[in_text_a]
+        lambda choice: update_sample_text(choice, "a"), inputs=[sample_dropdown_a], outputs=[in_text_a]
     )
     sample_dropdown_b.change(
-        lambda choice: update_sample_text(choice, "B"), inputs=[sample_dropdown_b], outputs=[in_text_b]
+        lambda choice: update_sample_text(choice, "b"), inputs=[sample_dropdown_b], outputs=[in_text_b]
     )
 
     def process_text(text, nbits, suffix):
@@ -333,8 +281,12 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
     def reset_all():
         return (
             gr.Slider(value=128),  # Reset ISCC Bit-Length
-            gr.Dropdown(value="None"),  # Reset sample dropdown A
-            gr.Dropdown(value="None"),  # Reset sample dropdown B
+            gr.Dropdown(
+                value="None", choices=["None"] + [f"a:{lang}" for lang in samples["a"]]
+            ),  # Reset sample dropdown A
+            gr.Dropdown(
+                value="None", choices=["None"] + [f"b:{lang}" for lang in samples["b"]]
+            ),  # Reset sample dropdown B
             gr.TextArea(value=""),  # Reset Text A
             gr.TextArea(value=""),  # Reset Text B
             gr.Textbox(value=""),  # Reset ISCC Code for Text A
