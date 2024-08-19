@@ -127,3 +127,89 @@ def test_cosine_similarity_different_lengths():
     b = b"\x00\x00\x00\x00"
     with pytest.raises(ValueError, match="The lengths of the two bytes objects must be the same"):
         utils.cosine_similarity(a, b)
+
+
+def test_granular_similarity():
+    from iscc_sct.models import Metadata, FeatureSet, Feature
+
+    # Create two Metadata objects with some matching and non-matching simprints
+    metadata_a = Metadata(
+        iscc="ISCC:KACYPXW563EDNM",
+        features=[
+            FeatureSet(
+                simprints=[
+                    Feature(simprint="AAAA"),  # Will match
+                    Feature(simprint="BBBB"),  # Will not match
+                ]
+            )
+        ],
+    )
+
+    metadata_b = Metadata(
+        iscc="ISCC:KACYPXW563EDNM",
+        features=[
+            FeatureSet(
+                simprints=[
+                    Feature(simprint="AAAA"),  # Will match
+                    Feature(simprint="CCCC"),  # Will not match
+                ]
+            )
+        ],
+    )
+
+    # Test with default threshold
+    matches = utils.granular_similarity(metadata_a, metadata_b)
+    assert len(matches) == 1
+    assert matches[0][0].simprint == "AAAA"
+    assert matches[0][1] == 100
+    assert matches[0][2].simprint == "AAAA"
+
+    # Test with lower threshold
+    matches = utils.granular_similarity(metadata_a, metadata_b, threshold=0)
+    assert len(matches) == 4  # All combinations should match
+
+    # Test with higher threshold
+    matches = utils.granular_similarity(metadata_a, metadata_b, threshold=101)
+    assert len(matches) == 0  # No matches should be found
+
+
+def test_granular_similarity_no_matches():
+    from iscc_sct.models import Metadata, FeatureSet, Feature
+
+    metadata_a = Metadata(
+        iscc="ISCC:KACYPXW563EDNM", features=[FeatureSet(simprints=[Feature(simprint="AAAA")])]
+    )
+
+    metadata_b = Metadata(
+        iscc="ISCC:KACYPXW563EDNM", features=[FeatureSet(simprints=[Feature(simprint="BBBB")])]
+    )
+
+    matches = utils.granular_similarity(metadata_a, metadata_b)
+    assert len(matches) == 0
+
+
+def test_granular_similarity_multiple_matches():
+    from iscc_sct.models import Metadata, FeatureSet, Feature
+
+    metadata_a = Metadata(
+        iscc="ISCC:KACYPXW563EDNM",
+        features=[
+            FeatureSet(simprints=[Feature(simprint="AAAA"), Feature(simprint="BBBB")]),
+            FeatureSet(simprints=[Feature(simprint="CCCC")]),
+        ],
+    )
+
+    metadata_b = Metadata(
+        iscc="ISCC:KACYPXW563EDNM",
+        features=[
+            FeatureSet(simprints=[Feature(simprint="AAAA"), Feature(simprint="DDDD")]),
+            FeatureSet(simprints=[Feature(simprint="CCCC")]),
+        ],
+    )
+
+    matches = utils.granular_similarity(metadata_a, metadata_b)
+    assert len(matches) == 2
+    assert {(match[0].simprint, match[2].simprint) for match in matches} == {
+        ("AAAA", "AAAA"),
+        ("CCCC", "CCCC"),
+    }
