@@ -205,7 +205,7 @@ def granular_similarity(metadata_a, metadata_b, threshold=80):
     # type: (Metadata, Metadata, int) -> List[Tuple[Feature, int, Feature]]
     """
     Compare simprints from two Metadata objects and return matching pairs above a similarity
-    threshold.
+    threshold. Only the most similar pair for each simprint_a is included.
 
     :param metadata_a: The first Metadata object.
     :param metadata_b: The second Metadata object.
@@ -218,13 +218,20 @@ def granular_similarity(metadata_a, metadata_b, threshold=80):
     matches = []
 
     for feature_set_a in metadata_a.features:
-        for feature_set_b in metadata_b.features:
-            for simprint_a in feature_set_a.simprints:
+        for simprint_a in feature_set_a.simprints:
+            best_match = None
+            best_similarity = threshold - 1
+
+            for feature_set_b in metadata_b.features:
                 for simprint_b in feature_set_b.simprints:
                     similarity = cosine_similarity(
                         decode_base64(simprint_a.simprint), decode_base64(simprint_b.simprint)
                     )
-                    if similarity >= threshold:
-                        matches.append((simprint_a, similarity, simprint_b))
+                    if similarity > best_similarity:
+                        best_similarity = similarity
+                        best_match = (simprint_a, similarity, simprint_b)
+
+            if best_match:
+                matches.append(best_match)
 
     return matches
