@@ -135,12 +135,28 @@ options:
 
 `iscc-sct` employs the following process:
 
-1. Splits the text into semantically coherent chunks.
+1. Splits the text into overlaping chunks (using syntactically sensible breakpoints).
 1. Uses a pre-trained deep learning model for text embedding.
 1. Generates feature vectors capturing essential characteristics of the chunks.
 1. Aggregates these vectors and binarizes them to produce a Semantic Text-Code.
+1. Prefixes the binarized vector with the matching ISCC header, encodes it with base32, and adds the
+   "ISCC:" prefix.
 
 This process ensures robustness to variations and translations, enabling cross-lingual matching.
+
+Here's a visual representation of the ISCC Semantic Text-Code generation process:
+
+```mermaid
+graph TD
+    A[Input Text] --> B[Split into Overlapping Chunks]
+    B --> C[Create Multilingual Vector Embeddings per Chunk]
+    C --> D[Calculate Document Vector using Mean Pooling]
+    D --> E[Binarize Document Vector]
+    E --> F[Prefix with ISCC Header]
+    F --> G[Encode with Base32]
+    G --> H[Prefix with 'ISCC:']
+    H --> I[Final ISCC Semantic Text-Code]
+```
 
 ## Development and Contributing
 
