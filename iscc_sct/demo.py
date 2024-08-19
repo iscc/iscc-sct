@@ -207,7 +207,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
     with gr.Accordion(label="Details", open=False):
 
         with gr.Row(variant="panel"):
-            with gr.Column():
+            with gr.Column(variant="panel"):
                 in_iscc_bits = gr.Slider(
                     label="ISCC Bit-Length",
                     info="NUMBER OF BITS FOR OUTPUT ISCC",
@@ -216,7 +216,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                     step=32,
                     value=sct.sct_opts.bits,
                 )
-            with gr.Column():
+            with gr.Column(variant="panel"):
                 in_max_tokens = gr.Slider(
                     label="Max Tokens",
                     info="MAXIMUM NUMBER OF TOKENS PER CHUNK",
