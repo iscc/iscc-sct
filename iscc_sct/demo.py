@@ -134,8 +134,9 @@ samples = load_samples()
 
 
 iscc_theme = gr.themes.Default(
-    font=[gr.themes.GoogleFont("Readex Pro")],
+    font=[gr.themes.GoogleFont("Readex Pro Light")],
     font_mono=[gr.themes.GoogleFont("JetBrains Mono")],
+    text_size=gr.themes.sizes.text_lg,
     radius_size=gr.themes.sizes.radius_none,
 )
 
@@ -499,7 +500,7 @@ The "Explore Details & Advanced Options" section provides additional tools and i
 
 4. **Granular Matches**: See a detailed comparison of individual chunks between Text A and Text B.
    This table shows which specific parts of the texts are most similar, along with their approximate
-   cosine similarity (scales from -100% to +100%).
+   cosine similarity (scaled -100% to +100%).
 """
             )
 
