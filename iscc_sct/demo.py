@@ -18,47 +18,6 @@ custom_css = """
     background: white;
     min-height: 30px;
 }
-
-.granular-matches {
-    max-height: 300px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: transparent transparent;
-}
-
-.granular-matches::-webkit-scrollbar {
-    width: 6px;
-}
-
-.granular-matches::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.granular-matches::-webkit-scrollbar-thumb {
-    background-color: transparent;
-}
-
-.granular-matches:hover {
-    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
-}
-
-.granular-matches:hover::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.3);
-}
-
-.granular-matches table {
-    width: 100%;
-}
-
-.granular-matches td {
-    vertical-align: top;
-    padding: 5px;
-    border-bottom: 1px solid #eee;
-}
-
-.granular-matches tr:last-child td {
-    border-bottom: none;
-}
 """
 
 
@@ -232,7 +191,10 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
     with gr.Row(variant="panel"):
         reset_button = gr.Button("Reset All")
 
-    with gr.Accordion(label="Details", open=False):
+    with gr.Accordion(label="🔍 Explore Details & Advanced Options", open=False):
+        gr.Markdown(
+            "Unfold to see chunked texts, adjust ISCC bit-length, and view granular matches between texts."
+        )
         with gr.Row(variant="panel"):
             with gr.Column(variant="panel"):
                 in_iscc_bits = gr.Slider(
