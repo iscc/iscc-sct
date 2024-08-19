@@ -217,6 +217,15 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 elem_id="chunked-text-b",
             )
 
+    with gr.Row(variant="panel"):
+        with gr.Column(variant="panel"):
+            gr.Markdown("### Granular Matches")
+            in_granular_matches = gr.Dataframe(
+                headers=["Chunked A", "Similarity", "Chunk B"],
+                column_widths=["45%", "10%", "45%"]
+            )
+
+
     def update_sample_text(choice, group):
         if choice == "None":
             return ""
