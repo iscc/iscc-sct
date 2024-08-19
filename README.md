@@ -157,6 +157,16 @@ poetry install
 If you have suggestions for improvements or bug fixes, please open an issue or pull request. For
 major changes, please open an issue first to discuss your ideas.
 
+## Suported Languages:
+
+Arabic, Armenian, Bengali, Bosnian, Bulgarian, Burmese, Catalan, Chinese (China), Chinese (Taiwan),
+Croatian, Czech, Danish, Dutch, English, Estonian, Farsi, Finnish, French, French (Canada),
+Galician, German, Greek, Gujarati, Hebrew, Hindi, Hungarian, Icelandic, Indonesian, Italian,
+Japanese, Kannada, Korean, Kurdish, Latvian, Lithuanian, Macedonian, Malay, Malayalam, Marathi,
+Mongolian, Norwegian Bokmål, Persian, Polish, Portuguese, Portuguese (Brazil), Romanian, Russian,
+Serbian, Sinhala, Slovak, Slovenian, Spanish, Swedish, Tamil, Telugu, Thai, Turkish, Ukrainian,
+Urdu, Vietnamese.
+
 ## Future Work
 
 ### Shift Resistant Semantic Chunking
