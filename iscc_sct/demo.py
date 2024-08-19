@@ -205,7 +205,6 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         reset_button = gr.Button("Reset All")
 
     with gr.Accordion(label="Details", open=False):
-
         with gr.Row(variant="panel"):
             with gr.Column(variant="panel"):
                 in_iscc_bits = gr.Slider(
@@ -247,7 +246,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                     headers=["Chunk A", "Similarity", "Chunk B"],
                     column_widths=["45%", "10%", "45%"],
                     wrap=True,
-                    elem_classes="no-scrollbar"
+                    elem_classes="no-scrollbar",
                 )
 
     def update_sample_text(choice, group):
@@ -335,7 +334,9 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
 
         granular_matches = []
         if text_a and text_b:
-            matches = sct.granular_similarity(result_a["metadata"], result_b["metadata"], threshold=75)
+            matches = sct.granular_similarity(
+                result_a["metadata"], result_b["metadata"], threshold=80
+            )
             for match in matches:
                 granular_matches.append(
                     [

@@ -90,3 +90,40 @@ def test_iscc_distance_different_lengths():
     iscc2 = sct.create("Hello", bits=96).iscc
     with pytest.raises(ValueError, match="The input ISCCs must have the same length"):
         utils.iscc_distance(iscc1, iscc2)
+
+
+def test_cosine_similarity_identical():
+    a = b"\x00\x00\x00\x00"
+    b = b"\x00\x00\x00\x00"
+    assert utils.cosine_similarity(a, b) == 100
+
+
+def test_cosine_similarity_opposite():
+    a = b"\x00\x00\x00\x00"
+    b = b"\xff\xff\xff\xff"
+    assert utils.cosine_similarity(a, b) == -100
+
+
+def test_cosine_similarity_half_similar():
+    a = b"\x00\x00\xff\xff"
+    b = b"\x00\x00\x00\x00"
+    assert utils.cosine_similarity(a, b) == 0
+
+
+def test_cosine_similarity_quarter_similar():
+    a = b"\x00\xff\xff\xff"
+    b = b"\x00\x00\x00\x00"
+    assert utils.cosine_similarity(a, b) == -50
+
+
+def test_cosine_similarity_three_quarter_similar():
+    a = b"\x00\x00\x00\xff"
+    b = b"\x00\x00\x00\x00"
+    assert utils.cosine_similarity(a, b) == 50
+
+
+def test_cosine_similarity_different_lengths():
+    a = b"\x00\x00\x00"
+    b = b"\x00\x00\x00\x00"
+    with pytest.raises(ValueError, match="The lengths of the two bytes objects must be the same"):
+        utils.cosine_similarity(a, b)
