@@ -18,6 +18,24 @@ custom_css = """
     background: white;
     min-height: 30px;
 }
+
+.no-scrollbar table {
+ overflow: hidden !important;
+}
+
+.no-scrollbar thead,
+.no-scrollbar tbody {
+ overflow: hidden !important;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+ display: none;
+}
+
+.no-scrollbar {
+ -ms-overflow-style: none;
+ scrollbar-width: none;
+}
 """
 
 
@@ -184,47 +202,53 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 out_similarity = gr.HTML()
 
     with gr.Row(variant="panel"):
-        with gr.Column():
-            in_iscc_bits = gr.Slider(
-                label="ISCC Bit-Length",
-                info="NUMBER OF BITS FOR OUTPUT ISCC",
-                minimum=64,
-                maximum=256,
-                step=32,
-                value=sct.sct_opts.bits,
-            )
-        with gr.Column():
-            in_max_tokens = gr.Slider(
-                label="Max Tokens",
-                info="MAXIMUM NUMBER OF TOKENS PER CHUNK",
-                minimum=49,
-                maximum=sct.sct_opts.max_tokens,
-                step=1,
-                value=127,
-            )
+        reset_button = gr.Button("Reset All")
 
-    with gr.Row(variant="panel"):
-        with gr.Column(variant="panel"):
-            out_chunks_a = gr.HighlightedText(
-                label="Chunked Text A",
-                interactive=False,
-                elem_id="chunked-text-a",
-            )
-        with gr.Column(variant="panel"):
-            out_chunks_b = gr.HighlightedText(
-                label="Chunked Text B",
-                interactive=False,
-                elem_id="chunked-text-b",
-            )
+    with gr.Accordion(label="Details", open=False):
 
-    with gr.Row(variant="panel"):
-        with gr.Column(variant="panel"):
-            gr.Markdown("### Granular Matches")
-            in_granular_matches = gr.Dataframe(
-                headers=["Chunked A", "Similarity", "Chunk B"],
-                column_widths=["45%", "10%", "45%"]
-            )
+        with gr.Row(variant="panel"):
+            with gr.Column():
+                in_iscc_bits = gr.Slider(
+                    label="ISCC Bit-Length",
+                    info="NUMBER OF BITS FOR OUTPUT ISCC",
+                    minimum=64,
+                    maximum=256,
+                    step=32,
+                    value=sct.sct_opts.bits,
+                )
+            with gr.Column():
+                in_max_tokens = gr.Slider(
+                    label="Max Tokens",
+                    info="MAXIMUM NUMBER OF TOKENS PER CHUNK",
+                    minimum=49,
+                    maximum=sct.sct_opts.max_tokens,
+                    step=1,
+                    value=127,
+                )
 
+        with gr.Row(variant="panel"):
+            with gr.Column(variant="panel"):
+                out_chunks_a = gr.HighlightedText(
+                    label="Chunked Text A",
+                    interactive=False,
+                    elem_id="chunked-text-a",
+                )
+            with gr.Column(variant="panel"):
+                out_chunks_b = gr.HighlightedText(
+                    label="Chunked Text B",
+                    interactive=False,
+                    elem_id="chunked-text-b",
+                )
+
+        with gr.Row(variant="panel"):
+            with gr.Column(variant="panel"):
+                gr.Markdown("### Granular Matches")
+                in_granular_matches = gr.Dataframe(
+                    headers=["Chunk A", "Similarity", "Chunk B"],
+                    column_widths=["45%", "10%", "45%"],
+                    wrap=True,
+                    elem_classes="no-scrollbar"
+                )
 
     def update_sample_text(choice, group):
         if choice == "None":
@@ -298,6 +322,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 out_chunks_func: gr.HighlightedText(
                     value=highlighted_chunks, elem_id=f"chunked-text-{suffix}"
                 ),
+                "metadata": iscc,
             }
 
         result_a = process_single_text(text_a, "a")
@@ -308,18 +333,38 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
 
         similarity = compare_codes(code_a, code_b, nbits) or out_similarity
 
+        granular_matches = []
+        if text_a and text_b:
+            matches = sct.granular_similarity(result_a["metadata"], result_b["metadata"], threshold=75)
+            for match in matches:
+                granular_matches.append(
+                    [
+                        match[0].content,
+                        f"{match[1]}%",
+                        match[2].content,
+                    ]
+                )
+
         return (
             result_a[out_code_a],
             result_a[out_chunks_a],
             result_b[out_code_b],
             result_b[out_chunks_b],
             similarity,
+            gr.Dataframe(value=granular_matches),
         )
 
     in_text_a.change(
         process_and_calculate,
         inputs=[in_text_a, in_text_b, in_iscc_bits, in_max_tokens],
-        outputs=[out_code_a, out_chunks_a, out_code_b, out_chunks_b, out_similarity],
+        outputs=[
+            out_code_a,
+            out_chunks_a,
+            out_code_b,
+            out_chunks_b,
+            out_similarity,
+            in_granular_matches,
+        ],
         show_progress="full",
         trigger_mode="always_last",
     )
@@ -327,7 +372,14 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
     in_text_b.change(
         process_and_calculate,
         inputs=[in_text_a, in_text_b, in_iscc_bits, in_max_tokens],
-        outputs=[out_code_a, out_chunks_a, out_code_b, out_chunks_b, out_similarity],
+        outputs=[
+            out_code_a,
+            out_chunks_a,
+            out_code_b,
+            out_chunks_b,
+            out_similarity,
+            in_granular_matches,
+        ],
         show_progress="full",
         trigger_mode="always_last",
     )
@@ -335,14 +387,28 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
     in_iscc_bits.change(
         process_and_calculate,
         inputs=[in_text_a, in_text_b, in_iscc_bits, in_max_tokens],
-        outputs=[out_code_a, out_chunks_a, out_code_b, out_chunks_b, out_similarity],
+        outputs=[
+            out_code_a,
+            out_chunks_a,
+            out_code_b,
+            out_chunks_b,
+            out_similarity,
+            in_granular_matches,
+        ],
         show_progress="full",
     )
 
     in_max_tokens.change(
         process_and_calculate,
         inputs=[in_text_a, in_text_b, in_iscc_bits, in_max_tokens],
-        outputs=[out_code_a, out_chunks_a, out_code_b, out_chunks_b, out_similarity],
+        outputs=[
+            out_code_a,
+            out_chunks_a,
+            out_code_b,
+            out_chunks_b,
+            out_similarity,
+            in_granular_matches,
+        ],
         show_progress="full",
     )
 
@@ -370,9 +436,6 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
             gr.HighlightedText(value=[]),  # Reset Chunked Text A
             gr.HighlightedText(value=[]),  # Reset Chunked Text B
         )
-
-    with gr.Row(variant="panel"):
-        reset_button = gr.Button("Reset All")
 
     reset_button.click(
         reset_all,
@@ -422,7 +485,8 @@ not just the exact words.
 - **Publishers**: Identify potential translations or similar works efficiently.
 
 This technology opens up new possibilities for understanding and managing text content across language barriers!
-""")
+"""
+            )
 
 
 if __name__ == "__main__":  # pragma: no cover

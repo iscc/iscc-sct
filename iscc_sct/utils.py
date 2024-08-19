@@ -26,6 +26,8 @@ __all__ = [
     "hamming_distance",
     "iscc_distance",
     "MODEL_PATH",
+    "cosine_similarity",
+    "granular_similarity",
 ]
 
 
