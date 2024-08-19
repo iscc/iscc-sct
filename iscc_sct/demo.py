@@ -482,7 +482,24 @@ or stored.
 - **Publishers**: Identify potential translations or similar works efficiently.
 
 This technology opens up new possibilities for understanding and managing text content across
-    language barriers!
+language barriers!
+
+### Explore Details & Advanced Options
+
+The "Explore Details & Advanced Options" section provides additional tools and information:
+
+1. **ISCC Bit-Length**: Adjust the precision of the ISCC code. Higher values provide more detailed
+   comparisons but may be more sensitive to minor differences.
+
+2. **Max Tokens**: Set the maximum number of tokens per chunk. This affects how the text is split
+   for processing.
+
+3. **Chunked Text**: View how each input text is divided into chunks for processing. Each chunk is
+   color-coded and labeled with its size and simprint (a similarity preserving fingerprint).
+
+4. **Granular Matches**: See a detailed comparison of individual chunks between Text A and Text B.
+   This table shows which specific parts of the texts are most similar, along with their approximate
+   cosine similarity (scales from -100% to +100%).
 """
             )
 
