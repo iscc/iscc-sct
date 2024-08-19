@@ -192,9 +192,6 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         reset_button = gr.Button("Reset All")
 
     with gr.Accordion(label="🔍 Explore Details & Advanced Options", open=False):
-        gr.Markdown(
-            "Unfold to see chunked texts, adjust ISCC bit-length, and view granular matches between texts."
-        )
         with gr.Row(variant="panel"):
             with gr.Column(variant="panel"):
                 in_iscc_bits = gr.Slider(
