@@ -60,6 +60,7 @@ numpy = "<2.0.0"
 pybase64 = "^1.4.0"
 certifi = ">=2024.07.04"
 gradio = { version = "*", optional = true }
+pyyaml = "^6.0.2"
 
 
 [tool.poetry.extras]
@@ -79,7 +80,7 @@ mdformat-gfm-alerts = "*"
 mdformat-frontmatter = "*"
 
 [tool.ruff]
-line-length = 119
+line-length = 100
 
 [tool.ruff.format]
 line-ending = "lf"
@@ -90,10 +91,11 @@ omit = ["iscc_sct/dev.py", "tests/", "iscc_sct/demo.py"]
 [tool.poe.tasks]
 format-code = { cmd = "ruff format", help = "Code style formating with ruff" }
 format-markdown = { cmd = "mdformat --wrap 119 --end-of-line lf README.md", help = "Markdown formating with mdformat" }
+format-yml = { script = "iscc_sct.dev:format_yml", help = "Format YML files"}
 convert-lf = { script = "iscc_sct.dev:convert_lf", help = "Convert line endings to LF"}
 test = { cmd = "pytest --cov=iscc_sct --cov-fail-under=100", help = "Run tests with coverage" }
 update-dependencies = { cmd = "poetry update", help = "Update dependencies" }
-all = ["format-code", "format-markdown", "convert-lf", "test"]
+all = ["format-code", "format-markdown", "format-yml", "convert-lf", "test"]
 update = ["update-dependencies", "all"]
 
 [build-system]
