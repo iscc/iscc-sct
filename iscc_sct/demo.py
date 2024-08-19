@@ -20,6 +20,12 @@ newline_symbols = {
 }
 
 
+default_similarity_bar = """
+    <h3>Semantic Similarity</h3>
+    <div style='width: 100%; border: 1px solid #ccc; height: 30px; position: relative; background-color: #fff;'></div>
+"""
+
+
 def no_nl(text):
     """Replace non-printable newline characters with printable symbols"""
     for char, symbol in newline_symbols.items():
@@ -120,7 +126,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
     with gr.Row(variant="panel"):
         gr.Markdown(
             """
-        ## ✂️ ISCC Semantic Text-Code
+        ## 🔮️ ISCC - Semantic Text-Code
         Demo of cross-lingual Semantic Text-Code (proof of concept)
         """,
         )
