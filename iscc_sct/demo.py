@@ -7,6 +7,10 @@ import gradio as gr
 import iscc_sct as sct
 import textwrap
 import yaml
+import pathlib
+
+
+HERE = pathlib.Path(__file__).parent.absolute()
 
 
 custom_css = """
@@ -120,7 +124,7 @@ def generate_similarity_bar(similarity):
 
 
 def load_samples():
-    with open("iscc_sct/samples.yml", "r", encoding="utf-8") as file:
+    with open(HERE / "samples.yml", "r", encoding="utf-8") as file:
         return yaml.safe_load(file)["samples"]
 
 
@@ -180,14 +184,24 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 out_similarity = gr.HTML()
 
     with gr.Row(variant="panel"):
-        in_iscc_bits = gr.Slider(
-            label="ISCC Bit-Length",
-            info="NUMBER OF BITS FOR OUTPUT ISCC",
-            minimum=64,
-            maximum=256,
-            step=32,
-            value=64,
-        )
+        with gr.Column():
+            in_iscc_bits = gr.Slider(
+                label="ISCC Bit-Length",
+                info="NUMBER OF BITS FOR OUTPUT ISCC",
+                minimum=64,
+                maximum=256,
+                step=32,
+                value=64,
+            )
+        with gr.Column():
+            in_max_tokens = gr.Slider(
+                label="Max Tokens",
+                info="MAXIMUM NUMBER OF TOKENS PER CHUNK",
+                minimum=49,
+                maximum=127,
+                step=1,
+                value=127,
+            )
 
     with gr.Row(variant="panel"):
         with gr.Column(variant="panel"):
@@ -219,7 +233,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         outputs=[in_text_b],
     )
 
-    def process_and_calculate(text_a, text_b, nbits):
+    def process_and_calculate(text_a, text_b, nbits, max_tokens):
         log.debug(f"Processing text_a: {text_a[:20]}, text_b: {text_b[:20]}")
 
         def process_single_text(text, suffix):
@@ -235,7 +249,13 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 }
 
             result = sct.gen_text_code_semantic(
-                text, bits=nbits, simprints=True, offsets=True, sizes=True, contents=True
+                text,
+                bits=nbits,
+                simprints=True,
+                offsets=True,
+                sizes=True,
+                contents=True,
+                max_tokens=max_tokens,
             )
             iscc = sct.Metadata(**result).to_object_format()
 
@@ -277,7 +297,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         code_a = result_a[out_code_a] if text_a else None
         code_b = result_b[out_code_b] if text_b else None
 
-        similarity = compare_codes(code_a, code_b, nbits) if code_a and code_b else None
+        similarity = compare_codes(code_a, code_b, nbits) or out_similarity
 
         return (
             result_a[out_code_a],
@@ -289,7 +309,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
 
     in_text_a.change(
         process_and_calculate,
-        inputs=[in_text_a, in_text_b, in_iscc_bits],
+        inputs=[in_text_a, in_text_b, in_iscc_bits, in_max_tokens],
         outputs=[out_code_a, out_chunks_a, out_code_b, out_chunks_b, out_similarity],
         show_progress="full",
         trigger_mode="always_last",
@@ -297,7 +317,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
 
     in_text_b.change(
         process_and_calculate,
-        inputs=[in_text_a, in_text_b, in_iscc_bits],
+        inputs=[in_text_a, in_text_b, in_iscc_bits, in_max_tokens],
         outputs=[out_code_a, out_chunks_a, out_code_b, out_chunks_b, out_similarity],
         show_progress="full",
         trigger_mode="always_last",
@@ -305,7 +325,14 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
 
     in_iscc_bits.change(
         process_and_calculate,
-        inputs=[in_text_a, in_text_b, in_iscc_bits],
+        inputs=[in_text_a, in_text_b, in_iscc_bits, in_max_tokens],
+        outputs=[out_code_a, out_chunks_a, out_code_b, out_chunks_b, out_similarity],
+        show_progress="full",
+    )
+
+    in_max_tokens.change(
+        process_and_calculate,
+        inputs=[in_text_a, in_text_b, in_iscc_bits, in_max_tokens],
         outputs=[out_code_a, out_chunks_a, out_code_b, out_chunks_b, out_similarity],
         show_progress="full",
     )
@@ -386,8 +413,7 @@ not just the exact words.
 - **Publishers**: Identify potential translations or similar works efficiently.
 
 This technology opens up new possibilities for understanding and managing text content across language barriers!
-"""
-            )
+""")
 
 
 if __name__ == "__main__":  # pragma: no cover
