@@ -1,5 +1,4 @@
 import math
-import binascii
 from base64 import b32encode, b32decode
 from pybase64 import urlsafe_b64encode, urlsafe_b64decode
 from loguru import logger as log
@@ -221,7 +220,7 @@ def granular_similarity(metadata_a, metadata_b, threshold=80):
             for simprint_a in feature_set_a.simprints:
                 for simprint_b in feature_set_b.simprints:
                     similarity = cosine_similarity(
-                        decode_base32(simprint_a.simprint), decode_base32(simprint_b.simprint)
+                        decode_base64(simprint_a.simprint), decode_base64(simprint_b.simprint)
                     )
                     if similarity >= threshold:
                         matches.append((simprint_a, similarity, simprint_b))
