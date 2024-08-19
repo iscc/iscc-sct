@@ -64,9 +64,21 @@ def compute_iscc_code(text1, text2, bit_length):
     return code1["iscc"], code2["iscc"], similarity
 
 
+import binascii
+
+
 def compare_codes(code_a, code_b, bits):
-    if all([code_a, code_b]):
-        return generate_similarity_bar(hamming_to_cosine(sct.iscc_distance(code_a, code_b), bits))
+    if code_a and code_b:
+        code_a_str = code_a.value if hasattr(code_a, "value") else str(code_a)
+        code_b_str = code_b.value if hasattr(code_b, "value") else str(code_b)
+        if code_a_str and code_b_str:
+            try:
+                distance = sct.iscc_distance(code_a_str, code_b_str)
+                return generate_similarity_bar(hamming_to_cosine(distance, bits))
+            except binascii.Error:
+                # Invalid ISCC code format
+                return None
+    return None
 
 
 def truncate_text(text, max_length=70):
@@ -162,7 +174,6 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
             out_code_b = gr.Textbox(label="ISCC Code for Text B")
 
     with gr.Row(variant="panel"):
-
         with gr.Column(variant="panel"):
             out_similarity_title = gr.Markdown("### Semantic Similarity")
             with gr.Row(elem_classes="simbar"):
@@ -208,86 +219,94 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         outputs=[in_text_b],
     )
 
-    def process_text(text, nbits, suffix):
-        log.debug(f"{text[:20]}")
-        out_code_func = globals().get(f"out_code_{suffix}")
-        out_chunks_func = globals().get(f"out_chunks_{suffix}")
+    def process_and_calculate(text_a, text_b, nbits):
+        log.debug(f"Processing text_a: {text_a[:20]}, text_b: {text_b[:20]}")
 
-        if not text:
+        def process_single_text(text, suffix):
+            out_code_func = globals().get(f"out_code_{suffix}")
+            out_chunks_func = globals().get(f"out_chunks_{suffix}")
+
+            if not text:
+                return {
+                    out_code_func: gr.Textbox(value=None),
+                    out_chunks_func: gr.HighlightedText(
+                        value=None, elem_id=f"chunked-text-{suffix}"
+                    ),
+                }
+
+            result = sct.gen_text_code_semantic(
+                text, bits=nbits, simprints=True, offsets=True, sizes=True, contents=True
+            )
+            iscc = sct.Metadata(**result).to_object_format()
+
+            # Generate chunked text with simprints and overlaps
+            features = iscc.features[0]
+            highlighted_chunks = []
+            overlaps = iscc.get_overlaps()
+
+            for i, feature in enumerate(features.simprints):
+                feature: sct.Feature
+                content = feature.content
+
+                # Remove leading overlap
+                if i > 0 and overlaps[i - 1]:
+                    content = content[len(overlaps[i - 1]) :]
+
+                # Remove trailing overlap
+                if i < len(overlaps) and overlaps[i]:
+                    content = content[: -len(overlaps[i])]
+
+                label = f"{feature.size}:{feature.simprint}"
+                highlighted_chunks.append((no_nl_inner(content), label))
+
+                if i < len(overlaps):
+                    overlap = overlaps[i]
+                    if overlap:
+                        highlighted_chunks.append((f"\n{no_nl(overlap)}\n", "overlap"))
+
             return {
-                out_code_func: gr.Textbox(value=None),
-                out_chunks_func: gr.HighlightedText(value=None, elem_id="chunked-text"),
+                out_code_func: gr.Textbox(value=iscc.iscc),
+                out_chunks_func: gr.HighlightedText(
+                    value=highlighted_chunks, elem_id=f"chunked-text-{suffix}"
+                ),
             }
 
-        result = sct.gen_text_code_semantic(
-            text, bits=nbits, simprints=True, offsets=True, sizes=True, contents=True
-        )
-        iscc = sct.Metadata(**result).to_object_format()
+        result_a = process_single_text(text_a, "a")
+        result_b = process_single_text(text_b, "b")
 
-        # Generate chunked text with simprints and overlaps
-        features = iscc.features[0]
-        highlighted_chunks = []
-        overlaps = iscc.get_overlaps()
+        code_a = result_a[out_code_a] if text_a else None
+        code_b = result_b[out_code_b] if text_b else None
 
-        for i, feature in enumerate(features.simprints):
-            feature: sct.Feature
-            content = feature.content
-
-            # Remove leading overlap
-            if i > 0 and overlaps[i - 1]:
-                content = content[len(overlaps[i - 1]) :]
-
-            # Remove trailing overlap
-            if i < len(overlaps) and overlaps[i]:
-                content = content[: -len(overlaps[i])]
-
-            label = f"{feature.size}:{feature.simprint}"
-            highlighted_chunks.append((no_nl_inner(content), label))
-
-            if i < len(overlaps):
-                overlap = overlaps[i]
-                if overlap:
-                    highlighted_chunks.append((f"\n{no_nl(overlap)}\n", "overlap"))
-
-        return {
-            out_code_func: gr.Textbox(value=iscc.iscc),
-            out_chunks_func: gr.HighlightedText(value=highlighted_chunks, elem_id="chunked-text"),
-        }
-
-    def recalculate_iscc(text_a, text_b, nbits):
-        code_a = sct.gen_text_code_semantic(text_a, bits=nbits)["iscc"] if text_a else None
-        code_b = sct.gen_text_code_semantic(text_b, bits=nbits)["iscc"] if text_b else None
-
-        if code_a and code_b:
-            similarity = compare_codes(code_a, code_b, nbits)
-        else:
-            similarity = None
+        similarity = compare_codes(code_a, code_b, nbits) if code_a and code_b else None
 
         return (
-            gr.Textbox(value=code_a) if code_a else gr.Textbox(),
-            gr.Textbox(value=code_b) if code_b else gr.Textbox(),
+            result_a[out_code_a],
+            result_a[out_chunks_a],
+            result_b[out_code_b],
+            result_b[out_chunks_b],
             similarity,
         )
 
     in_text_a.change(
-        lambda text, nbits: process_text(text, nbits, "a"),
-        inputs=[in_text_a, in_iscc_bits],
-        outputs=[out_code_a, out_chunks_a],
+        process_and_calculate,
+        inputs=[in_text_a, in_text_b, in_iscc_bits],
+        outputs=[out_code_a, out_chunks_a, out_code_b, out_chunks_b, out_similarity],
         show_progress="full",
         trigger_mode="always_last",
     )
+
     in_text_b.change(
-        lambda text, nbits: process_text(text, nbits, "b"),
-        inputs=[in_text_b, in_iscc_bits],
-        outputs=[out_code_b, out_chunks_b],
+        process_and_calculate,
+        inputs=[in_text_a, in_text_b, in_iscc_bits],
+        outputs=[out_code_a, out_chunks_a, out_code_b, out_chunks_b, out_similarity],
         show_progress="full",
         trigger_mode="always_last",
     )
 
     in_iscc_bits.change(
-        recalculate_iscc,
+        process_and_calculate,
         inputs=[in_text_a, in_text_b, in_iscc_bits],
-        outputs=[out_code_a, out_code_b, out_similarity],
+        outputs=[out_code_a, out_chunks_a, out_code_b, out_chunks_b, out_similarity],
         show_progress="full",
     )
 
@@ -300,12 +319,12 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
 
     def reset_all():
         return (
-            gr.Slider(value=128),  # Reset ISCC Bit-Length
+            gr.Slider(value=64),  # Reset ISCC Bit-Length
             gr.Dropdown(
-                value="None", choices=["None"] + [f"a:{lang}" for lang in samples["a"]]
+                value="None", choices=["None"] + [lang for lang in samples["a"]]
             ),  # Reset sample dropdown A
             gr.Dropdown(
-                value="None", choices=["None"] + [f"b:{lang}" for lang in samples["b"]]
+                value="None", choices=["None"] + [lang for lang in samples["b"]]
             ),  # Reset sample dropdown B
             gr.TextArea(value=""),  # Reset Text A
             gr.TextArea(value=""),  # Reset Text B
