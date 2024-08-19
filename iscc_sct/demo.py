@@ -131,8 +131,10 @@ def generate_similarity_bar(similarity):
         "transform: translateX(-50%);" if similarity >= 0 else "transform: translateX(50%);"
     )
 
+    tooltip = "Similarity based on ISCC code comparison, not direct text comparison."
+
     bar_html = f"""
-    <div style='width: 100%; border: 1px solid #ccc; height: 30px; position: relative; background-color: #eee;'>
+    <div title="{tooltip}" style='width: 100%; border: 1px solid #ccc; height: 30px; position: relative; background-color: #eee;'>
         <div style='height: 100%; width: {bar_width}%; background-color: {color}; position: absolute; {position}: 50%;'>
             <span style='position: absolute; width: 100%; {text_position} top: 0; line-height: 30px; color: white; {text_alignment}'>{display_similarity:.2f}%</span>
         </div>
@@ -159,7 +161,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
     with gr.Row(variant="panel"):
         gr.Markdown(
             """
-        ## 🔮️ ISCC - Semantic Text-Code
+        ## 🔮️ ISCC - Semantic-Code Text
         Demo of cross-lingual Semantic Text-Code (proof of concept)
         """,
         )
@@ -185,7 +187,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 lines=12,
                 max_lines=12,
             )
-            out_code_a = gr.Textbox(label="ISCC Code for Text A")
+            out_code_a = gr.Textbox(label="ISCC-SCT for Text A")
         with gr.Column(variant="panel"):
             in_text_b = gr.TextArea(
                 label="Text B",
@@ -193,13 +195,15 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 lines=12,
                 max_lines=12,
             )
-            out_code_b = gr.Textbox(label="ISCC Code for Text B")
+            out_code_b = gr.Textbox(label="ISCC-SCT for Text B")
 
     with gr.Row(variant="panel"):
         with gr.Column(variant="panel"):
-            out_similarity_title = gr.Markdown("### Semantic Similarity")
+            out_similarity_title = gr.Markdown("### ISCC-based Semantic Similarity")
             with gr.Row(elem_classes="simbar"):
                 out_similarity = gr.HTML()
+            gr.Markdown(
+                    "**NOTE:** Similarity is calculated based on the generated ISCC-SCT, not the original text.")
 
     with gr.Row(variant="panel"):
         reset_button = gr.Button("Reset All")
@@ -461,31 +465,41 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
 ## Understanding ISCC Semantic Text-Codes
 
 ### What is an ISCC Semantic Text-Code?
-An ISCC Semantic Text-Code is a digital fingerprint for text content. It captures the meaning of the text,
-not just the exact words.
+An ISCC Semantic Text-Code is a digital fingerprint for text content. It captures the meaning of
+the text, not just the exact words. Technically it is am ISCC-encoded, binarized multi-lingual
+document-embedding.
 
 ### How does it work?
 1. **Input**: You provide a text in any language.
-2. **Processing**: Our system analyzes the meaning of the text.
-3. **Output**: A unique code is generated that represents the text's content.
+2. **Processing**: Vector embeddings are created for individual chunks of the text.
+3. **Output**: A unique ISCC-UNIT is generated that represents the entire text's content.
 
 ### What can it do?
 - **Cross-language matching**: It can recognize similar content across different languages.
 - **Similarity detection**: It can measure how similar two texts are in meaning, not just in words.
-- **Content identification**: It can help identify texts with similar content, even if the wording is different.
+- **Content identification**: It can help identify texts with similar content, even if the wording
+    is different.
 
 ### How to use this demo:
 1. **Enter text**: Type or paste text into either or both text boxes.
-2. **Adjust bit length**: Use the slider to change the detail level of the code (higher = more detailed).
+2. **Adjust bit length**: Use the slider to change the detail level of the code (higher = more
+    detailed).
 3. **View results**: See the generated ISCC code for each text.
-4. **Compare**: Look at the similarity bar to see how alike the two texts are in meaning.
+4. **Compare**: Look at the similarity bar to see how alike the two texts are in meaning, based on
+    their ISCC codes.
+
+### Important Note:
+The similarity shown is calculated by comparing the ISCC codes, not the original texts. This
+allows for efficient and privacy-preserving comparisons, as only the codes need to be shared
+or stored.
 
 ### Why is this useful?
 - **Content creators**: Find similar content across languages.
 - **Researchers**: Quickly compare documents or find related texts in different languages.
 - **Publishers**: Identify potential translations or similar works efficiently.
 
-This technology opens up new possibilities for understanding and managing text content across language barriers!
+This technology opens up new possibilities for understanding and managing text content across
+    language barriers!
 """
             )
 
