@@ -191,14 +191,14 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 minimum=64,
                 maximum=256,
                 step=32,
-                value=64,
+                value=sct.sct_opts.bits,
             )
         with gr.Column():
             in_max_tokens = gr.Slider(
                 label="Max Tokens",
                 info="MAXIMUM NUMBER OF TOKENS PER CHUNK",
                 minimum=49,
-                maximum=127,
+                maximum=sct.sct_opts.max_tokens,
                 step=1,
                 value=127,
             )
