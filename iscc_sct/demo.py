@@ -9,6 +9,14 @@ import textwrap
 import yaml
 
 
+custom_css = """
+.simbar {
+    background: white;
+    min-height: 30px;
+}
+"""
+
+
 newline_symbols = {
     "\u000a": "⏎",  # Line Feed - Represented by the 'Return' symbol
     "\u000b": "↨",  # Vertical Tab - Represented by the 'Up Down Arrow' symbol
@@ -18,12 +26,6 @@ newline_symbols = {
     "\u2028": "↲",  # Line Separator - 'Downwards Arrow with Tip Leftwards' symbol
     "\u2029": "¶",  # Paragraph Separator - Represented by the 'Pilcrow' symbol
 }
-
-
-default_similarity_bar = """
-    <h3>Semantic Similarity</h3>
-    <div style='width: 100%; border: 1px solid #ccc; height: 30px; position: relative; background-color: #fff;'></div>
-"""
 
 
 def no_nl(text):
@@ -96,7 +98,6 @@ def generate_similarity_bar(similarity):
     )
 
     bar_html = f"""
-    <h3>Semantic Similarity</h3>
     <div style='width: 100%; border: 1px solid #ccc; height: 30px; position: relative; background-color: #eee;'>
         <div style='height: 100%; width: {bar_width}%; background-color: {color}; position: absolute; {position}: 50%;'>
             <span style='position: absolute; width: 100%; {text_position} top: 0; line-height: 30px; color: white; {text_alignment}'>{display_similarity:.2f}%</span>
@@ -113,8 +114,6 @@ def load_samples():
 
 samples = load_samples()
 
-custom_css = """
-"""
 
 iscc_theme = gr.themes.Default(
     font=[gr.themes.GoogleFont("Readex Pro")],
@@ -163,8 +162,11 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
             out_code_b = gr.Textbox(label="ISCC Code for Text B")
 
     with gr.Row(variant="panel"):
+
         with gr.Column(variant="panel"):
-            out_similarity = gr.HTML(label="Similarity")
+            out_similarity_title = gr.Markdown("### Semantic Similarity")
+            with gr.Row(elem_classes="simbar"):
+                out_similarity = gr.HTML()
 
     with gr.Row(variant="panel"):
         in_iscc_bits = gr.Slider(
