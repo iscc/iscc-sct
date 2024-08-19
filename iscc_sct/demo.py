@@ -192,7 +192,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
     with gr.Row(variant="panel"):
         reset_button = gr.Button("Reset All")
 
-    with gr.Accordion(label="🔍 Explore Details & Advanced Options", open=False):
+    with gr.Accordion(label="🔍 Explore Details & Advanced Options", open=True):
         with gr.Row(variant="panel"):
             with gr.Column(variant="panel"):
                 in_iscc_bits = gr.Slider(
