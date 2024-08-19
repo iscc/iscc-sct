@@ -1,4 +1,5 @@
 import math
+import binascii
 from base64 import b32encode, b32decode
 from pybase64 import urlsafe_b64encode, urlsafe_b64decode
 from loguru import logger as log
@@ -8,6 +9,8 @@ from pathlib import Path
 from urllib.request import urlretrieve
 from blake3 import blake3
 from platformdirs import PlatformDirs
+from typing import List, Tuple
+from iscc_sct.models import Metadata, Feature
 
 
 APP_NAME = "iscc-sct"
@@ -176,3 +179,51 @@ def iscc_distance(iscc1, iscc2):
 
     # Calculate and return the Hamming distance
     return hamming_distance(content1, content2)
+
+
+def cosine_similarity(a, b):
+    # type: (bytes, bytes) -> int
+    """
+    Calculate the approximate cosine similarity based on Hamming distance for two bytes inputs.
+
+    :param a: The first bytes object.
+    :param b: The second bytes object.
+    :return: The approximate cosine similarity between the two inputs, scaled from -100 to +100.
+    :raise ValueError: If a and b are not the same length.
+    """
+    if len(a) != len(b):
+        raise ValueError("The lengths of the two bytes objects must be the same")
+
+    distance = hamming_distance(a, b)
+    total_bits = len(a) * 8
+    similarity = 1 - (2 * distance / total_bits)
+    return max(min(int(similarity * 100), 100), -100)
+
+
+def granular_similarity(metadata_a, metadata_b, threshold=80):
+    # type: (Metadata, Metadata, int) -> List[Tuple[Feature, int, Feature]]
+    """
+    Compare simprints from two Metadata objects and return matching pairs above a similarity
+    threshold.
+
+    :param metadata_a: The first Metadata object.
+    :param metadata_b: The second Metadata object.
+    :param threshold: The similarity threshold (0-100) above which simprints are considered a match.
+    :return: A list of tuples containing matching simprints and their similarity.
+    """
+    metadata_a = metadata_a.to_object_format()
+    metadata_b = metadata_b.to_object_format()
+
+    matches = []
+
+    for feature_set_a in metadata_a.features:
+        for feature_set_b in metadata_b.features:
+            for simprint_a in feature_set_a.simprints:
+                for simprint_b in feature_set_b.simprints:
+                    similarity = cosine_similarity(
+                        decode_base32(simprint_a.simprint), decode_base32(simprint_b.simprint)
+                    )
+                    if similarity >= threshold:
+                        matches.append((simprint_a, similarity, simprint_b))
+
+    return matches
