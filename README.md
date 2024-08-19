@@ -10,9 +10,11 @@
 > repository are experimental and not part of the official
 > [ISO 24138:2024](https://www.iso.org/standard/77899.html) standard.
 
-`iscc-sct` is a semantic Text-Code for the [ISCC](https://core.iscc.codes) (*International Standard
-Content Code*). Semantic Text-Codes are short identifiers created from text documents that preserve
-similarity (in hamming distance) for semantically similar cross-lingual text inputs.
+`iscc-sct` is a **Semantic-Code Text** implementation for the [ISCC](https://core.iscc.codes)
+(*International Standard Content Code*). The Semantic-Code Text is a new ISCC-UNIT for semantic text
+identification. The algorithm creates simmilar (low hamming distance) codes for semantically similar
+text inputs across different languages. The SCT ISCC-UNIT is a compact binary code created from a
+binarized document-vector text-embedding.
 
 ## What is the ISCC
 
@@ -142,21 +144,8 @@ options:
 1. Prefixes the binarized vector with the matching ISCC header, encodes it with base32, and adds the
    "ISCC:" prefix.
 
-This process ensures robustness to variations and translations, enabling cross-lingual matching.
-
-Here's a visual representation of the ISCC Semantic Text-Code generation process:
-
-```mermaid
-graph TD
-    A[Input Text] --> B[Split into Overlapping Chunks]
-    B --> C[Create Multilingual Vector Embeddings per Chunk]
-    C --> D[Calculate Document Vector using Mean Pooling]
-    D --> E[Binarize Document Vector]
-    E --> F[Prefix with ISCC Header]
-    F --> G[Encode with Base32]
-    G --> H[Prefix with 'ISCC:']
-    H --> I[Final ISCC Semantic Text-Code]
-```
+This process ensures robustness to variations and translations, enabling cross-lingual matching
+based on a short Simprint.
 
 ## Development and Contributing
 
