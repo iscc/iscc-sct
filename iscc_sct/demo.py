@@ -19,22 +19,45 @@ custom_css = """
     min-height: 30px;
 }
 
-.no-scrollbar table {
- overflow: hidden !important;
+.granular-matches {
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
 }
 
-.no-scrollbar thead,
-.no-scrollbar tbody {
- overflow: hidden !important;
+.granular-matches::-webkit-scrollbar {
+    width: 6px;
 }
 
-.no-scrollbar::-webkit-scrollbar {
- display: none;
+.granular-matches::-webkit-scrollbar-track {
+    background: transparent;
 }
 
-.no-scrollbar {
- -ms-overflow-style: none;
- scrollbar-width: none;
+.granular-matches::-webkit-scrollbar-thumb {
+    background-color: transparent;
+}
+
+.granular-matches:hover {
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
+
+.granular-matches:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.granular-matches table {
+    width: 100%;
+}
+
+.granular-matches td {
+    vertical-align: top;
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+}
+
+.granular-matches tr:last-child td {
+    border-bottom: none;
 }
 """
 
@@ -203,7 +226,8 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
             with gr.Row(elem_classes="simbar"):
                 out_similarity = gr.HTML()
             gr.Markdown(
-                    "**NOTE:** Similarity is calculated based on the generated ISCC-SCT, not the original text.")
+                "**NOTE:** Similarity is calculated based on the generated ISCC-SCT, not the original text."
+            )
 
     with gr.Row(variant="panel"):
         reset_button = gr.Button("Reset All")
@@ -250,7 +274,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                     headers=["Chunk A", "Similarity", "Chunk B"],
                     column_widths=["45%", "10%", "45%"],
                     wrap=True,
-                    elem_classes="no-scrollbar",
+                    elem_classes="granular-matches",
                 )
 
     def update_sample_text(choice, group):
