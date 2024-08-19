@@ -49,7 +49,9 @@ def generate_html(fingerprint_data):
             if i < len(chunks) - 1 and end > chunks[i + 1]["offset"]:
                 overlap_end = chunks[i + 1]["offset"]
                 html_content += f'<span class="{chunk_color}">{escape_and_preserve_breaks(chunk["text"][start - chunk["offset"]:overlap_end - chunk["offset"]])}</span>'
-                html_content += escape_and_preserve_breaks(chunk["text"][overlap_end - chunk["offset"] :])
+                html_content += escape_and_preserve_breaks(
+                    chunk["text"][overlap_end - chunk["offset"] :]
+                )
             else:
                 html_content += escape_and_preserve_breaks(chunk["text"][start - chunk["offset"] :])
 

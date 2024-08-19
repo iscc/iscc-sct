@@ -233,11 +233,15 @@ def model():
     so.graph_optimization_level = rt.GraphOptimizationLevel.ORT_ENABLE_ALL
     try:
         with sct.timer("ONNXMODEL load time"):
-            return rt.InferenceSession(sct.MODEL_PATH, sess_options=so, providers=selected_onnx_providers)
+            return rt.InferenceSession(
+                sct.MODEL_PATH, sess_options=so, providers=selected_onnx_providers
+            )
     except NoSuchFile:  # pragma: no cover
         with sct.timer("ONNXMODEL aquisition/load time"):
             model_path = sct.get_model()
-            return rt.InferenceSession(model_path, sess_options=so, providers=selected_onnx_providers)
+            return rt.InferenceSession(
+                model_path, sess_options=so, providers=selected_onnx_providers
+            )
 
 
 def tokenize_chunks(chunks):

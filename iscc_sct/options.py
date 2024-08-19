@@ -29,15 +29,27 @@ class SctOptions(BaseSettings):
         multiple_of=32,
     )
 
-    characters: bool = Field(True, description="ISCC_SCT_CHARACTERS - Include document character count")
-    embedding: bool = Field(False, description="ISCC_SCT_EMBEDDING - Include global document embedding")
+    characters: bool = Field(
+        True, description="ISCC_SCT_CHARACTERS - Include document character count"
+    )
+    embedding: bool = Field(
+        False, description="ISCC_SCT_EMBEDDING - Include global document embedding"
+    )
 
-    precision: int = Field(8, description="ISCC_SCT_PRECISION - Max fractional digits for embeddings (default 8)")
+    precision: int = Field(
+        8, description="ISCC_SCT_PRECISION - Max fractional digits for embeddings (default 8)"
+    )
 
-    simprints: bool = Field(False, description="ISCC_SCT_SIMPRINTS - Include granular feature simprints")
-    offsets: bool = Field(False, description="ISCC_SCT_OFFSETS - Include offsets of granular features")
+    simprints: bool = Field(
+        False, description="ISCC_SCT_SIMPRINTS - Include granular feature simprints"
+    )
+    offsets: bool = Field(
+        False, description="ISCC_SCT_OFFSETS - Include offsets of granular features"
+    )
 
-    sizes: bool = Field(False, description="ISCC_SCT_SIZES - Include sizes of granular features (number of chars)")
+    sizes: bool = Field(
+        False, description="ISCC_SCT_SIZES - Include sizes of granular features (number of chars)"
+    )
 
     contents: bool = Field(False, description="ISCC_SCT_CONTENTS - Include granular text chunks")
 
@@ -52,7 +64,9 @@ class SctOptions(BaseSettings):
         description="ISCC_SCT_OVERLAP - Max tokens allowed to overlap between chunks (Default 48)",
     )
 
-    trim: bool = Field(False, description="ISCC_SCT_TRIM - Trim whitespace from chunks (Default False)")
+    trim: bool = Field(
+        False, description="ISCC_SCT_TRIM - Trim whitespace from chunks (Default False)"
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",

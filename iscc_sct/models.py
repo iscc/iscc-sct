@@ -82,7 +82,9 @@ class PrettyBaseModel(BaseModel):
         return self.pretty_repr()
 
     def pretty_repr(self):
-        return self.model_dump_json(indent=2, exclude_unset=True, exclude_none=True, exclude_defaults=False)
+        return self.model_dump_json(
+            indent=2, exclude_unset=True, exclude_none=True, exclude_defaults=False
+        )
 
 
 class Feature(PrettyBaseModel):
@@ -132,9 +134,15 @@ class Metadata(PrettyBaseModel):
                 new_features.append(new_feature_set)
             else:
                 new_feature_set.simprints = [f.simprint for f in feature_set.simprints]
-                new_feature_set.offsets = [f.offset for f in feature_set.simprints if f.offset is not None]
-                new_feature_set.sizes = [f.size for f in feature_set.simprints if f.size is not None]
-                new_feature_set.contents = [f.content for f in feature_set.simprints if f.content is not None]
+                new_feature_set.offsets = [
+                    f.offset for f in feature_set.simprints if f.offset is not None
+                ]
+                new_feature_set.sizes = [
+                    f.size for f in feature_set.simprints if f.size is not None
+                ]
+                new_feature_set.contents = [
+                    f.content for f in feature_set.simprints if f.content is not None
+                ]
                 new_features.append(new_feature_set)
 
         return Metadata(iscc=self.iscc, characters=self.characters, features=new_features)
@@ -154,7 +162,9 @@ class Metadata(PrettyBaseModel):
             # Convert to object format if in index format
             feature_set = self.to_object_format().features[0]
 
-        if not all(feature.content and feature.offset is not None for feature in feature_set.simprints):
+        if not all(
+            feature.content and feature.offset is not None for feature in feature_set.simprints
+        ):
             return None
 
         # Sort features by offset
@@ -191,7 +201,9 @@ class Metadata(PrettyBaseModel):
             # Convert to object format if in index format
             feature_set = self.to_object_format().features[0]
 
-        if not all(feature.content and feature.offset is not None for feature in feature_set.simprints):
+        if not all(
+            feature.content and feature.offset is not None for feature in feature_set.simprints
+        ):
             return []
 
         # Sort features by offset

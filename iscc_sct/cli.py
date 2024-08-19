@@ -8,9 +8,15 @@ from charset_normalizer import from_bytes
 
 def main():
     parser = argparse.ArgumentParser(description="Generate Semantic Text-Codes for text files.")
-    parser.add_argument("path", type=str, help="Path to text files (supports glob patterns).", nargs="?")
-    parser.add_argument("-b", "--bits", type=int, default=256, help="Bit-Length of Code (default 256)")
-    parser.add_argument("-g", "--granular", action="store_true", help="Activate granular processing.")
+    parser.add_argument(
+        "path", type=str, help="Path to text files (supports glob patterns).", nargs="?"
+    )
+    parser.add_argument(
+        "-b", "--bits", type=int, default=256, help="Bit-Length of Code (default 256)"
+    )
+    parser.add_argument(
+        "-g", "--granular", action="store_true", help="Activate granular processing."
+    )
     parser.add_argument("-d", "--debug", action="store_true", help="Show debugging messages.")
     args = parser.parse_args()
 

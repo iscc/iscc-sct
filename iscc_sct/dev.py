@@ -38,5 +38,5 @@ def format_yml():
                 default_flow_style=False,
                 default_style=">",
                 allow_unicode=True,
-                line_break="\n"
+                line_break="\n",
             )

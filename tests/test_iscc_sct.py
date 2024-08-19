@@ -178,7 +178,9 @@ def test_embed_tokens():
     chunks = ["Hello World", "These are chunks"]
     tokens = tokenize_chunks(chunks)
     embeddings = embed_tokens(tokens)
-    assert list(embeddings[0][0][:3]) == pytest.approx([0.05907335, 0.11408358, 0.12727071], rel=1e-2)
+    assert list(embeddings[0][0][:3]) == pytest.approx(
+        [0.05907335, 0.11408358, 0.12727071], rel=1e-2
+    )
 
 
 def test_embed_chunks():

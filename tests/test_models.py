@@ -22,7 +22,11 @@ def test_feature_initialization():
 
 def test_feature_set_initialization():
     fs = FeatureSet()
-    assert fs.model_dump(exclude_none=True) == {"maintype": "semantic", "subtype": "text", "version": 0}
+    assert fs.model_dump(exclude_none=True) == {
+        "maintype": "semantic",
+        "subtype": "text",
+        "version": 0,
+    }
 
 
 def test_sct_meta_initialization():
@@ -33,7 +37,12 @@ def test_sct_meta_initialization():
     assert meta.features is None
 
     # Test initialization with all fields
-    features = [FeatureSet(simprints=[Feature(simprint="feature1", offset=0, content="text1")], embedding=[0.1, 0.2])]
+    features = [
+        FeatureSet(
+            simprints=[Feature(simprint="feature1", offset=0, content="text1")],
+            embedding=[0.1, 0.2],
+        )
+    ]
     meta = Metadata(iscc="ISCC1234567890", characters=1000, features=features)
     assert meta.iscc == "ISCC1234567890"
     assert meta.characters == 1000
@@ -67,7 +76,12 @@ def test_metadata_to_index_format():
 def test_metadata_to_object_format():
     # Test conversion from Index-Format to Object-Format
     features = [
-        FeatureSet(simprints=["feature1", "feature2"], offsets=[0, 5], sizes=[5, 5], contents=["text1", "text2"])
+        FeatureSet(
+            simprints=["feature1", "feature2"],
+            offsets=[0, 5],
+            sizes=[5, 5],
+            contents=["text1", "text2"],
+        )
     ]
     meta = Metadata(iscc="ISCC1234567890", features=features)
     object_meta = meta.to_object_format()

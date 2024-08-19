@@ -85,7 +85,9 @@ def generate_similarity_bar(similarity):
 
     # Adjust the text position to be centered within the colored bar
     text_position = "left: 50%;" if similarity >= 0 else "right: 50%;"
-    text_alignment = "transform: translateX(-50%);" if similarity >= 0 else "transform: translateX(50%);"
+    text_alignment = (
+        "transform: translateX(-50%);" if similarity >= 0 else "transform: translateX(50%);"
+    )
 
     bar_html = f"""
     <h3>Semantic Similarity</h3>
@@ -188,10 +190,14 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         return samples[group][choice]
 
     sample_dropdown_a.change(
-        lambda choice: update_sample_text(choice, "a"), inputs=[sample_dropdown_a], outputs=[in_text_a]
+        lambda choice: update_sample_text(choice, "a"),
+        inputs=[sample_dropdown_a],
+        outputs=[in_text_a],
     )
     sample_dropdown_b.change(
-        lambda choice: update_sample_text(choice, "b"), inputs=[sample_dropdown_b], outputs=[in_text_b]
+        lambda choice: update_sample_text(choice, "b"),
+        inputs=[sample_dropdown_b],
+        outputs=[in_text_b],
     )
 
     def process_text(text, nbits, suffix):
@@ -205,7 +211,9 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                 out_chunks_func: gr.HighlightedText(value=None, elem_id="chunked-text"),
             }
 
-        result = sct.gen_text_code_semantic(text, bits=nbits, simprints=True, offsets=True, sizes=True, contents=True)
+        result = sct.gen_text_code_semantic(
+            text, bits=nbits, simprints=True, offsets=True, sizes=True, contents=True
+        )
         iscc = sct.Metadata(**result).to_object_format()
 
         # Generate chunked text with simprints and overlaps
@@ -275,8 +283,12 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         show_progress="full",
     )
 
-    out_code_a.change(compare_codes, inputs=[out_code_a, out_code_b, in_iscc_bits], outputs=[out_similarity])
-    out_code_b.change(compare_codes, inputs=[out_code_a, out_code_b, in_iscc_bits], outputs=[out_similarity])
+    out_code_a.change(
+        compare_codes, inputs=[out_code_a, out_code_b, in_iscc_bits], outputs=[out_similarity]
+    )
+    out_code_b.change(
+        compare_codes, inputs=[out_code_a, out_code_b, in_iscc_bits], outputs=[out_similarity]
+    )
 
     def reset_all():
         return (

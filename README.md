@@ -5,50 +5,57 @@
 [![Downloads](https://pepy.tech/badge/iscc-sct)](https://pepy.tech/project/iscc-sct)
 
 > [!CAUTION]
-> **This is a proof of concept.** All releases with version numbers below v1.0.0 may break backward compatibility and
-> produce incompatible Semantic Text-Codes. The algorithms of this `iscc-sct` repository are experimental and not part
-> of the official [ISO 24138:2024](https://www.iso.org/standard/77899.html) standard.
+> **This is a proof of concept.** All releases with version numbers below v1.0.0 may break backward
+> compatibility and produce incompatible Semantic Text-Codes. The algorithms of this `iscc-sct`
+> repository are experimental and not part of the official
+> [ISO 24138:2024](https://www.iso.org/standard/77899.html) standard.
 
-`iscc-sct` is a semantic Text-Code for the [ISCC](https://core.iscc.codes) (*International Standard Content Code*).
-Semantic Text-Codes are short identifiers created from text documents that preserve similarity (in hamming distance)
-for semantically similar cross-lingual text inputs.
+`iscc-sct` is a semantic Text-Code for the [ISCC](https://core.iscc.codes) (*International Standard
+Content Code*). Semantic Text-Codes are short identifiers created from text documents that preserve
+similarity (in hamming distance) for semantically similar cross-lingual text inputs.
 
 ## What is the ISCC
 
-The ISCC is a combination of various similarity preserving fingerprints and an identifier for digital media content.
+The ISCC is a combination of various similarity preserving fingerprints and an identifier for
+digital media content.
 
-ISCCs are generated algorithmically from digital content, just like cryptographic hashes. However, instead of using a
-single cryptographic hash function to identify data only, the ISCC uses various algorithms to create a composite
-identifier that exhibits similarity-preserving properties (soft hash or Simprint).
+ISCCs are generated algorithmically from digital content, just like cryptographic hashes. However,
+instead of using a single cryptographic hash function to identify data only, the ISCC uses various
+algorithms to create a composite identifier that exhibits similarity-preserving properties (soft
+hash or Simprint).
 
-The component-based structure of the ISCC identifies content at multiple levels of abstraction. Each component is
-self-describing, modular, and can be used separately or with others to aid in various content identification tasks. The
-algorithmic design supports content deduplication, database synchronization, indexing, integrity verification,
-timestamping, versioning, data provenance, similarity clustering, anomaly detection, usage tracking, allocation of
-royalties, fact-checking and general digital asset management use-cases.
+The component-based structure of the ISCC identifies content at multiple levels of abstraction. Each
+component is self-describing, modular, and can be used separately or with others to aid in various
+content identification tasks. The algorithmic design supports content deduplication, database
+synchronization, indexing, integrity verification, timestamping, versioning, data provenance,
+similarity clustering, anomaly detection, usage tracking, allocation of royalties, fact-checking and
+general digital asset management use-cases.
 
 ## What is ISCC Semantic Text-Code?
 
-The ISCC framework already includes a Text-Code based on lexical similarity for near-duplicate matching. The ISCC
-Semantic Text-Code is a planned additional ISCC-UNIT focused on capturing a more abstract and broader semantic
-similarity. It is engineered to be robust against a wide range of variations and, most remarkably, translations of text
-that cannot be matched based on lexical similarity alone.
+The ISCC framework already includes a Text-Code based on lexical similarity for near-duplicate
+matching. The ISCC Semantic Text-Code is a planned additional ISCC-UNIT focused on capturing a more
+abstract and broader semantic similarity. It is engineered to be robust against a wide range of
+variations and, most remarkably, translations of text that cannot be matched based on lexical
+similarity alone.
 
 ### Translation Matching
 
-One of the most interesting aspects of the Semantic Text-Code is its ability to generate **(near)-identical codes for
-translations of the same text**. This means that the same content, expressed in different languages, can be identified
-and linked, opening up new possibilities for cross-lingual content identification and similarity detection.
+One of the most interesting aspects of the Semantic Text-Code is its ability to generate
+**(near)-identical codes for translations of the same text**. This means that the same content,
+expressed in different languages, can be identified and linked, opening up new possibilities for
+cross-lingual content identification and similarity detection.
 
 ## Key Features
 
-- **Semantic Similarity**: Utilizes deep learning models to generate codes that reflect the semantic essence of text.
-- **Translation Matching**: Creates nearly identical codes for text translations, enabling cross-lingual content
-  identification.
-- **Bit-Length Flexibility**: Supports generating codes of various bit lengths (up to 256 bits), allowing for
-  adjustable granularity in similarity detection.
-- **ISCC Compatible**: Generates codes fully compatible with the ISCC specification, facilitating seamless integration
-  with existing ISCC-based systems.
+- **Semantic Similarity**: Utilizes deep learning models to generate codes that reflect the semantic
+  essence of text.
+- **Translation Matching**: Creates nearly identical codes for text translations, enabling
+  cross-lingual content identification.
+- **Bit-Length Flexibility**: Supports generating codes of various bit lengths (up to 256 bits),
+  allowing for adjustable granularity in similarity detection.
+- **ISCC Compatible**: Generates codes fully compatible with the ISCC specification, facilitating
+  seamless integration with existing ISCC-based systems.
 
 ## Installation
 
@@ -138,9 +145,9 @@ This process ensures robustness to variations and translations, enabling cross-l
 
 ## Development and Contributing
 
-We welcome contributions to enhance the capabilities, efficiency, and compatibility of this proof of concept with the
-broader ISCC ecosystem. For development, install the project in development mode using
-[Poetry](https://python-poetry.org):
+We welcome contributions to enhance the capabilities, efficiency, and compatibility of this proof of
+concept with the broader ISCC ecosystem. For development, install the project in development mode
+using [Poetry](https://python-poetry.org):
 
 ```shell
 git clone https://github.com/iscc/iscc-sct.git
@@ -148,30 +155,32 @@ cd iscc-sct
 poetry install
 ```
 
-If you have suggestions for improvements or bug fixes, please open an issue or pull request. For major changes, please
-open an issue first to discuss your ideas.
+If you have suggestions for improvements or bug fixes, please open an issue or pull request. For
+major changes, please open an issue first to discuss your ideas.
 
 ## Future Work
 
 ### Shift Resistant Semantic Chunking
 
-The current chunking strategy uses tries to maximize chunk sizes (up to 127 tokens) wheil still splitting at lexically
-sensible boundaries with an overlap of up to 48 tokens. See
+The current chunking strategy uses tries to maximize chunk sizes (up to 127 tokens) wheil still
+splitting at lexically sensible boundaries with an overlap of up to 48 tokens. See
 [text-splitter](https://github.com/benbrandt/text-splitter).
 
-Cross document chunk matching via granular Simprints can likely be improved significantly with a semantically aware and
-shift resistant chunking strategy. Better shift resistance would improve the chances that the bounderies detected for
-semantically similar text sequences in different documents are aligned.
+Cross document chunk matching via granular Simprints can likely be improved significantly with a
+semantically aware and shift resistant chunking strategy. Better shift resistance would improve the
+chances that the bounderies detected for semantically similar text sequences in different documents
+are aligned.
 
 ### MRL based Embeddings
 
-A text embedding model trained with [Matryoshka Representation Learning](https://arxiv.org/pdf/2205.13147) may yield
-better results with short 64-bit Semantic Text-Codes.
+A text embedding model trained with
+[Matryoshka Representation Learning](https://arxiv.org/pdf/2205.13147) may yield better results with
+short 64-bit Semantic Text-Codes.
 
 ### Larger Chunk Sizes
 
-A text embedding model with support for a larger `max_token` size (currently 128) may yield higher-order granular
-simprints based on larger chunks of text.
+A text embedding model with support for a larger `max_token` size (currently 128) may yield
+higher-order granular simprints based on larger chunks of text.
 
 ## Acknowledgements
 
