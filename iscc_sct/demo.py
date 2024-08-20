@@ -443,9 +443,8 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
     )
 
     with gr.Row(variant="panel"):
-        with gr.Column(variant="panel"):
-            gr.Markdown(
-                """
+        gr.Markdown(
+            """
 ## Understanding ISCC Semantic Text-Codes
 
 ### What is an ISCC Semantic Text-Code?
@@ -476,7 +475,11 @@ document-embedding.
 The similarity shown is calculated by comparing the ISCC codes, not the original texts. This
 allows for efficient and privacy-preserving comparisons, as only the codes need to be shared
 or stored.
+"""
+        )
 
+        gr.Markdown(
+            """
 ### Why is this useful?
 - **Content creators**: Find similar content across languages.
 - **Researchers**: Quickly compare documents or find related texts in different languages.
@@ -490,20 +493,30 @@ language barriers!
 The "Explore Details & Advanced Options" section provides additional tools and information:
 
 1. **ISCC Bit-Length**: Adjust the precision of the ISCC code. Higher values provide more detailed
-   comparisons but may be more sensitive to minor differences.
+comparisons but may be more sensitive to minor differences.
 
 2. **Max Tokens**: Set the maximum number of tokens per chunk. This affects how the text is split
-   for processing.
+for processing.
 
 3. **Chunked Text**: View how each input text is divided into chunks for processing. Each chunk is
-   color-coded and labeled with its size and simprint (a similarity preserving fingerprint).
+color-coded and labeled with its size and simprint (a similarity preserving fingerprint).
 
 4. **Granular Matches**: See a detailed comparison of individual chunks between Text A and Text B.
-   This table shows which specific parts of the texts are most similar, along with their approximate
-   cosine similarity (scaled -100% to +100%).
-"""
-            )
+This table shows which specific parts of the texts are most similar (above 80%), along with their
+approximate cosine similarity (scaled -100% to +100%).
 
+For more information about the **ISCC** see:
+- https://github.com/iscc
+- https://iscc.codes
+- https://iscc.io
+- [ISO 24138:2024](https://www.iso.org/standard/77899.html)
+"""
+        )
+    with gr.Row():
+        gr.Markdown(
+            f"iscc-sct v{sct.__version__} | Source Code: https://github.com/iscc/iscc-sct",
+            elem_classes="footer",
+        )
 
 if __name__ == "__main__":  # pragma: no cover
     demo.launch()
