@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.1.3] - Unrelease
+## [0.1.3] - Unreleased
 
 ## [0.1.2] - 2024-08-19
 - Encode granular features with base64
