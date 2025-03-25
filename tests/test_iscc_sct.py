@@ -104,44 +104,41 @@ def test_gen_text_code_semantic_granular():
         offsets=True,
         contents=True,
     )
-    assert (
-        result
-        == {
-            "characters": 726,
-            "iscc": "ISCC:CAARISHPJHEXQAYL",
-            "features": [
-                {
-                    "maintype": "semantic",
-                    "subtype": "text",
-                    "version": 0,
-                    "simprints": ["FWjtTcl4Aws", "lAjHSc1wAws"],
-                    "offsets": [0, 297],
-                    "contents": [
-                        "\n"
-                        "`iscc-sct` is a **proof of concept implementation** of a semantic "
-                        "Text-Code for the\n"
-                        "[ISCC](https://core.iscc.codes) (*International Standard Content "
-                        "Code*). Semantic Text-Codes are\n"
-                        "designed to capture and represent the language agnostic semantic "
-                        "content of text for improved\n"
-                        "similarity detection.\n"
-                        "\n",  # NOTE: end of first chunk (see comma :)
-                        "\n"
-                        "\n"
-                        "The ISCC framework already comes with a Text-Code that is based "
-                        "on lexical similarity and can match\n"
-                        "near duplicates. The ISCC Semantic Text-Code is planned as a new "
-                        "additional ISCC-UNIT focused on\n"
-                        "capturing a more abstract and broad semantic similarity. As such "
-                        "the Semantic Text-Code is\n"
-                        "engineered to be robust against a broader range of variations and "
-                        "translations of text that cannot\n"
-                        "be matched based on lexical similarity.\n",
-                    ],
-                }
-            ],
-        }
-    )
+    assert result == {
+        "characters": 726,
+        "iscc": "ISCC:CAARISHPJHEXQAYL",
+        "features": [
+            {
+                "maintype": "semantic",
+                "subtype": "text",
+                "version": 0,
+                "simprints": ["FWjtTcl4Aws", "lAjHSc1wAws"],
+                "offsets": [0, 297],
+                "contents": [
+                    "\n"
+                    "`iscc-sct` is a **proof of concept implementation** of a semantic "
+                    "Text-Code for the\n"
+                    "[ISCC](https://core.iscc.codes) (*International Standard Content "
+                    "Code*). Semantic Text-Codes are\n"
+                    "designed to capture and represent the language agnostic semantic "
+                    "content of text for improved\n"
+                    "similarity detection.\n"
+                    "\n",  # NOTE: end of first chunk (see comma :)
+                    "\n"
+                    "\n"
+                    "The ISCC framework already comes with a Text-Code that is based "
+                    "on lexical similarity and can match\n"
+                    "near duplicates. The ISCC Semantic Text-Code is planned as a new "
+                    "additional ISCC-UNIT focused on\n"
+                    "capturing a more abstract and broad semantic similarity. As such "
+                    "the Semantic Text-Code is\n"
+                    "engineered to be robust against a broader range of variations and "
+                    "translations of text that cannot\n"
+                    "be matched based on lexical similarity.\n",
+                ],
+            }
+        ],
+    }
 
 
 def test_gen_text_code_semantic_checks_bits():

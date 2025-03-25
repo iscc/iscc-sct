@@ -21,10 +21,10 @@ def generate_html(fingerprint_data):
         <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg">
             <h1 class="text-2xl font-bold mb-4">Text Fingerprint Visualization</h1>
             <div class="text-sm mb-4">
-                <span class="font-semibold">ISCC:</span> {fingerprint_data['iscc']}
+                <span class="font-semibold">ISCC:</span> {fingerprint_data["iscc"]}
             </div>
             <div class="text-sm mb-4">
-                <span class="font-semibold">Characters:</span> {fingerprint_data['characters']}
+                <span class="font-semibold">Characters:</span> {fingerprint_data["characters"]}
             </div>
             <div class="relative text-base leading-relaxed whitespace-pre-wrap">
     """
@@ -43,12 +43,12 @@ def generate_html(fingerprint_data):
                 return escape(text).replace("\n", "<br>")
 
             # Non-overlapping part
-            html_content += f'<span class="{overlap_color}">{escape_and_preserve_breaks(chunk["text"][current_pos - chunk["offset"]:start - chunk["offset"]])}'
+            html_content += f'<span class="{overlap_color}">{escape_and_preserve_breaks(chunk["text"][current_pos - chunk["offset"] : start - chunk["offset"]])}'
 
             # Overlapping part (if any)
             if i < len(chunks) - 1 and end > chunks[i + 1]["offset"]:
                 overlap_end = chunks[i + 1]["offset"]
-                html_content += f'<span class="{chunk_color}">{escape_and_preserve_breaks(chunk["text"][start - chunk["offset"]:overlap_end - chunk["offset"]])}</span>'
+                html_content += f'<span class="{chunk_color}">{escape_and_preserve_breaks(chunk["text"][start - chunk["offset"] : overlap_end - chunk["offset"]])}</span>'
                 html_content += escape_and_preserve_breaks(
                     chunk["text"][overlap_end - chunk["offset"] :]
                 )
