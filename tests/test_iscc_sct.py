@@ -239,6 +239,40 @@ def test_compress():
     assert compress(arr2, 1) == expected
 
 
+def test_utf32be_chunk_retrieval():
+    """Test that we can retrieve text chunks using UTF-32BE encoding with offset/size * 4."""
+    # Generate text code with features
+    text = (
+        "Hello world! 你好世界! こんにちは! 안녕하세요! مرحبا! שלום! Ç 가 Ω ℍ ① ︷ i⁹ ¼ ǆ ⫝̸ ȴ ȷ ɂ ć "
+        "Iñtërnâtiôn\nàlizætiøn☃💩 –  is a tric\t ky   thing!\r"
+    )
+    text += TEXT
+    result = sct.gen_text_code_semantic(
+        text, simprints=True, offsets=True, sizes=True, contents=True
+    )
+
+    # Convert text to UTF-32BE
+    text_utf32be = text.encode("utf-32be")
+
+    # For each feature, retrieve the chunk using offset and size
+    features = result["features"][0]
+    for i, simprint in enumerate(features["simprints"]):
+        offset = features["offsets"][i]
+        size = features["sizes"][i]
+        original_chunk = features["contents"][i]
+
+        # Calculate byte offset and size in UTF-32BE
+        byte_offset = offset * 4
+        byte_size = size * 4
+
+        # Retrieve chunk from UTF-32BE encoded text
+        chunk_bytes = text_utf32be[byte_offset : byte_offset + byte_size]
+        retrieved_chunk = chunk_bytes.decode("utf-32be")
+
+        # Verify retrieved chunk matches the original
+        assert retrieved_chunk == original_chunk, f"Chunk mismatch at index {i}"
+
+
 def test_embedding_precision():
     d16 = sct.gen_text_code_semantic("Hello World", embedding=True, precision=4)
     assert d16["features"][0]["embedding"][0] == 0.0087
