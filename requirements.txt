@@ -6,6 +6,6 @@ platformdirs
 tokenizers
 pydantic-settings
 charset-normalizer
-numpy<2.0.0
+numpy
 pybase64
 certifi
