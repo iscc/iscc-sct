@@ -106,6 +106,7 @@ Generate a Semantic Text-Code using the create function:
   "iscc": "ISCC:CADV3GG6JH3XEVRNSVYGCLJ7AAV3BOT5J7EHEZKPFXEGRJ2CTWACGZI",
   "characters": 77
 }
+
 ```
 
 For granular (per chunk) feature outputs:
@@ -133,6 +134,7 @@ For granular (per chunk) feature outputs:
     }
   ]
 }
+
 ```
 
 ### Comparing Two Texts
