@@ -287,11 +287,11 @@ If you use ISCC-SCT in your research, please cite:
 
 ```bibtex
 @software{iscc_sct,
-  author = {ISCC Foundation},
+  author = {Pan, Titusz},
   title = {ISCC-SCT: Semantic Text-Code for the International Standard Content Code},
   url = {https://github.com/iscc/iscc-sct},
   version = {0.1.3},
-  year = {2023},
+  year = {2024},
 }
 ```
 
@@ -299,7 +299,7 @@ If you use ISCC-SCT in your research, please cite:
 
 ### Shift Resistant Semantic Chunking
 
-The current chunking strategy uses tries to maximize chunk sizes (up to 127 tokens) wheil still
+The current chunking strategy uses tries to maximize chunk sizes (up to 127 tokens) while still
 splitting at lexically sensible boundaries with an overlap of up to 48 tokens. See
 [text-splitter](https://github.com/benbrandt/text-splitter).
 
