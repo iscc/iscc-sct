@@ -14,7 +14,20 @@
 (*International Standard Content Code*). The Semantic-Code Text is a new ISCC-UNIT for semantic text
 identification. The algorithm creates simmilar (low hamming distance) codes for semantically similar
 text inputs across different languages. The SCT ISCC-UNIT is a compact binary code created from a
-binarized document-vector text-embedding.
+binarized document-vector text-embeddings.
+
+## Quick Start
+
+```bash
+# Install the package
+pip install iscc-sct
+
+# Generate a semantic code
+python -c "import iscc_sct as sct; print(sct.create('Your text here').iscc)"
+
+# Or use the CLI
+sct "path/to/textfile.txt"
+```
 
 ## What is the ISCC
 
@@ -33,6 +46,14 @@ synchronization, indexing, integrity verification, timestamping, versioning, dat
 similarity clustering, anomaly detection, usage tracking, allocation of royalties, fact-checking and
 general digital asset management use-cases.
 
+## Comparison with Standard ISCC Content-Code Text
+
+| Feature       | ISCC Content-Code Text   | ISCC Semantic-Code Text           |
+| ------------- | ------------------------ | --------------------------------- |
+| Focus         | Lexical similarity       | Semantic similarity               |
+| Cross-lingual | No                       | Yes                               |
+| Use case      | Near-duplicate detection | Semantic similarity, translations |
+
 ## What is ISCC Semantic Text-Code?
 
 The ISCC framework already includes a Text-Code based on lexical similarity for near-duplicate
@@ -44,9 +65,9 @@ similarity alone.
 ### Translation Matching
 
 One of the most interesting aspects of the Semantic Text-Code is its ability to generate
-**(near)-identical codes for translations of the same text**. This means that the same content,
-expressed in different languages, can be identified and linked, opening up new possibilities for
-cross-lingual content identification and similarity detection.
+**(near)-identical codes for translations or paraphrased versions of the same text**. This means
+that the same content, expressed in different languages, can be identified and linked, opening up
+new possibilities for cross-lingual content identification and similarity detection.
 
 ## Key Features
 
@@ -61,7 +82,7 @@ cross-lingual content identification and similarity detection.
 
 ## Installation
 
-Ensure you have Python 3.9 or newer installed on your system. Install the library using:
+Ensure you have Python 3.10 or newer installed on your system. Install the library using:
 
 ```bash
 pip install iscc-sct
@@ -85,7 +106,6 @@ Generate a Semantic Text-Code using the create function:
   "iscc": "ISCC:CADV3GG6JH3XEVRNSVYGCLJ7AAV3BOT5J7EHEZKPFXEGRJ2CTWACGZI",
   "characters": 77
 }
-
 ```
 
 For granular (per chunk) feature outputs:
@@ -113,7 +133,31 @@ For granular (per chunk) feature outputs:
     }
   ]
 }
+```
 
+### Comparing Two Texts
+
+```python
+import iscc_sct as sct
+
+# Generate codes for two texts
+text1 = """
+An ISCC applies to a specific digital asset and is a data-descriptor deterministically constructed
+from multiple hash digests using the algorithms and rules in this document. This document does not
+provide information on registration of ISCCs.
+"""
+
+text2 = """
+Ein ISCC bezieht sich auf ein bestimmtes digitales Gut und ist ein Daten-Deskriptor, der
+deterministisch aus mehreren Hash-Digests unter Verwendung der Algorithmen und Regeln in diesem
+Dokument erstellt wird. Dieses Dokument enthält keine Informationen über die Registrierung von ISCCs.
+"""
+
+code1 = sct.create(text1)
+code2 = sct.create(text2)
+
+distance = sct.iscc_distance(code1.iscc, code2.iscc)
+print(f"Hamming distance in bits: {distance}")
 ```
 
 The installation also provides a sct command-line tool:
@@ -135,6 +179,10 @@ options:
 
 ## How It Works
 
+```
+Text Input → Text Chunking → Embedding Generation → Vector Aggregation → Binarization → ISCC Encoding
+```
+
 `iscc-sct` employs the following process:
 
 1. Splits the text into overlaping chunks (using syntactically sensible breakpoints).
@@ -146,6 +194,24 @@ options:
 
 This process ensures robustness to variations and translations, enabling cross-lingual matching
 based on a short Simprint.
+
+## Configuration
+
+ISCC-SCT can be configured using environment variables:
+
+| Environment Variable | Description                          | Default |
+| -------------------- | ------------------------------------ | ------- |
+| ISCC_SCT_BITS        | Default bit-length of generated code | 64      |
+| ISCC_SCT_MAX_TOKENS  | Maximum tokens per chunk             | 127     |
+| ISCC_SCT_OVERLAP     | Maximum token overlap between chunks | 48      |
+
+See iscc_sct/options.py for more configuration settings.
+
+## Performance Considerations
+
+- The embedding model will be downloaded on first execution
+- **CPU vs GPU**: On systems with CUDA-compatible GPUs, install with `pip install iscc-sct[gpu]` for
+  significantly faster processing.
 
 ## Development and Contributing
 
@@ -198,7 +264,14 @@ sct gui
 This command will launch the Gradio interface in your default web browser, allowing you to interact
 with the demo on your local machine.
 
-## Suported Languages:
+## Current Limitations
+
+- The semantic matching works best for texts with at least several sentences.
+- Very short texts (a few words) may not generate reliable semantic codes.
+- Performance may vary across different language pairs.
+- The model size is approximately 450MB, which may impact initial loading time.
+
+## Suported Languages
 
 Arabic, Armenian, Bengali, Bosnian, Bulgarian, Burmese, Catalan, Chinese (China), Chinese (Taiwan),
 Croatian, Czech, Danish, Dutch, English, Estonian, Farsi, Finnish, French, French (Canada),
@@ -207,6 +280,20 @@ Japanese, Kannada, Korean, Kurdish, Latvian, Lithuanian, Macedonian, Malay, Mala
 Mongolian, Norwegian Bokmål, Persian, Polish, Portuguese, Portuguese (Brazil), Romanian, Russian,
 Serbian, Sinhala, Slovak, Slovenian, Spanish, Swedish, Tamil, Telugu, Thai, Turkish, Ukrainian,
 Urdu, Vietnamese.
+
+## Citation
+
+If you use ISCC-SCT in your research, please cite:
+
+```bibtex
+@software{iscc_sct,
+  author = {ISCC Foundation},
+  title = {ISCC-SCT: Semantic Text-Code for the International Standard Content Code},
+  url = {https://github.com/iscc/iscc-sct},
+  version = {0.1.3},
+  year = {2023},
+}
+```
 
 ## Future Work
 
