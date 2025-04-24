@@ -152,17 +152,29 @@ def test_split_text(text_en):
     assert chunks[-1][1][:8] == "\n (Laugh"
 
 
-def test_split_text_byte_offsets(monkeypatch):
-    monkeypatch.setattr(sct.sct_opts, "byte_offsets", True)
-
-
 def test_split_text_override():
-    text = "Try some very small and granular text splitting. Use options override for it."
+    text = "Try some very small and granular text splitting with Iñtërnâtiônàlizætiøn☃. Use options override for it."
     chunks = split_text(text, max_tokens=8, overlap=4)
     assert chunks == [
         (0, "Try some very small and granular text "),
-        (20, "and granular text splitting. "),
-        (49, "Use options override for it."),
+        (20, "and granular text splitting with "),
+        (53, "Iñtërnâtiônà"),
+        (59, "âtiônàlizætiøn"),
+        (73, "☃. "),
+        (76, "Use options override for it."),
+    ]
+
+
+def test_split_text_override_byte_offsets():
+    text = "Try some very small and granular text splitting with Iñtërnâtiônàlizætiøn☃. Use options override for it."
+    chunks = split_text(text, max_tokens=8, overlap=4, byte_offsets=True)
+    assert chunks == [
+        (0, "Try some very small and granular text "),
+        (20, "and granular text splitting with "),
+        (53, "Iñtërnâtiônà"),
+        (61, "âtiônàlizætiøn"),
+        (80, "☃. "),
+        (85, "Use options override for it."),
     ]
 
 
