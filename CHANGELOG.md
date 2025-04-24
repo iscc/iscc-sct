@@ -2,12 +2,13 @@
 
 ## [0.1.4] - Unreleased
 
+- Added `bytes_offsets` option to generate UTF-8 byte positions instead of character positions
 - Updated dependencies
 
 ## [0.1.3] - 2025-04-02
 
 - Update license, dependencies, and project metadata.
-- Update dependencies to latest versions and workflow configurations (Poetry and GitHub Actions).
+- Update dependencies to the latest versions and workflow configurations (Poetry and GitHub Actions).
 - Update CLI tests to use dynamic SCT command execution.
 - Add UTF-32BE chunk retrieval test for semantic text code.
 - Fix Python 3.13 support by removing Python 3.9 compatibility and updating version constraints.
