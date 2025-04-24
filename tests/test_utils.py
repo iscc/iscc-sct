@@ -264,3 +264,11 @@ def test_char_to_byte_offsets():
     mixed = "a¢€𐍈z"  # 1, 2, 3, 4-byte characters
     mixed_pos = list(range(len(mixed)))
     assert utils.char_to_byte_offsets(mixed, mixed_pos) == [0, 1, 3, 6, 10]
+
+
+def test_test_char_to_byte_offsets_against_simple():
+    text = "Iñtërnâtiônàlizætiøn☃"
+    offsets = list(range(len(text)))
+    assert utils.char_to_byte_offsets(text, offsets) == utils.char_to_byte_offsets_simple(
+        text, offsets
+    )

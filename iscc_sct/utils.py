@@ -277,3 +277,16 @@ def char_to_byte_offsets(text, char_positions):
 
     # Map back to original order
     return [byte_positions[pos_map[pos]] for pos in char_positions]
+
+
+def char_to_byte_offsets_simple(text, char_positions):
+    # type: (str, list[int]) -> list[int]
+    """
+    Simple implementation to convert character positions to byte offsets in a UTF-8 encoded string.
+    This function repeatedly encodes text slices, so its performance is not optimal for large texts.
+
+    :param text: The input text.
+    :param char_positions: List of character positions.
+    :return: List of corresponding byte positions.
+    """
+    return [len(text[:pos].encode("utf-8")) for pos in char_positions]
