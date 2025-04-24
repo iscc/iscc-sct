@@ -293,3 +293,56 @@ def test_utf32be_chunk_retrieval():
 def test_embedding_precision():
     d16 = sct.gen_text_code_semantic("Hello World", embedding=True, precision=4)
     assert d16["features"][0]["embedding"][0] == 0.0087
+
+
+def test_create_byte_offsets():
+    """Test generation with byte offsets using text with multibyte characters."""
+    # Text with ASCII, CJK, emoji, etc.
+    text = (
+        "Hello world! 你好世界! こんにちは! 안녕하세요! مرحبا! שלום! Ç 가 Ω ℍ ① ︷ i⁹ ¼ ǆ ⫝̸ ȴ ȷ ɂ ć "
+        "Iñtërnâtiôn\nàlizætiøn☃💩 –  is a tric\t ky   thing!\r"
+    )
+    text += TEXT
+
+    # Generate with character offsets (default)
+    result_char = sct.create(text, offsets=True, sizes=True)
+    # Generate with byte offsets
+    result_bytes = sct.create(text, offsets=True, sizes=True, byte_offsets=True)
+
+    # ISCC and Character Count should be the same
+    assert result_char.iscc == result_bytes.iscc
+    assert result_char.characters == result_bytes.characters
+
+    # Features should be different
+    assert result_char.features != result_bytes.features
+
+    assert result_char.model_dump(exclude_none=True) == {
+        "iscc": "ISCC:CAARISGPJHEXQBQL",
+        "characters": 851,
+        "features": [
+            {
+                "byte_offsets": False,
+                "maintype": "semantic",
+                "offsets": [0, 209, 422],
+                "sizes": [307, 215, 429],
+                "subtype": "text",
+                "version": 0,
+            }
+        ],
+    }
+
+
+    assert result_bytes.model_dump(exclude_none=True) == {
+        "iscc": "ISCC:CAARISGPJHEXQBQL",
+        "characters": 851,
+        "features": [
+            {
+                "byte_offsets": True,
+                "maintype": "semantic",
+                "offsets": [0, 280, 493],
+                "sizes": [378, 215, 429],
+                "subtype": "text",
+                "version": 0,
+            }
+        ],
+    }
