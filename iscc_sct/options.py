@@ -47,8 +47,9 @@ class SctOptions(BaseSettings):
         False, description="ISCC_SCT_OFFSETS - Include offsets of granular features"
     )
 
-    offsets_utf8: bool = Field(
-        False, description="ISCC_SCT_OFFSETS_UTF8 - Use UTF‑8 byte positions instad of Unicode character positions"
+    byte_offsets: bool = Field(
+        False,
+        description="ISCC_SCT_BYTE_OFFSETS - Use UTF-8 byte offsets instead of character offsets",
     )
 
     sizes: bool = Field(

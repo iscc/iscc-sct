@@ -219,3 +219,48 @@ def test_granular_similarity_multiple_matches():
         ("AAECAwQFBgc", "AAECAwQFBgc"),
         ("EBESExQVFhc", "EBESExQVFhc"),
     }
+
+
+def test_char_to_byte_offsets():
+    # This text is 21 unicode characters but 30 utf-8 bytes
+    text = "Iñtërnâtiônàlizætiøn☃"
+
+    # Test single position conversion
+    assert utils.char_to_byte_offsets(text, [0]) == [0]  # First character
+    assert utils.char_to_byte_offsets(text, [1]) == [1]  # 'ñ' starts at byte 1
+    assert utils.char_to_byte_offsets(text, [3]) == [4]  # 'ë' starts at byte 4
+
+    # Test multiple positions
+    positions = [0, 2, 7, 10, 20]  # I, t, â, ô, ☃
+    expected = [0, 3, 10, 14, 27]
+    assert utils.char_to_byte_offsets(text, positions) == expected
+
+    # Test out of order positions
+    shuffled = [10, 2, 20, 0, 7]
+    expected_shuffled = [14, 3, 27, 0, 10]
+    assert utils.char_to_byte_offsets(text, shuffled) == expected_shuffled
+
+    # Test edge cases
+    assert utils.char_to_byte_offsets(text, []) == []  # Empty list
+    assert utils.char_to_byte_offsets("", []) == []  # Empty text
+
+    # Test with duplicate positions
+    duplicates = [0, 7, 7, 10, 0]
+    expected_duplicates = [0, 10, 10, 14, 0]
+    assert utils.char_to_byte_offsets(text, duplicates) == expected_duplicates
+
+    # Test with emoji (4-byte UTF-8 characters)
+    emoji_text = "Hello 👋 world 🌍!"
+    emoji_positions = [0, 6, 8, 14, 16]  # H, 👋, w, 🌍, !
+    expected_emoji = [0, 6, 11, 17, 22]
+    assert utils.char_to_byte_offsets(emoji_text, emoji_positions) == expected_emoji
+
+    # Test all positions in a string
+    simple = "abc"
+    all_pos = list(range(len(simple)))
+    assert utils.char_to_byte_offsets(simple, all_pos) == all_pos  # ASCII has 1:1 mapping
+
+    # Test with mixed ASCII and non-ASCII
+    mixed = "a¢€𐍈z"  # 1, 2, 3, 4-byte characters
+    mixed_pos = list(range(len(mixed)))
+    assert utils.char_to_byte_offsets(mixed, mixed_pos) == [0, 1, 3, 6, 10]

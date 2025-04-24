@@ -29,6 +29,7 @@ __all__ = [
     "iscc_distance",
     "cosine_similarity",
     "granular_similarity",
+    "char_to_byte_offsets",
     "MODEL_PATH",
 ]
 
@@ -237,3 +238,42 @@ def granular_similarity(metadata_a, metadata_b, threshold=80):
                 matches.append(best_match)
 
     return matches
+
+
+def char_to_byte_offsets(text, char_positions):
+    # type: (str, list[int]) -> list[int]
+    """
+    Efficiently convert character positions to byte positions in a single pass.
+
+    :param text: The input text
+    :param char_positions: List of character positions to convert
+    :return: List of corresponding byte positions
+    """
+    if not char_positions:
+        return []
+
+    # Sort positions for efficient single-pass processing
+    sorted_positions = sorted(set(char_positions))
+    pos_map = {pos: idx for idx, pos in enumerate(sorted_positions)}
+    byte_positions = [0] * len(sorted_positions)
+
+    char_pos = byte_pos = 0
+    pos_idx = 0
+
+    for ch in text:
+        if pos_idx < len(sorted_positions) and char_pos == sorted_positions[pos_idx]:
+            byte_positions[pos_idx] = byte_pos
+            pos_idx += 1
+
+        # Efficient branch-free UTF-8 byte length calculation
+        cp = ord(ch)
+        byte_pos += 1 + (cp >= 0x80) + (cp >= 0x800) + (cp >= 0x10000)
+        char_pos += 1
+
+    # After processing all characters, handle any requested position equal to len(text)
+    while pos_idx < len(sorted_positions) and sorted_positions[pos_idx] == char_pos:
+        byte_positions[pos_idx] = byte_pos
+        pos_idx += 1
+
+    # Map back to original order
+    return [byte_positions[pos_map[pos]] for pos in char_positions]
