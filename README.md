@@ -299,8 +299,8 @@ If you use ISCC-SCT in your research, please cite:
   author = {Pan, Titusz},
   title = {ISCC-SCT: Semantic Text-Code for the International Standard Content Code},
   url = {https://github.com/iscc/iscc-sct},
-  version = {0.1.3},
-  year = {2024},
+  version = {0.1.4},
+  year = {2025},
 }
 ```
 
