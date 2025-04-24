@@ -306,8 +306,8 @@ The current chunking strategy uses tries to maximize chunk sizes (up to 127 toke
 splitting at lexically sensible boundaries with an overlap of up to 48 tokens. See
 [text-splitter](https://github.com/benbrandt/text-splitter).
 
-Cross document chunk matching via granular Simprints can likely be improved significantly with a
-semantically aware and shift resistant chunking strategy. Better shift resistance would improve the
+Cross-document chunk matching via granular Simprints can likely be improved significantly with a
+semantically aware and shift-resistant chunking strategy. Better shift resistance would improve the
 chances that the bounderies detected for semantically similar text sequences in different documents
 are aligned.
 
