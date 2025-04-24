@@ -69,7 +69,7 @@ def code_text_semantic(fp, **options):
         If you enable generating granular features with `features=True` those features will have
         the same bit-length as the generated ISCC-UNIT.
 
-    :param fp: File path of plaintext file to process
+    :param fp: File path of a plaintext file to process
     :param options: Custom processing options for overriding global options
     :key bits (int): Length of generated Semantic Text-Code in bits (default 64)
     :key characters (bool): Return document character count (default True).
@@ -104,7 +104,7 @@ def gen_text_code_semantic(text, **options):
     :key sizes (bool): Include sizes of granular features (number of chars, default False).
     :key contents (bool): Return text chunks (default False).
     :key max_tokens (int): Max tokens per chunk (default 127).
-    :key overlap (int): Max tokens allowed to overlap between chunks (default 48).
+    :key overlap (int): Max tokens allowed overlapping between chunks (default 48).
     :key trim (int): Trim whitespace from chunks (default False).
     :return: Dict with ISCC processing results (using Index-Format for granular features)
     """
@@ -165,7 +165,7 @@ def gen_text_code_semantic(text, **options):
 
 def soft_hash_text_semantic(text):
     # type: (str) -> bytes
-    """Creates a 256-bit semantic similarity preserving hash for text input."""
+    """Creates a 256-bit semantic similarity-preserving hash for text input."""
     chunks = [item[1] for item in split_text(text)]
     embeddings = embed_chunks(chunks)
     embedding = mean_pooling(embeddings)
@@ -181,9 +181,9 @@ def split_text(text, **options):
     :param text: Text to split.
     :param options: Custom processing options for overriding global options
     :key max_tokens (int): Max tokens per chunk (default 127).
-    :key overlap (int): Max tokens allowed to overlap between chunks (default 48).
+    :key overlap (int): Max tokens allowed overlapping between chunks (default 48).
     :key trim (int): Trim whitespace from chunks (default False).
-    :return: A list of offset, chunk tuples [(offset,chunk), ...]
+    :return: A list of offset, chunk tuples [(offset, chunk), ...]
     """
     opts = sct.sct_opts.override(options)
     chunks = splitter(**opts.model_dump()).chunk_indices(text)
@@ -218,7 +218,7 @@ def splitter(**options):
 
     :param options: Custom processing options for overriding global options
     :key max_tokens (int): Max tokens per chunk (default 127).
-    :key overlap (int): Max tokens allowed to overlap between chunks (default 48).
+    :key overlap (int): Max tokens allowed overlapping between chunks (default 48).
     :key trim (int): Trim whitespace from chunks (default False).
     :return: An instance of TextSplitter.
     """
@@ -306,7 +306,7 @@ def embed_tokens(tokens):
 def attention_pooling(token_embeddings, attention_mask):
     # type: (np.array, np.array) -> np.array
     """
-    Apply attention mask based mean pooling to the token embeddings.
+    Apply attention mask-based mean pooling to the token embeddings.
 
     :param token_embeddings: Raw token embeddings from the model.
     :param attention_mask: Attention masks for the embeddings.
@@ -339,7 +339,7 @@ def binarize(vec):
     Binarize an embedding vector into a hash digest.
 
     :param vec: Vector to be binarized.
-    :return: A bytes object representing the binary hash.
+    :return: A byte object representing the binary hash.
     """
     return bytes((np.packbits(np.array(vec) >= 0)))
 
@@ -351,7 +351,7 @@ def compress(vec, precision):
 
     :param vec: Embedding vector.
     :param precision: Max number of fractional decimal places.
-    :return: Vector as native python list of rounded floats.
+    :return: Vector as a native python list of rounded floats.
     """
     rounded_array = np.around(vec, decimals=precision)
     compress_list = [round(x, precision) for x in rounded_array.tolist()]
