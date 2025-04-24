@@ -123,6 +123,7 @@ For granular (per chunk) feature outputs:
       "maintype": "semantic",
       "subtype": "text",
       "version": 0,
+      "byte_offsets": false,
       "simprints": [
         {
           "simprint": "XZjeSfdyVi0",

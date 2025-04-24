@@ -112,6 +112,7 @@ def test_gen_text_code_semantic_granular():
                 "maintype": "semantic",
                 "subtype": "text",
                 "version": 0,
+                "byte_offsets": False,
                 "simprints": ["FWjtTcl4Aws", "lAjHSc1wAws"],
                 "offsets": [0, 297],
                 "contents": [

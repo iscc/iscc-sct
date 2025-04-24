@@ -136,6 +136,8 @@ def gen_text_code_semantic(text, **options):
             "subtype": "text",
             "version": 0,
         }
+        if opts.offsets or opts.sizes:
+            feature_set["byte_offsets"] = opts.byte_offsets
         if opts.embedding:
             feature_set["embedding"] = compress(embedding, opts.precision)
         if opts.simprints:
@@ -144,7 +146,10 @@ def gen_text_code_semantic(text, **options):
         if opts.offsets:
             feature_set["offsets"] = offsets
         if opts.sizes:
-            feature_set["sizes"] = [len(chunk) for chunk in chunks]
+            if opts.byte_offsets:
+                feature_set["sizes"] = [len(chunk.encode("utf-8")) for chunk in chunks]
+            else:
+                feature_set["sizes"] = [len(chunk) for chunk in chunks]
         if opts.contents:
             feature_set["contents"] = chunks
         result["features"] = [feature_set]
