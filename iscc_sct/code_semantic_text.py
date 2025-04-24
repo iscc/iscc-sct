@@ -181,7 +181,16 @@ def split_text(text, **options):
     :return: A list of offset, chunk tuples [(offset,chunk), ...]
     """
     opts = sct.sct_opts.override(options)
-    return splitter(**opts.model_dump()).chunk_indices(text)
+    chunks = splitter(**opts.model_dump()).chunk_indices(text)
+
+    if not opts.byte_offsets:
+        return chunks
+
+    # Convert character offsets to byte offsets
+    char_positions = [offset for offset, _ in chunks]
+    byte_positions = sct.char_to_byte_offsets(text, char_positions)
+
+    return [(byte_positions[i], chunk) for i, (_, chunk) in enumerate(chunks)]
 
 
 @cache
