@@ -1,4 +1,4 @@
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 from iscc_sct.options import *
 from iscc_sct.utils import *
 from iscc_sct.code_semantic_text import *

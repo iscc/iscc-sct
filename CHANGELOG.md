@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.4] - Unreleased
+
+- Updated dependencies
+
 ## [0.1.3] - 2025-04-02
 
 - Update license, dependencies, and project metadata.
