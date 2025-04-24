@@ -26,6 +26,7 @@ def test_feature_set_initialization():
         "maintype": "semantic",
         "subtype": "text",
         "version": 0,
+        "byte_offsets": False,
     }
 
 

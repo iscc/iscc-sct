@@ -98,6 +98,7 @@ class FeatureSet(PrettyBaseModel):
     maintype: str = "semantic"
     subtype: str = "text"
     version: int = 0
+    byte_offsets: Optional[bool] = False
     embedding: Optional[List[float]] = None
     simprints: Optional[
         Union[
