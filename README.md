@@ -138,6 +138,12 @@ For granular (per chunk) feature outputs:
 
 ```
 
+> [!TIP]
+> By default, granular features (simprints) report their offsets as character positions. If the
+> `byte_offsets` option is enabled (via the ISCC_SCT_BYTE_OFFSETS environment variable or as an
+> option in code), the offsets will be computed on the UTF-8 representation of the text. This can be
+> useful when you need to retrieve individual text chunks via random access from remote storage.
+
 ### Comparing Two Texts
 
 ```python
