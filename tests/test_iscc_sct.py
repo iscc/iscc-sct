@@ -316,6 +316,13 @@ def test_create_byte_offsets():
     # Features should be different
     assert result_char.features != result_bytes.features
 
+    # Character versus UTF-8 chunk retrieval and actual chunks should match
+    char_chunk = text[0 : result_char.features[0].sizes[0]]
+    byte_chunk = text.encode("utf-8")[0 : result_bytes.features[0].sizes[0]].decode("utf-8")
+    assert char_chunk == byte_chunk
+    actual_chunk = sct.create(text, contents=True)
+    assert actual_chunk.features[0].contents[0] == char_chunk
+
     assert result_char.model_dump(exclude_none=True) == {
         "iscc": "ISCC:CAARISGPJHEXQBQL",
         "characters": 851,
@@ -330,7 +337,6 @@ def test_create_byte_offsets():
             }
         ],
     }
-
 
     assert result_bytes.model_dump(exclude_none=True) == {
         "iscc": "ISCC:CAARISGPJHEXQBQL",
