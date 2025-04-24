@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.1.4] - Unreleased
+## [0.1.4] - 2025-04-24
 
 - Added `bytes_offsets` option to generate UTF-8 byte positions instead of character positions
 - Updated dependencies
