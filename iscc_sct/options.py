@@ -73,6 +73,12 @@ class SctOptions(BaseSettings):
         False, description="ISCC_SCT_TRIM - Trim whitespace from chunks (Default False)"
     )
 
+    download_timeout: int = Field(
+        600,
+        description="ISCC_SCT_DOWNLOAD_TIMEOUT - Timeout in seconds for model download lock acquisition (Default 600)",
+        gt=0,
+    )
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

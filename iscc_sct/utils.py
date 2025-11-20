@@ -7,9 +7,11 @@ import time
 from pathlib import Path
 from urllib.request import urlretrieve
 from blake3 import blake3
+from filelock import FileLock, Timeout
 from platformdirs import PlatformDirs
 from typing import List, Tuple
 from iscc_sct.models import Metadata, Feature
+from iscc_sct.options import sct_opts
 
 
 APP_NAME = "iscc-sct"
@@ -58,17 +60,45 @@ class timer:
 
 
 def get_model():  # pragma: no cover
-    """Check and return local model file if it exists, otherwise download."""
-    if MODEL_PATH.exists():
-        try:
+    """
+    Check and return local model file if it exists, otherwise download.
+    Uses file locking to prevent race conditions in concurrent scenarios.
+    """
+    lock_path = MODEL_PATH.with_suffix(".lock")
+    timeout = sct_opts.download_timeout
+
+    try:
+        with FileLock(lock_path, timeout=timeout):
+            # Double-check pattern: another process may have completed download
+            if MODEL_PATH.exists():
+                try:
+                    return check_integrity(MODEL_PATH, MODEL_CHECKSUM)
+                except RuntimeError:
+                    log.warning("Model file integrity error - redownloading ...")
+                    MODEL_PATH.unlink()  # Remove corrupt file
+
+            # Atomic download: temp file + rename
+            temp_path = MODEL_PATH.with_suffix(f".tmp.{os.getpid()}")
+            try:
+                log.info("Downloading embedding model ...")
+                urlretrieve(MODEL_URL, filename=temp_path)
+                check_integrity(temp_path, MODEL_CHECKSUM)
+                os.replace(temp_path, MODEL_PATH)  # Atomic on all platforms
+                log.info("Model download completed successfully")
+            finally:
+                # Cleanup temp file on any failure
+                if temp_path.exists():
+                    temp_path.unlink()
+
             return check_integrity(MODEL_PATH, MODEL_CHECKSUM)
-        except RuntimeError:
-            log.warning("Model file integrity error - redownloading ...")
-            urlretrieve(MODEL_URL, filename=MODEL_PATH)
-    else:
-        log.info("Downloading embedding model ...")
-        urlretrieve(MODEL_URL, filename=MODEL_PATH)
-    return check_integrity(MODEL_PATH, MODEL_CHECKSUM)
+
+    except Timeout:
+        msg = f"Timeout waiting for model download lock after {timeout} seconds"
+        log.error(msg)
+        raise RuntimeError(
+            f"{msg}. Another process may be downloading the model. "
+            "Please wait or increase ISCC_SCT_DOWNLOAD_TIMEOUT."
+        )
 
 
 def check_integrity(file_path, checksum):

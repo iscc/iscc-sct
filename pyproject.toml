@@ -44,6 +44,7 @@ dependencies = [
     "tokenizers",
     "pydantic-settings",
     "charset-normalizer",
+    "filelock",
     "numpy",
     "pybase64",
     "certifi",
