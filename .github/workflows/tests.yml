@@ -25,6 +25,9 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
 
+      - name: Install platformdirs for cache setup
+        run: uv pip install platformdirs
+
       - name: Get model cache directory
         id: model-cache-dir
         shell: python
