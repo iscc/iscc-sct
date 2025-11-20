@@ -9,3 +9,4 @@ coverage.xml
 .env
 .aider*
 datasets
+CLAUDE.md
