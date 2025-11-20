@@ -26,7 +26,7 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Install platformdirs for cache setup
-        run: uv pip install platformdirs
+        run: uv pip install --system platformdirs
 
       - name: Get model cache directory
         id: model-cache-dir
