@@ -208,13 +208,50 @@ based on a short Simprint.
 
 ISCC-SCT can be configured using environment variables:
 
-| Environment Variable | Description                          | Default |
-| -------------------- | ------------------------------------ | ------- |
-| ISCC_SCT_BITS        | Default bit-length of generated code | 64      |
-| ISCC_SCT_MAX_TOKENS  | Maximum tokens per chunk             | 127     |
-| ISCC_SCT_OVERLAP     | Maximum token overlap between chunks | 48      |
+| Environment Variable | Description                          | Default                         |
+| -------------------- | ------------------------------------ | ------------------------------- |
+| ISCC_SCT_BITS        | Default bit-length of generated code | 64                              |
+| ISCC_SCT_MAX_TOKENS  | Maximum tokens per chunk             | 127                             |
+| ISCC_SCT_OVERLAP     | Maximum token overlap between chunks | 48                              |
+| ISCC_SCT_MODEL_DIR   | Custom directory for model storage   | Platform-specific user data dir |
 
 See iscc_sct/options.py for more configuration settings.
+
+### Custom Model Storage Location
+
+By default, the embedding model is downloaded to a platform-specific user data directory. You can
+customize this location using the `ISCC_SCT_MODEL_DIR` environment variable:
+
+#### Container Deployments
+
+```dockerfile
+# Download model to /app/models during build
+ENV ISCC_SCT_MODEL_DIR=/app/models
+RUN python -c "import iscc_sct.utils; iscc_sct.utils.get_model()"
+```
+
+#### CI/CD Caching
+
+```yaml
+- name: Cache iscc-sct model
+  uses: actions/cache@v4
+  with:
+    path: .cache/iscc-sct
+    key: iscc-sct-model-v1
+
+- name: Run tests
+  env:
+    ISCC_SCT_MODEL_DIR: .cache/iscc-sct
+  run: pytest
+```
+
+#### Shared Model Cache
+
+```bash
+# Multiple users/processes share one model
+export ISCC_SCT_MODEL_DIR=/opt/shared/iscc-sct
+python my_app.py
+```
 
 ## Performance Considerations
 

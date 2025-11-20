@@ -79,6 +79,11 @@ class SctOptions(BaseSettings):
         gt=0,
     )
 
+    model_dir: str | None = Field(
+        None,
+        description="ISCC_SCT_MODEL_DIR - Custom directory for model storage (default: platform-specific user data dir)",
+    )
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

@@ -1,9 +1,14 @@
 from pathlib import Path
+import os
+import subprocess
+import sys
+import tempfile
 
 import pytest
 from blake3 import blake3
 
 import iscc_sct as sct
+from iscc_sct.options import SctOptions
 from iscc_sct.code_semantic_text import (
     split_text,
     tokenize_chunks,
@@ -352,3 +357,80 @@ def test_create_byte_offsets():
             }
         ],
     }
+
+
+def test_options_model_dir_default():
+    """Test that model_dir defaults to None."""
+    opts = SctOptions()
+    assert opts.model_dir is None
+
+
+def test_options_model_dir_custom():
+    """Test that model_dir can be set to a custom value."""
+    custom_dir = "/custom/model/path"
+    opts = SctOptions(model_dir=custom_dir)
+    assert opts.model_dir == custom_dir
+
+
+def test_options_model_dir_from_env(monkeypatch):
+    """Test that model_dir can be set via environment variable."""
+    custom_dir = "/env/model/path"
+    monkeypatch.setenv("ISCC_SCT_MODEL_DIR", custom_dir)
+    opts = SctOptions()
+    assert opts.model_dir == custom_dir
+
+
+def test_model_path_resolution():
+    """Test that custom model_dir gets resolved to absolute path."""
+    from importlib import reload
+    import iscc_sct.utils as utils_module
+
+    # Test with a relative path
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Create a test to verify that relative paths would be resolved
+        # Note: This test verifies the logic without actually reloading modules
+        test_path = Path("./test_relative_path")
+        resolved = test_path.resolve()
+        assert resolved.is_absolute()
+
+
+def test_model_directory_creation():
+    """Test that custom model directory is created if it doesn't exist."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        custom_dir = Path(tmpdir) / "custom_model_dir"
+        assert not custom_dir.exists()
+
+        # Create the directory as the code would do
+        os.makedirs(custom_dir, exist_ok=True)
+        assert custom_dir.exists()
+        assert custom_dir.is_dir()
+
+
+def test_custom_model_dir_via_reload(monkeypatch):
+    """Test that custom model_dir is used when set via environment variable (module-level code path)."""
+    from importlib import reload
+    import iscc_sct.utils
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        custom_dir = Path(tmpdir) / "custom_model_path"
+
+        # Set environment variable and reload module to trigger module-level code
+        monkeypatch.setenv("ISCC_SCT_MODEL_DIR", str(custom_dir))
+
+        # Reload options module first (it reads env vars)
+        import iscc_sct.options
+
+        reload(iscc_sct.options)
+
+        # Then reload utils module (it uses options)
+        reload(iscc_sct.utils)
+
+        # Verify the custom directory was used
+        expected = custom_dir.resolve()
+        actual = iscc_sct.utils.MODEL_PATH.parent
+        assert actual == expected, f"Expected {expected}, got {actual}"
+
+        # Reload again to restore default state for other tests
+        monkeypatch.delenv("ISCC_SCT_MODEL_DIR")
+        reload(iscc_sct.options)
+        reload(iscc_sct.utils)

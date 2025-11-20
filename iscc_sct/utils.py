@@ -16,8 +16,18 @@ from iscc_sct.options import sct_opts
 
 APP_NAME = "iscc-sct"
 APP_AUTHOR = "iscc"
-dirs = PlatformDirs(appname=APP_NAME, appauthor=APP_AUTHOR)
-os.makedirs(dirs.user_data_dir, exist_ok=True)
+
+# Determine model storage directory from options or platform default
+if sct_opts.model_dir:
+    model_storage_dir = Path(sct_opts.model_dir).resolve()
+    log.debug(f"Using custom model directory: {model_storage_dir}")
+else:
+    dirs = PlatformDirs(appname=APP_NAME, appauthor=APP_AUTHOR)
+    model_storage_dir = Path(dirs.user_data_dir)
+    log.debug(f"Using default model directory: {model_storage_dir}")
+
+# Ensure directory exists
+os.makedirs(model_storage_dir, exist_ok=True)
 
 
 __all__ = [
@@ -40,7 +50,7 @@ BASE_VERSION = "1.0.0"
 BASE_URL = f"https://github.com/iscc/iscc-binaries/releases/download/v{BASE_VERSION}"
 MODEL_FILENAME = "iscc-sct-v0.1.0.onnx"
 MODEL_URL = f"{BASE_URL}/{MODEL_FILENAME}"
-MODEL_PATH = Path(dirs.user_data_dir) / MODEL_FILENAME
+MODEL_PATH = model_storage_dir / MODEL_FILENAME
 MODEL_CHECKSUM = "ff254d62db55ed88a1451b323a66416f60838dd2f0338dba21bc3b8822459abc"
 
 
