@@ -13,3 +13,4 @@ CLAUDE.md
 .mcp.json
 .venv
 .python-version
+.claude/
