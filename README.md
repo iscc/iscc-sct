@@ -225,12 +225,12 @@ See iscc_sct/options.py for more configuration settings.
 ## Development and Contributing
 
 We welcome contributions to enhance the capabilities and efficiency of this proof of concept. For
-development, install the project in development mode using [Poetry](https://python-poetry.org):
+development, install the project in development mode using [uv](https://docs.astral.sh/uv/):
 
 ```shell
 git clone https://github.com/iscc/iscc-sct.git
 cd iscc-sct
-poetry install
+uv sync --all-extras
 ```
 
 If you have suggestions for improvements or bug fixes, please open an issue or pull request. For

@@ -2,6 +2,7 @@
 
 ## [0.1.5] - Unreleased
 
+- Switch to UV for dependency management
 - Updated dependencies
 
 ## [0.1.4] - 2025-04-24

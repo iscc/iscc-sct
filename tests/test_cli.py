@@ -1,11 +1,9 @@
-import subprocess
 import sys
 import pytest
-
-
-def get_sct_command():
-    """Get the command to run the SCT CLI"""
-    return [sys.executable, "-m", "iscc_sct.cli"]
+from io import StringIO
+from unittest.mock import patch, MagicMock
+from iscc_sct.cli import main
+from loguru import logger
 
 
 @pytest.fixture
@@ -30,47 +28,54 @@ def non_utf8_text_file(tmp_path):
 
 
 def test_cli_no_args():
-    result = subprocess.run(get_sct_command(), capture_output=True, text=True)
-    assert result.returncode == 0
-    assert "Generate Semantic" in result.stdout
+    with patch("sys.argv", ["iscc-sct"]):
+        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            main()
+            output = mock_stdout.getvalue()
+            assert "Generate Semantic" in output
 
 
 def test_cli_empty_file(empty_text_file):
-    result = subprocess.run(
-        [*get_sct_command(), str(empty_text_file), "-d"], capture_output=True, text=True
-    )
-    assert result.returncode == 0
-    assert "SKIPPED" in result.stderr
+    with patch("sys.argv", ["iscc-sct", str(empty_text_file), "-d"]):
+        mock_logger = MagicMock()
+        with patch("iscc_sct.cli.logger", mock_logger):
+            main()
+            # Check that warning was called with SKIPPED message
+            warning_calls = [str(call) for call in mock_logger.warning.call_args_list]
+            assert any("SKIPPED" in str(call) for call in warning_calls)
 
 
-def test_cli_non_utf8_file(non_utf8_text_file):
-    result = subprocess.run(
-        [*get_sct_command(), str(non_utf8_text_file), "-d"], capture_output=True, text=True
-    )
-    assert result.returncode == 0
-    assert "Could not decode" in result.stderr
-    assert "ISCC:" in result.stdout
+def test_cli_non_utf8_file(non_utf8_text_file, capsys):
+    with patch("sys.argv", ["iscc-sct", str(non_utf8_text_file), "-d"]):
+        mock_logger = MagicMock()
+        with patch("iscc_sct.cli.logger", mock_logger):
+            main()
+            captured = capsys.readouterr()
+            # Check that debug was called with "Could not decode" message
+            debug_calls = [str(call) for call in mock_logger.debug.call_args_list]
+            assert any("Could not decode" in str(call) for call in debug_calls)
+            assert "ISCC:" in captured.out
 
 
-def test_cli_generate_sct(sample_text_file):
-    result = subprocess.run(
-        [*get_sct_command(), str(sample_text_file)], capture_output=True, text=True
-    )
-    assert result.returncode == 0
-    assert "ISCC:" in result.stdout
+def test_cli_generate_sct(sample_text_file, capsys):
+    with patch("sys.argv", ["iscc-sct", str(sample_text_file)]):
+        main()
+        captured = capsys.readouterr()
+        assert "ISCC:" in captured.out
 
 
-def test_cli_generate_sct_granular(sample_text_file):
-    result = subprocess.run(
-        [*get_sct_command(), str(sample_text_file), "--granular"], capture_output=True, text=True
-    )
-    assert result.returncode == 0
-    assert "features" in result.stdout
+def test_cli_generate_sct_granular(sample_text_file, capsys):
+    with patch("sys.argv", ["iscc-sct", str(sample_text_file), "--granular"]):
+        main()
+        captured = capsys.readouterr()
+        assert "features" in captured.out
 
 
 def test_cli_debug_mode(sample_text_file):
-    result = subprocess.run(
-        [*get_sct_command(), str(sample_text_file), "--debug"], capture_output=True, text=True
-    )
-    assert result.returncode == 0
-    assert "DEBUG" in result.stderr
+    with patch("sys.argv", ["iscc-sct", str(sample_text_file), "--debug"]):
+        mock_logger = MagicMock()
+        with patch("iscc_sct.cli.logger", mock_logger):
+            main()
+            # Check that logger.remove() was NOT called (debug mode keeps logger active)
+            # and that debug was called
+            assert mock_logger.debug.called

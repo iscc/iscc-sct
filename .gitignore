@@ -10,3 +10,6 @@ coverage.xml
 .aider*
 datasets
 CLAUDE.md
+.mcp.json
+.venv
+.python-version

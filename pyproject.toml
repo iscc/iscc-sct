@@ -1,15 +1,15 @@
-[tool.poetry]
+[project]
 name = "iscc-sct"
 version = "0.1.5"
 description = "ISCC - Semantic Code Text"
-authors = ["Titusz <tp@piscc.io>"]
-license = "Apache-2.0"
+authors = [
+    {name = "Titusz", email = "tp@piscc.io"}
+]
+license = {text = "Apache-2.0"}
 readme = "README.md"
-homepage = "https://iscc.codes"
-repository = "https://github.com/iscc/iscc-sct"
-documentation = "https://github.com/iscc/iscc-sct"
-keywords=["iscc", "text similarity", "cross lingual", "semantic similarity"]
-classifiers=[
+requires-python = ">=3.10,<=3.13"
+keywords = ["iscc", "text similarity", "cross lingual", "semantic similarity"]
+classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
@@ -35,50 +35,50 @@ classifiers=[
     "Topic :: System :: Clustering",
     "Topic :: System :: Distributed Computing",
 ]
+dependencies = [
+    "semantic-text-splitter",
+    "onnxruntime",
+    "loguru",
+    "blake3",
+    "platformdirs",
+    "tokenizers",
+    "pydantic-settings",
+    "charset-normalizer",
+    "numpy",
+    "pybase64",
+    "certifi",
+    "pyyaml",
+    "pydantic",
+]
 
-[tool.poetry.urls]
-"Changelog" = "https://github.com/iscc/iscc-sct/blob/main/CHANGELOG.md"
-"Bug Tracker" = "https://github.com/iscc/iscc-sct/issues"
-"Twitter" = "https://twitter.com/iscc_foundation"
-"Donate" = "https://iscc.foundation/support"
-
-[tool.poetry.scripts]
-sct = 'iscc_sct.cli:main'
-
-[tool.poetry.dependencies]
-python = ">=3.10,<3.14"
-semantic-text-splitter = "*"
-onnxruntime = "<=1.21.0"
-onnxruntime-gpu = { version = "*", optional = true }
-loguru = "*"
-blake3 = "*"
-platformdirs = "*"
-tokenizers = "*"
-pydantic-settings = "*"
-charset-normalizer = "*"
-numpy = "*"
-pybase64 = "*"
-certifi = "*"
-gradio = { version = "*", optional = true }
-pyyaml = "*"
-pydantic = "*"
-
-
-[tool.poetry.extras]
+[project.optional-dependencies]
 gpu = ["onnxruntime-gpu"]
 demo = ["gradio"]
 
-[tool.poetry.group.test.dependencies]
-pytest = "*"
-coverage = "*"
-pytest-cov = "*"
+[dependency-groups]
+dev = [
+    "pytest",
+    "coverage",
+    "pytest-cov",
+    "poethepoet",
+    "ruff",
+    "mdformat-gfm",
+    "mdformat-gfm-alerts",
+    "mdformat-frontmatter",
+    "gradio",
+]
 
-[tool.poetry.group.dev.dependencies]
-poethepoet = "*"
-ruff = "*"
-mdformat-gfm = "*"
-mdformat-gfm-alerts = "*"
-mdformat-frontmatter = "*"
+[project.urls]
+Homepage = "https://iscc.codes"
+Repository = "https://github.com/iscc/iscc-sct"
+Documentation = "https://github.com/iscc/iscc-sct"
+Changelog = "https://github.com/iscc/iscc-sct/blob/main/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/iscc/iscc-sct/issues"
+Twitter = "https://twitter.com/iscc_foundation"
+Donate = "https://iscc.foundation/support"
+
+[project.scripts]
+iscc-sct = "iscc_sct.cli:main"
 
 [tool.ruff]
 line-length = 100
@@ -95,10 +95,10 @@ format-markdown = { cmd = "mdformat --wrap 100 --end-of-line lf README.md", help
 format-yml = { script = "iscc_sct.dev:format_yml", help = "Format YML files"}
 convert-lf = { script = "iscc_sct.dev:convert_lf", help = "Convert line endings to LF"}
 test = { cmd = "pytest --cov=iscc_sct --cov-fail-under=100", help = "Run tests with coverage" }
-update-dependencies = { cmd = "poetry update", help = "Update dependencies" }
+update-dependencies = { cmd = "uv sync --upgrade", help = "Update dependencies" }
 all = ["format-code", "format-markdown", "format-yml", "convert-lf", "test"]
 update = ["update-dependencies", "all"]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

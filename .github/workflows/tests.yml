@@ -19,21 +19,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v3
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          poetry-version: 2.1.1
-
-      - name: Setup Venv
-        run: |
-          poetry config virtualenvs.create true --local
-          poetry config virtualenvs.in-project true --local
-
-      - name: Cache Project Dependencies
-        uses: actions/cache@v4
-        with:
-          path: ./.venv
-          key: venv-${{ hashFiles('poetry.lock') }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
       - name: Get model cache directory
         id: model-cache-dir
@@ -55,7 +45,7 @@ jobs:
             ${{ runner.os }}-onnx-model-
 
       - name: Install Dependencies
-        run: poetry install -E demo
+        run: uv sync --extra demo --extra test
 
       - name: Run Tests
-        run: poetry run pytest --cov=iscc_sct --cov-report=xml -v tests
+        run: uv run pytest --cov=iscc_sct --cov-report=xml -v tests
