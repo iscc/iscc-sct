@@ -48,7 +48,7 @@ jobs:
             ${{ runner.os }}-onnx-model-
 
       - name: Install Dependencies
-        run: uv sync --extra demo --extra test
+        run: uv sync --extra demo --group dev
 
       - name: Run Tests
         run: uv run pytest --cov=iscc_sct --cov-report=xml -v tests
