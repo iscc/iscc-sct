@@ -50,6 +50,7 @@ dependencies = [
     "certifi",
     "pyyaml",
     "pydantic",
+    "typer",
 ]
 
 [project.optional-dependencies]
