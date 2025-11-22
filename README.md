@@ -26,7 +26,7 @@ pip install iscc-sct
 python -c "import iscc_sct as sct; print(sct.create('Your text here').iscc)"
 
 # Or use the CLI
-sct "path/to/textfile.txt"
+iscc-sct create "path/to/textfile.txt"
 ```
 
 ## What is the ISCC
@@ -169,21 +169,24 @@ distance = sct.iscc_distance(code1.iscc, code2.iscc)
 print(f"Hamming distance in bits: {distance}")
 ```
 
-The installation also provides a sct command-line tool:
+The installation also provides an `iscc-sct` command-line tool:
 
 ```shell
-usage: sct [-h] [-b BITS] [-g] [-d] [path]
+# Generate ISCC codes from text files
+iscc-sct create <path> [OPTIONS]
 
-Generate Semantic Text-Codes for text files.
+# Launch Gradio demo interface
+iscc-sct demo
 
-positional arguments:
-  path                  Path to text files (supports glob patterns) or 'gui' to launch Gradio demo.
-
-options:
-  -h, --help            show this help message and exit
-  -b BITS, --bits BITS  Bit-Length of Code (default 256)
-  -g, --granular        Activate granular processing.
-  -d, --debug           Show debugging messages.
+Options:
+  -b, --bits INTEGER    Bit-length of Code (default: 256)
+  -g, --granular        Activate granular processing
+  -d, --debug           Show debugging messages
+  -q, --quiet           Suppress informational messages
+  -o, --output PATH     Write output to file
+  -f, --format TEXT     Output format: text or json (default: text)
+  --version, -v         Show version and exit
+  --help                Show this message and exit
 ```
 
 ## How It Works
@@ -301,10 +304,10 @@ pip install iscc-sct[demo]
 
 This will ensure that Gradio and other necessary dependencies for the demo are installed.
 
-After installation, you can use the `sct` command-line tool that comes with the package:
+After installation, you can use the `iscc-sct` command-line tool that comes with the package:
 
 ```shell
-sct gui
+iscc-sct demo
 ```
 
 This command will launch the Gradio interface in your default web browser, allowing you to interact

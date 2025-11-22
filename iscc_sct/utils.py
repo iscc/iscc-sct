@@ -20,11 +20,9 @@ APP_AUTHOR = "iscc"
 # Determine model storage directory from options or platform default
 if sct_opts.model_dir:
     model_storage_dir = Path(sct_opts.model_dir).resolve()
-    log.debug(f"Using custom model directory: {model_storage_dir}")
 else:
     dirs = PlatformDirs(appname=APP_NAME, appauthor=APP_AUTHOR)
     model_storage_dir = Path(dirs.user_data_dir)
-    log.debug(f"Using default model directory: {model_storage_dir}")
 
 # Ensure directory exists
 os.makedirs(model_storage_dir, exist_ok=True)
