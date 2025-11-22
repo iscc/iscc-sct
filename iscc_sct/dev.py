@@ -24,7 +24,7 @@ def convert_lf():  # pragma: no cover
 
 
 def format_yml():
-    for f in HERE.glob("**\*.yml"):
+    for f in HERE.glob("**/*.yml"):
         with open(f, "rt", encoding="utf-8") as infile:
             data = yaml.safe_load(infile)
         with open(f, "wt", encoding="utf-8", newline="\n") as outf:
