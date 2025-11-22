@@ -25,7 +25,8 @@ app = typer.Typer(
     name="iscc-sct",
     help="ISCC - Semantic Code Text: Generate semantic similarity preserving text codes.",
     add_completion=False,
-    no_args_is_help=True,
+    invoke_without_command=True,  # Allow default command
+    no_args_is_help=False,  # Allow running without args for version
     context_settings={"help_option_names": ["-h", "--help"]},
 )
 
@@ -36,22 +37,6 @@ def version_callback(value: bool):
     if value:
         typer.echo(f"iscc-sct version {__version__}")
         raise typer.Exit()
-
-
-@app.callback()
-def callback(
-    version: Optional[bool] = typer.Option(
-        None,
-        "--version",
-        "-v",
-        callback=version_callback,
-        is_eager=True,
-        help="Show version and exit.",
-    ),
-):
-    # type: (Optional[bool]) -> None
-    """ISCC-SCT: Semantic Code Text for cross-lingual similarity detection."""
-    pass
 
 
 def resolve_path(path_pattern):
@@ -93,40 +78,36 @@ def resolve_path(path_pattern):
     return []
 
 
-def main():
-    # type: () -> None
-    """Entry point for the CLI."""
-    app()
-
-
-@app.command(name="create")
-def create_command(
-    paths: list[str] = typer.Argument(..., help="Path(s) to text files (supports glob patterns)"),
-    bits: int = typer.Option(256, "--bits", "-b", help="Bit-length of Code"),
-    granular: bool = typer.Option(False, "--granular", "-g", help="Activate granular processing"),
-    debug: bool = typer.Option(False, "--debug", "-d", help="Show debugging messages"),
-    quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress informational messages"),
-    output: Optional[Path] = typer.Option(
-        None, "--output", "-o", help="Write output to file instead of stdout"
-    ),
-    format: str = typer.Option("text", "--format", "-f", help="Output format: text or json"),
+def process_files(
+    paths,
+    format,
+    unit_bits,
+    simprint_bits,
+    granular,
+    pretty,
+    content,
 ):
-    # type: (list[str], int, bool, bool, bool, Optional[Path], str) -> None
-    """Generate Semantic Text-Codes for text files."""
-    # Configure logging
-    if not debug:
-        logger.remove()
+    # type: (list[str], str, int, int, bool, bool, bool) -> None
+    """Process files and generate ISCC codes."""
+
+    # Disable loguru by default
+    logger.remove()
 
     # Validate format
     if format not in ["text", "json"]:
         typer.echo(f"Error: Invalid format '{format}'. Choose 'text' or 'json'.", err=True)
         raise typer.Exit(code=1)
 
+    # Validate content flag
+    if content and not granular:
+        typer.echo("Error: --content requires --granular to be enabled.", err=True)
+        raise typer.Exit(code=1)
+
     # Find matching files from all provided paths
     files = []
     for path in paths:
         matching_files = resolve_path(path)
-        if not matching_files and not quiet:
+        if not matching_files:
             logger.warning(f"No files found for pattern: {path}")
         files.extend(matching_files)
 
@@ -143,20 +124,15 @@ def create_command(
         typer.echo("Error: No files found matching any of the provided patterns.", err=True)
         raise typer.Exit(code=1)
 
-    # Prepare output storage for JSON format
-    results = [] if format == "json" else None
+    # For JSON format, we'll output as we go (NDJSON for multiple files)
+    results = []
 
     # Detect if output is being redirected (not a TTY)
-    is_tty = sys.stdout.isatty() if output is None else False
+    is_tty = sys.stdout.isatty()
 
     # Process files with optional progress bar
-    # Show progress bar only if: not quiet, multiple files, and outputting to terminal
-    show_progress = not quiet and len(files) > 1 and is_tty
-
-    # Open output file if specified (for streaming writes)
-    output_file = None
-    if output and format != "json":  # JSON needs to be complete before writing
-        output_file = output.open("w", encoding="utf-8")
+    # Show progress bar only if: multiple files and outputting to terminal
+    show_progress = len(files) > 1 and is_tty
 
     # Setup console and progress bar if needed
     console = Console() if show_progress else None
@@ -178,7 +154,7 @@ def create_command(
             progress.start()
             task_id = progress.add_task("Processing files...", total=len(files))
 
-        for idx, file_path in enumerate(files):
+        for file_path in files:
             logger.debug(f"Processing {file_path.name}")
 
             try:
@@ -203,47 +179,98 @@ def create_command(
                         logger.debug(f"Decode {file_path.name} with {charset_match.encoding}.")
                         text = str(charset_match)
 
-                    # Generate ISCC
-                    sct_meta = create(text, granular=granular, bits=bits)
+                    # Build options for create() function
+                    options = {
+                        "bits": unit_bits,
+                        "bits_granular": simprint_bits,
+                    }
 
-                    # Format and output immediately
+                    # Add content flag if requested
+                    if content:
+                        options["contents"] = True
+
+                    # Generate ISCC
+                    sct_meta = create(text, granular=granular, **options)
+
+                    # Format and output
                     if format == "json":
                         result = {
-                            "file": str(file_path),
                             "iscc": sct_meta.iscc,
+                            "filename": file_path.as_posix(),
                         }
-                        if granular:
-                            result["metadata"] = sct_meta.model_dump()
+                        if granular and sct_meta.features:
+                            # Convert to object format for cleaner JSON
+                            features_list = []
+                            for feature_set in sct_meta.features:
+                                # Check if we're in index format
+                                if feature_set.simprints and isinstance(
+                                    feature_set.simprints[0], str
+                                ):
+                                    # Index format - convert to list of dicts
+                                    for i in range(len(feature_set.simprints)):
+                                        feature_dict = {"simprint": feature_set.simprints[i]}
+                                        if feature_set.offsets:
+                                            feature_dict["offset"] = feature_set.offsets[i]
+                                        if feature_set.sizes:
+                                            feature_dict["size"] = feature_set.sizes[i]
+                                        if feature_set.contents:
+                                            feature_dict["content"] = feature_set.contents[i]
+                                        features_list.append(feature_dict)
+                                else:
+                                    # Object format - use as is
+                                    for feature in feature_set.simprints:
+                                        features_list.append(feature.model_dump())
+                            result["features"] = features_list
                         results.append(result)
                     else:
-                        # Format line
-                        if granular:
-                            # For granular output, keep the detailed format
-                            line = f"{repr(sct_meta)} {file_path}"
-                        else:
-                            if len(files) > 1:
-                                # Multiple files: use checksum-style format (iscc  file)
-                                line = f"{sct_meta.iscc}  {file_path}"
-                            else:
-                                # Single file: output only the ISCC code
-                                line = sct_meta.iscc
+                        # Text format output - always include filename with forward slashes
+                        line = f"{sct_meta.iscc} {file_path.as_posix()}"
 
-                        # Stream output immediately
-                        if output_file:
-                            output_file.write(line + "\n")
-                            output_file.flush()  # Ensure immediate write
+                        # Output the main line
+                        if console and progress:
+                            console.print(line, markup=False, highlight=False)
                         else:
-                            # Use console.print if progress bar is active, otherwise typer.echo
-                            if console and progress:
-                                # Disable markup to prevent ISCC codes from being interpreted as styles
-                                console.print(line, markup=False, highlight=False)
-                            else:
-                                typer.echo(line)
+                            typer.echo(line)
+
+                        # Add granular details if requested
+                        if granular and sct_meta.features:
+                            for feature_set in sct_meta.features:
+                                # Check format and output simprints with details
+                                if feature_set.simprints and isinstance(
+                                    feature_set.simprints[0], str
+                                ):
+                                    # Index format
+                                    for i in range(len(feature_set.simprints)):
+                                        parts = [f"  {feature_set.simprints[i]}"]
+                                        if feature_set.offsets:
+                                            parts.append(str(feature_set.offsets[i]))
+                                        if feature_set.sizes:
+                                            parts.append(str(feature_set.sizes[i]))
+                                        detail_line = " ".join(parts)
+                                        if console and progress:
+                                            console.print(
+                                                detail_line, markup=False, highlight=False
+                                            )
+                                        else:
+                                            typer.echo(detail_line)
+                                else:
+                                    # Object format
+                                    for feature in feature_set.simprints:
+                                        parts = [f"  {feature.simprint}"]
+                                        if feature.offset is not None:
+                                            parts.append(str(feature.offset))
+                                        if feature.size is not None:
+                                            parts.append(str(feature.size))
+                                        detail_line = " ".join(parts)
+                                        if console and progress:
+                                            console.print(
+                                                detail_line, markup=False, highlight=False
+                                            )
+                                        else:
+                                            typer.echo(detail_line)
 
             except Exception as e:
                 logger.error(f"Error processing {file_path}: {e}")
-                if debug:
-                    raise
                 continue
 
             finally:
@@ -254,20 +281,132 @@ def create_command(
     finally:
         if progress:
             progress.stop()
-        if output_file:
-            output_file.close()
 
-    # Handle JSON output (needs all results before writing)
+    # Handle JSON output
     if format == "json":
-        output_text = json.dumps(results, indent=2)
-        if output:
-            output.write_text(output_text, encoding="utf-8")
-            if not quiet:
-                typer.echo(f"Output written to {output}")
-        else:
+        if len(results) == 1:
+            # Single file: output just the object
+            indent = 2 if pretty else None
+            output_text = json.dumps(results[0], indent=indent)
             typer.echo(output_text)
-    elif output and not quiet:
-        typer.echo(f"Output written to {output}")
+        else:
+            # Multiple files: NDJSON format (one JSON object per line, no indentation)
+            for result in results:
+                output_text = json.dumps(result)
+                typer.echo(output_text)
+
+
+@app.callback(invoke_without_command=True)
+def callback(
+    ctx: typer.Context,
+    paths: list[str] = typer.Argument(
+        default=None,
+        help="Path(s) to text files (supports glob patterns)",
+        show_default=False,
+    ),
+    format: str = typer.Option(
+        "text",
+        "--format",
+        "-f",
+        help="Output format: text or json",
+    ),
+    unit_bits: int = typer.Option(
+        256,
+        "--unit-bits",
+        "-u",
+        help="Bit-length of ISCC-UNIT",
+    ),
+    simprint_bits: int = typer.Option(
+        256,
+        "--simprint-bits",
+        "-s",
+        help="Bit-length of ISCC-SIMPRINTs",
+    ),
+    granular: bool = typer.Option(
+        False,
+        "--granular",
+        "-g",
+        help="Activate granular simprint processing",
+    ),
+    pretty: bool = typer.Option(
+        False,
+        "--pretty",
+        "-p",
+        help="Output pretty JSON",
+    ),
+    content: bool = typer.Option(
+        False,
+        "--content",
+        "-c",
+        help="Include chunked text content in output (requires --granular)",
+    ),
+    version: Optional[bool] = typer.Option(
+        None,
+        "--version",
+        "-v",
+        callback=version_callback,
+        is_eager=True,
+        help="Show version and exit",
+    ),
+):
+    # type: (typer.Context, list[str]|None, str, int, int, bool, bool, bool, Optional[bool]) -> None
+    """Default callback that runs create command when no subcommand is specified."""
+    if ctx.invoked_subcommand is None:
+        # No subcommand was invoked, run create as default
+        # If no paths provided, show help
+        if not paths:
+            typer.echo(ctx.get_help())
+            raise typer.Exit()
+
+        process_files(paths, format, unit_bits, simprint_bits, granular, pretty, content)
+
+
+@app.command(name="create")
+def create_command(
+    paths: list[str] = typer.Argument(
+        ...,
+        help="Path(s) to text files (supports glob patterns)",
+    ),
+    format: str = typer.Option(
+        "text",
+        "--format",
+        "-f",
+        help="Output format: text or json",
+    ),
+    unit_bits: int = typer.Option(
+        256,
+        "--unit-bits",
+        "-u",
+        help="Bit-length of ISCC-UNIT",
+    ),
+    simprint_bits: int = typer.Option(
+        256,
+        "--simprint-bits",
+        "-s",
+        help="Bit-length of ISCC-SIMPRINTs",
+    ),
+    granular: bool = typer.Option(
+        False,
+        "--granular",
+        "-g",
+        help="Activate granular simprint processing",
+    ),
+    pretty: bool = typer.Option(
+        False,
+        "--pretty",
+        "-p",
+        help="Output pretty JSON",
+    ),
+    content: bool = typer.Option(
+        False,
+        "--content",
+        "-c",
+        help="Include chunked text content in output (requires --granular)",
+    ),
+):
+    # type: (list[str], str, int, int, bool, bool, bool) -> None
+    """Generate Semantic Text-Codes for text files."""
+    process_files(paths, format, unit_bits, simprint_bits, granular, pretty, content)
 
 
 @app.command()
@@ -285,6 +424,12 @@ def demo():
             err=True,
         )
         raise typer.Exit(code=1)
+
+
+def main():
+    # type: () -> None
+    """Entry point for the CLI."""
+    app()
 
 
 if __name__ == "__main__":  # pragma: no cover

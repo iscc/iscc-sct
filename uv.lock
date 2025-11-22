@@ -702,7 +702,7 @@ requires-dist = [
     { name = "pyyaml" },
     { name = "semantic-text-splitter" },
     { name = "tokenizers" },
-    { name = "typer" },
+    { name = "typer", specifier = ">=0.12.0" },
 ]
 provides-extras = ["gpu", "demo"]
 
