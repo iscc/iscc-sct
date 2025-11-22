@@ -124,15 +124,15 @@ def process_files(
         typer.echo("Error: No files found matching any of the provided patterns.", err=True)
         raise typer.Exit(code=1)
 
-    # For JSON format, we'll output as we go (NDJSON for multiple files)
-    results = []
-
     # Detect if output is being redirected (not a TTY)
     is_tty = sys.stdout.isatty()
 
     # Process files with optional progress bar
     # Show progress bar only if: multiple files and outputting to terminal
     show_progress = len(files) > 1 and is_tty
+
+    # For JSON format, determine indentation (pretty formatting for single file or if --pretty is set)
+    json_indent = 2 if (pretty or len(files) == 1) and format == "json" else None
 
     # Setup console and progress bar if needed
     console = Console() if show_progress else None
@@ -221,7 +221,13 @@ def process_files(
                                     for feature in feature_set.simprints:
                                         features_list.append(feature.model_dump())
                             result["features"] = features_list
-                        results.append(result)
+
+                        # Output JSON immediately as file is processed
+                        output_text = json.dumps(result, indent=json_indent)
+                        if console and progress:
+                            console.print(output_text, markup=False, highlight=False)
+                        else:
+                            typer.echo(output_text)
                     else:
                         # Text format output - always include filename with forward slashes
                         line = f"{sct_meta.iscc} {file_path.as_posix()}"
@@ -281,19 +287,6 @@ def process_files(
     finally:
         if progress:
             progress.stop()
-
-    # Handle JSON output
-    if format == "json":
-        if len(results) == 1:
-            # Single file: output just the object
-            indent = 2 if pretty else None
-            output_text = json.dumps(results[0], indent=indent)
-            typer.echo(output_text)
-        else:
-            # Multiple files: NDJSON format (one JSON object per line, no indentation)
-            for result in results:
-                output_text = json.dumps(result)
-                typer.echo(output_text)
 
 
 @app.callback(invoke_without_command=True)
