@@ -68,6 +68,7 @@ dev = [
     "mdformat-gfm-alerts",
     "mdformat-frontmatter",
     "gradio",
+    "radon>=6.0.1",
 ]
 
 [project.urls]
@@ -97,6 +98,7 @@ format-markdown = { cmd = "mdformat --wrap 100 --end-of-line lf README.md", help
 format-yml = { script = "iscc_sct.dev:format_yml", help = "Format YML files"}
 convert-lf = { script = "iscc_sct.dev:convert_lf", help = "Convert line endings to LF"}
 test = { cmd = "pytest --cov=iscc_sct --cov-fail-under=100", help = "Run tests with coverage" }
+check-complexity = { cmd = "radon cc iscc_sct --min C -s -a --total-average", help = "Check code complexity with radon" }
 update-dependencies = { cmd = "uv sync --upgrade", help = "Update dependencies" }
 all = ["format-code", "format-markdown", "format-yml", "convert-lf", "test"]
 update = ["update-dependencies", "all"]
