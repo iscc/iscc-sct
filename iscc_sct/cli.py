@@ -259,6 +259,23 @@ def output_json(result, json_indent, console, progress):
             typer.echo(output_text)
 
 
+def escape_content(content, max_length=50):
+    # type: (str, int) -> str
+    """Escape content for single-line output and truncate if needed.
+
+    Args:
+        content: The content to escape
+        max_length: Maximum length before truncation (0 = no limit)
+
+    Returns:
+        Escaped and optionally truncated content
+    """
+    escaped = content.replace('\r\n', '\\n').replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
+    if max_length > 0 and len(escaped) > max_length:
+        return escaped[:max_length] + "..."
+    return escaped
+
+
 def print_line(line, console, progress):
     # type: (str, Console | None, Progress | None) -> None
     """Print a line of output."""
@@ -268,66 +285,70 @@ def print_line(line, console, progress):
         typer.echo(line)
 
 
-def format_feature_parts_index(feature_set, index):
-    # type: (object, int) -> list[str]
+def format_feature_parts_index(feature_set, index, include_content, truncate):
+    # type: (object, int, bool, int) -> list[str]
     """Format parts for a feature in index format."""
     parts = [f"  {feature_set.simprints[index]}"]
     if feature_set.offsets:
         parts.append(str(feature_set.offsets[index]))
     if feature_set.sizes:
         parts.append(str(feature_set.sizes[index]))
+    if include_content and feature_set.contents:
+        parts.append(escape_content(feature_set.contents[index], truncate))
     return parts
 
 
-def format_feature_parts_object(feature):
-    # type: (object) -> list[str]
+def format_feature_parts_object(feature, include_content, truncate):
+    # type: (object, bool, int) -> list[str]
     """Format parts for a feature in object format."""
     parts = [f"  {feature.simprint}"]
     if feature.offset is not None:
         parts.append(str(feature.offset))
     if feature.size is not None:
         parts.append(str(feature.size))
+    if include_content and hasattr(feature, 'content') and feature.content is not None:
+        parts.append(escape_content(feature.content, truncate))
     return parts
 
 
-def output_index_format_features(feature_set, console, progress):
-    # type: (object, Console | None, Progress | None) -> None
+def output_index_format_features(feature_set, console, progress, include_content, truncate):
+    # type: (object, Console | None, Progress | None, bool, int) -> None
     """Output features in index format."""
     for i in range(len(feature_set.simprints)):
-        parts = format_feature_parts_index(feature_set, i)
+        parts = format_feature_parts_index(feature_set, i, include_content, truncate)
         detail_line = " ".join(parts)
         print_line(detail_line, console, progress)
 
 
-def output_object_format_features(feature_set, console, progress):
-    # type: (object, Console | None, Progress | None) -> None
+def output_object_format_features(feature_set, console, progress, include_content, truncate):
+    # type: (object, Console | None, Progress | None, bool, int) -> None
     """Output features in object format."""
     for feature in feature_set.simprints:
-        parts = format_feature_parts_object(feature)
+        parts = format_feature_parts_object(feature, include_content, truncate)
         detail_line = " ".join(parts)
         print_line(detail_line, console, progress)
 
 
-def output_text_features(features, console, progress):
-    # type: (list, Console | None, Progress | None) -> None
+def output_text_features(features, console, progress, include_content, truncate):
+    # type: (list, Console | None, Progress | None, bool, int) -> None
     """Output granular features in text format."""
     for feature_set in features:
         # Check format and output simprints with details
         if feature_set.simprints and isinstance(feature_set.simprints[0], str):
-            output_index_format_features(feature_set, console, progress)
+            output_index_format_features(feature_set, console, progress, include_content, truncate)
         else:
-            output_object_format_features(feature_set, console, progress)
+            output_object_format_features(feature_set, console, progress, include_content, truncate)
 
 
-def output_text(result, granular, console, progress):
-    # type: (dict, bool, Console | None, Progress | None) -> None
+def output_text(result, granular, console, progress, include_content, truncate):
+    # type: (dict, bool, Console | None, Progress | None, bool, int) -> None
     """Output result in text format."""
     line = f"{result['iscc']} {result['filename']}"
     print_line(line, console, progress)
 
     # Add granular details if requested
     if granular and result.get("meta") and result["meta"].features:
-        output_text_features(result["meta"].features, console, progress)
+        output_text_features(result["meta"].features, console, progress, include_content, truncate)
 
 
 def create_progress(show_progress, total_files, need_console):
@@ -412,7 +433,7 @@ def process_and_output_file(file_path, options, console, progress):
         if options["format"] == "json":
             output_json(result, options["json_indent"], console, progress)
         else:
-            output_text(result, options["granular"], console, progress)
+            output_text(result, options["granular"], console, progress, options["content"], options["truncate"])
 
 
 def run_processing_loop(files, options, console, progress):
@@ -445,8 +466,9 @@ def process_files(
     granular,
     pretty,
     content,
+    truncate,
 ):
-    # type: (list[str], str, int, int, bool, bool, bool) -> None
+    # type: (list[str], str, int, int, bool, bool, bool, int) -> None
     """Process files and generate ISCC codes."""
 
     # Setup environment
@@ -469,6 +491,7 @@ def process_files(
         "content": content,
         "format": format,
         "json_indent": json_indent,
+        "truncate": truncate,
     }
 
     # Run processing loop
@@ -519,6 +542,12 @@ def callback(
         "-c",
         help="Include chunked text content in output (requires --granular)",
     ),
+    truncate: int = typer.Option(
+        50,
+        "--truncate",
+        "-t",
+        help="Max length for content output (0 = no limit)",
+    ),
     version: Optional[bool] = typer.Option(
         None,
         "--version",
@@ -528,7 +557,7 @@ def callback(
         help="Show version and exit",
     ),
 ):
-    # type: (typer.Context, list[str]|None, str, int, int, bool, bool, bool, Optional[bool]) -> None
+    # type: (typer.Context, list[str]|None, str, int, int, bool, bool, bool, int, Optional[bool]) -> None
     """Default callback that runs create command when no subcommand is specified."""
     if ctx.invoked_subcommand is None:
         # No subcommand was invoked, run create as default
@@ -537,7 +566,7 @@ def callback(
             typer.echo(ctx.get_help())
             raise typer.Exit()
 
-        process_files(paths, format, unit_bits, simprint_bits, granular, pretty, content)
+        process_files(paths, format, unit_bits, simprint_bits, granular, pretty, content, truncate)
 
 
 @app.command(name="create")
@@ -582,10 +611,16 @@ def create_command(
         "-c",
         help="Include chunked text content in output (requires --granular)",
     ),
+    truncate: int = typer.Option(
+        50,
+        "--truncate",
+        "-t",
+        help="Max length for content output (0 = no limit)",
+    ),
 ):
-    # type: (list[str], str, int, int, bool, bool, bool) -> None
+    # type: (list[str], str, int, int, bool, bool, bool, int) -> None
     """Generate Semantic Text-Codes for text files."""
-    process_files(paths, format, unit_bits, simprint_bits, granular, pretty, content)
+    process_files(paths, format, unit_bits, simprint_bits, granular, pretty, content, truncate)
 
 
 @app.command()
