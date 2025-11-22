@@ -3,7 +3,7 @@
 import json
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 import typer
 from charset_normalizer import from_bytes
@@ -498,56 +498,9 @@ def process_files(
     run_processing_loop(files, options, console, progress)
 
 
-@app.callback(invoke_without_command=True)
+@app.callback()
 def callback(
     ctx: typer.Context,
-    paths: list[str] = typer.Argument(
-        default=None,
-        help="Path(s) to text files (supports glob patterns)",
-        show_default=False,
-    ),
-    format: str = typer.Option(
-        "text",
-        "--format",
-        "-f",
-        help="Output format: text or json",
-    ),
-    unit_bits: int = typer.Option(
-        256,
-        "--unit-bits",
-        "-u",
-        help="Bit-length of ISCC-UNIT",
-    ),
-    simprint_bits: int = typer.Option(
-        256,
-        "--simprint-bits",
-        "-s",
-        help="Bit-length of ISCC-SIMPRINTs",
-    ),
-    granular: bool = typer.Option(
-        False,
-        "--granular",
-        "-g",
-        help="Activate granular simprint processing",
-    ),
-    pretty: bool = typer.Option(
-        False,
-        "--pretty",
-        "-p",
-        help="Output pretty JSON",
-    ),
-    content: bool = typer.Option(
-        False,
-        "--content",
-        "-c",
-        help="Include chunked text content in output (requires --granular)",
-    ),
-    truncate: int = typer.Option(
-        50,
-        "--truncate",
-        "-t",
-        help="Max length for content output (0 = no limit)",
-    ),
     version: Optional[bool] = typer.Option(
         None,
         "--version",
@@ -557,16 +510,12 @@ def callback(
         help="Show version and exit",
     ),
 ):
-    # type: (typer.Context, list[str]|None, str, int, int, bool, bool, bool, int, Optional[bool]) -> None
-    """Default callback that runs create command when no subcommand is specified."""
+    # type: (typer.Context, Optional[bool]) -> None
+    """Generate ISCC codes for files or use subcommands for advanced operations."""
+    # Show help if no subcommand and no arguments
     if ctx.invoked_subcommand is None:
-        # No subcommand was invoked, run create as default
-        # If no paths provided, show help
-        if not paths:
-            typer.echo(ctx.get_help())
-            raise typer.Exit()
-
-        process_files(paths, format, unit_bits, simprint_bits, granular, pretty, content, truncate)
+        typer.echo(ctx.get_help())
+        raise typer.Exit()
 
 
 @app.command(name="create")
@@ -643,6 +592,30 @@ def demo():
 def main():
     # type: () -> None
     """Entry point for the CLI."""
+    import sys
+
+    # Check if we should insert 'create' as default command
+    if len(sys.argv) > 1:
+        known_commands = ["create", "demo"]
+
+        # Find first non-option argument
+        first_non_option_idx = None
+        for i in range(1, len(sys.argv)):
+            if not sys.argv[i].startswith("-"):
+                # Also skip the value after an option that takes a parameter
+                if i > 1 and sys.argv[i-1] in ["-f", "--format", "-u", "--unit-bits",
+                                                "-s", "--simprint-bits", "-t", "--truncate"]:
+                    continue
+                first_non_option_idx = i
+                break
+
+        # If we found a non-option argument that's not a known command
+        if first_non_option_idx is not None:
+            first_non_option = sys.argv[first_non_option_idx]
+            if first_non_option not in known_commands:
+                # Insert 'create' command at the beginning (after script name)
+                sys.argv.insert(1, "create")
+
     app()
 
 

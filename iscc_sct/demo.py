@@ -140,7 +140,7 @@ iscc_theme = gr.themes.Default(
     radius_size=gr.themes.sizes.radius_none,
 )
 
-with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
+with gr.Blocks() as demo:
     with gr.Row(variant="panel"):
         gr.Markdown(
             """
@@ -184,7 +184,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
         with gr.Column(variant="panel"):
             out_similarity_title = gr.Markdown("### ISCC-based Semantic Similarity")
             with gr.Row(elem_classes="simbar"):
-                out_similarity = gr.HTML()
+                out_similarity = gr.HTML(padding=False)
             gr.Markdown(
                 "**NOTE:** Similarity is calculated based on the generated ISCC-SCT, not the original text."
             )
@@ -235,6 +235,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
                     column_widths=["45%", "10%", "45%"],
                     wrap=True,
                     elem_classes="granular-matches",
+                    row_count=5,
                 )
 
     def update_sample_text(choice, group):
@@ -421,7 +422,7 @@ with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
             gr.TextArea(value=""),  # Reset Text B
             gr.Textbox(value=""),  # Reset ISCC Code for Text A
             gr.Textbox(value=""),  # Reset ISCC Code for Text B
-            gr.HTML(value=""),  # Reset Similarity
+            gr.HTML(value="", padding=False),  # Reset Similarity
             gr.HighlightedText(value=[]),  # Reset Chunked Text A
             gr.HighlightedText(value=[]),  # Reset Chunked Text B
         )
@@ -519,4 +520,4 @@ For more information about the **ISCC** see:
         )
 
 if __name__ == "__main__":  # pragma: no cover
-    demo.launch()
+    demo.launch(theme=iscc_theme, css=custom_css)
