@@ -9,6 +9,7 @@ import typer
 from charset_normalizer import from_bytes
 from loguru import logger
 from rich.console import Console
+from rich.json import JSON
 from rich.progress import Progress, TextColumn, BarColumn, TaskProgressColumn
 
 from iscc_sct.main import create
@@ -39,6 +40,27 @@ def version_callback(value: bool):
         raise typer.Exit()
 
 
+def expand_path(path_pattern):
+    # type: (str) -> str
+    """Expand user directory in path pattern."""
+    return Path(path_pattern).expanduser().as_posix()
+
+
+def find_files_from_directory(directory):
+    # type: (Path) -> list[Path]
+    """Recursively find all files in a directory."""
+    files = list(directory.rglob("*"))
+    return sorted([f for f in files if f.is_file()])
+
+
+def find_files_from_glob(pattern):
+    # type: (str) -> list[Path]
+    """Find files matching a glob pattern."""
+    import glob
+    matches = glob.glob(pattern, recursive=True)
+    return sorted([Path(m) for m in matches if Path(m).is_file()])
+
+
 def resolve_path(path_pattern):
     # type: (str) -> list[Path]
     """Resolve a path pattern to a list of file paths.
@@ -51,8 +73,7 @@ def resolve_path(path_pattern):
     Returns:
         Sorted list of resolved file paths
     """
-    # Expand user directory (~) if present
-    expanded_pattern = Path(path_pattern).expanduser().as_posix()
+    expanded_pattern = expand_path(path_pattern)
     path = Path(expanded_pattern)
 
     # Case 1: Existing file
@@ -61,49 +82,20 @@ def resolve_path(path_pattern):
 
     # Case 2: Existing directory - recursively find all files
     if path.exists() and path.is_dir():
-        files = list(path.rglob("*"))
-        return sorted([f for f in files if f.is_file()])
+        return find_files_from_directory(path)
 
     # Case 3: Glob pattern
-    # Check if pattern contains glob characters
     glob_chars = {"*", "?", "[", "]", "{", "}"}
     if any(char in expanded_pattern for char in glob_chars):
-        # Use glob.glob for better pattern support
-        import glob
-
-        matches = glob.glob(expanded_pattern, recursive=True)
-        return sorted([Path(m) for m in matches if Path(m).is_file()])
+        return find_files_from_glob(expanded_pattern)
 
     # Case 4: Non-existent file or pattern with no matches
     return []
 
 
-def process_files(
-    paths,
-    format,
-    unit_bits,
-    simprint_bits,
-    granular,
-    pretty,
-    content,
-):
-    # type: (list[str], str, int, int, bool, bool, bool) -> None
-    """Process files and generate ISCC codes."""
-
-    # Disable loguru by default
-    logger.remove()
-
-    # Validate format
-    if format not in ["text", "json"]:
-        typer.echo(f"Error: Invalid format '{format}'. Choose 'text' or 'json'.", err=True)
-        raise typer.Exit(code=1)
-
-    # Validate content flag
-    if content and not granular:
-        typer.echo("Error: --content requires --granular to be enabled.", err=True)
-        raise typer.Exit(code=1)
-
-    # Find matching files from all provided paths
+def collect_files(paths):
+    # type: (list[str]) -> list[Path]
+    """Collect and deduplicate files from multiple path patterns."""
     files = []
     for path in paths:
         matching_files = resolve_path(path)
@@ -118,36 +110,315 @@ def process_files(
         if f not in seen:
             seen.add(f)
             unique_files.append(f)
-    files = unique_files
 
+    return unique_files
+
+
+def validate_options(format, content, granular):
+    # type: (str, bool, bool) -> None
+    """Validate command-line options."""
+    if format not in ["text", "json"]:
+        typer.echo(f"Error: Invalid format '{format}'. Choose 'text' or 'json'.", err=True)
+        raise typer.Exit(code=1)
+
+    if content and not granular:
+        typer.echo("Error: --content requires --granular to be enabled.", err=True)
+        raise typer.Exit(code=1)
+
+
+def read_text_from_file(file_path):
+    # type: (Path) -> str | None
+    """Read and decode text from a file.
+
+    Returns:
+        Decoded text or None if file cannot be processed
+    """
+    with file_path.open("rb") as file:
+        data = file.read()
+
+        # Try UTF-8 first
+        try:
+            text = data.decode("utf-8")
+            if not text.strip():
+                logger.warning(f"SKIPPED empty: {file_path}")
+                return None
+            return text
+        except UnicodeDecodeError:
+            # Fall back to charset detection
+            logger.debug(f"Could not decode {file_path.name} as UTF-8.")
+            charset_match = from_bytes(data).best()
+            if not charset_match:
+                logger.error(
+                    f"SKIPPING {file_path.name} - failed to detect text encoding"
+                )
+                return None
+            logger.debug(f"Decode {file_path.name} with {charset_match.encoding}.")
+            return str(charset_match)
+
+
+def process_single_file(file_path, unit_bits, simprint_bits, granular, content):
+    # type: (Path, int, int, bool, bool) -> dict | None
+    """Process a single file and generate ISCC.
+
+    Returns:
+        Dictionary with ISCC result or None if processing failed
+    """
+    logger.debug(f"Processing {file_path.name}")
+
+    try:
+        text = read_text_from_file(file_path)
+        if text is None:
+            return None
+
+        # Build options for create() function
+        options = {
+            "bits": unit_bits,
+            "bits_granular": simprint_bits,
+        }
+
+        # Add content flag if requested
+        if content:
+            options["contents"] = True
+
+        # Generate ISCC
+        sct_meta = create(text, granular=granular, **options)
+
+        return {
+            "iscc": sct_meta.iscc,
+            "filename": file_path.as_posix(),
+            "meta": sct_meta
+        }
+
+    except Exception as e:
+        logger.error(f"Error processing {file_path}: {e}")
+        return None
+
+
+def format_index_features(feature_set):
+    # type: (object) -> list[dict]
+    """Format features in index format to dictionaries."""
+    features_list = []
+    for i in range(len(feature_set.simprints)):
+        feature_dict = {"simprint": feature_set.simprints[i]}
+        if feature_set.offsets:
+            feature_dict["offset"] = feature_set.offsets[i]
+        if feature_set.sizes:
+            feature_dict["size"] = feature_set.sizes[i]
+        if feature_set.contents:
+            feature_dict["content"] = feature_set.contents[i]
+        features_list.append(feature_dict)
+    return features_list
+
+
+def format_object_features(feature_set):
+    # type: (object) -> list[dict]
+    """Format features in object format to dictionaries."""
+    return [feature.model_dump() for feature in feature_set.simprints]
+
+
+def format_json_features(features):
+    # type: (list) -> list[dict]
+    """Format features for JSON output."""
+    features_list = []
+    for feature_set in features:
+        # Check if we're in index format
+        if feature_set.simprints and isinstance(feature_set.simprints[0], str):
+            features_list.extend(format_index_features(feature_set))
+        else:
+            features_list.extend(format_object_features(feature_set))
+    return features_list
+
+
+def output_json(result, json_indent, console, progress):
+    # type: (dict, int | None, Console | None, Progress | None) -> None
+    """Output result in JSON format (NDJSON by default, pretty with --pretty flag)."""
+    output = {
+        "iscc": result["iscc"],
+        "filename": result["filename"],
+    }
+
+    # Add features if available
+    if result.get("meta") and result["meta"].features:
+        output["features"] = format_json_features(result["meta"].features)
+
+    # Use rich.json for pretty output, compact JSON for NDJSON
+    if json_indent is not None:
+        # Pretty output using rich.json
+        json_str = json.dumps(output, indent=json_indent)
+        if console:
+            console.print(JSON(json_str))
+        else:
+            # Fallback to regular indented JSON if no console
+            typer.echo(json_str)
+    else:
+        # Compact NDJSON format
+        output_text = json.dumps(output)
+        if console and progress:
+            console.print(output_text, markup=False, highlight=False)
+        else:
+            typer.echo(output_text)
+
+
+def print_line(line, console, progress):
+    # type: (str, Console | None, Progress | None) -> None
+    """Print a line of output."""
+    if console and progress:
+        console.print(line, markup=False, highlight=False)
+    else:
+        typer.echo(line)
+
+
+def format_feature_parts_index(feature_set, index):
+    # type: (object, int) -> list[str]
+    """Format parts for a feature in index format."""
+    parts = [f"  {feature_set.simprints[index]}"]
+    if feature_set.offsets:
+        parts.append(str(feature_set.offsets[index]))
+    if feature_set.sizes:
+        parts.append(str(feature_set.sizes[index]))
+    return parts
+
+
+def format_feature_parts_object(feature):
+    # type: (object) -> list[str]
+    """Format parts for a feature in object format."""
+    parts = [f"  {feature.simprint}"]
+    if feature.offset is not None:
+        parts.append(str(feature.offset))
+    if feature.size is not None:
+        parts.append(str(feature.size))
+    return parts
+
+
+def output_index_format_features(feature_set, console, progress):
+    # type: (object, Console | None, Progress | None) -> None
+    """Output features in index format."""
+    for i in range(len(feature_set.simprints)):
+        parts = format_feature_parts_index(feature_set, i)
+        detail_line = " ".join(parts)
+        print_line(detail_line, console, progress)
+
+
+def output_object_format_features(feature_set, console, progress):
+    # type: (object, Console | None, Progress | None) -> None
+    """Output features in object format."""
+    for feature in feature_set.simprints:
+        parts = format_feature_parts_object(feature)
+        detail_line = " ".join(parts)
+        print_line(detail_line, console, progress)
+
+
+def output_text_features(features, console, progress):
+    # type: (list, Console | None, Progress | None) -> None
+    """Output granular features in text format."""
+    for feature_set in features:
+        # Check format and output simprints with details
+        if feature_set.simprints and isinstance(feature_set.simprints[0], str):
+            output_index_format_features(feature_set, console, progress)
+        else:
+            output_object_format_features(feature_set, console, progress)
+
+
+def output_text(result, granular, console, progress):
+    # type: (dict, bool, Console | None, Progress | None) -> None
+    """Output result in text format."""
+    line = f"{result['iscc']} {result['filename']}"
+    print_line(line, console, progress)
+
+    # Add granular details if requested
+    if granular and result.get("meta") and result["meta"].features:
+        output_text_features(result["meta"].features, console, progress)
+
+
+def create_progress(show_progress, total_files, need_console):
+    # type: (bool, int, bool) -> tuple[Console | None, Progress | None]
+    """Create progress bar components if needed.
+
+    Args:
+        show_progress: Whether to show progress bar
+        total_files: Total number of files to process
+        need_console: Whether a console is needed (e.g., for pretty JSON)
+    """
+    if not show_progress and not need_console:
+        return None, None
+
+    console = Console()
+
+    if not show_progress:
+        # Console needed but no progress bar
+        return console, None
+
+    progress = Progress(
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TaskProgressColumn(),
+        console=console,
+        transient=False,
+        refresh_per_second=10,
+    )
+    return console, progress
+
+
+def setup_processing_environment(format, content, granular, paths):
+    # type: (str, bool, bool, list[str]) -> tuple[list[Path], bool, int | None]
+    """Setup the processing environment.
+
+    Returns:
+        Tuple of (files, show_progress, json_indent)
+    """
+    # Disable loguru by default
+    logger.remove()
+
+    # Validate options
+    validate_options(format, content, granular)
+
+    # Collect files
+    files = collect_files(paths)
     if not files:
         typer.echo("Error: No files found matching any of the provided patterns.", err=True)
         raise typer.Exit(code=1)
 
     # Detect if output is being redirected (not a TTY)
     is_tty = sys.stdout.isatty()
-
-    # Process files with optional progress bar
-    # Show progress bar only if: multiple files and outputting to terminal
     show_progress = len(files) > 1 and is_tty
 
-    # For JSON format, determine indentation (pretty formatting for single file or if --pretty is set)
-    json_indent = 2 if (pretty or len(files) == 1) and format == "json" else None
+    # Default to NDJSON (no indentation)
+    json_indent = None
 
-    # Setup console and progress bar if needed
-    console = Console() if show_progress else None
-    progress = None
+    return files, show_progress, json_indent
+
+
+def setup_pretty_json(pretty, format, json_indent):
+    # type: (bool, str, int | None) -> int | None
+    """Setup JSON indentation based on pretty flag."""
+    if pretty and format == "json":
+        return 2
+    return json_indent
+
+
+def process_and_output_file(file_path, options, console, progress):
+    # type: (Path, dict, Console | None, Progress | None) -> None
+    """Process a single file and output the result."""
+    result = process_single_file(
+        file_path,
+        options["unit_bits"],
+        options["simprint_bits"],
+        options["granular"],
+        options["content"]
+    )
+
+    if result:
+        # Output result based on format
+        if options["format"] == "json":
+            output_json(result, options["json_indent"], console, progress)
+        else:
+            output_text(result, options["granular"], console, progress)
+
+
+def run_processing_loop(files, options, console, progress):
+    # type: (list[Path], dict, Console | None, Progress | None) -> None
+    """Run the main processing loop."""
     task_id = None
-
-    if show_progress:
-        progress = Progress(
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TaskProgressColumn(),
-            console=console,
-            transient=False,  # Keep progress bar visible
-            refresh_per_second=10,
-        )
 
     try:
         if progress:
@@ -155,138 +426,53 @@ def process_files(
             task_id = progress.add_task("Processing files...", total=len(files))
 
         for file_path in files:
-            logger.debug(f"Processing {file_path.name}")
+            process_and_output_file(file_path, options, console, progress)
 
-            try:
-                with file_path.open("rb") as file:
-                    data = file.read()
-
-                    # Try UTF-8 first
-                    try:
-                        text = data.decode("utf-8")
-                        if not text.strip():
-                            logger.warning(f"SKIPPED empty: {file_path}")
-                            continue
-                    except UnicodeDecodeError:
-                        # Fall back to charset detection
-                        logger.debug(f"Could not decode {file_path.name} as UTF-8.")
-                        charset_match = from_bytes(data).best()
-                        if not charset_match:
-                            logger.error(
-                                f"SKIPPING {file_path.name} - failed to detect text encoding"
-                            )
-                            continue
-                        logger.debug(f"Decode {file_path.name} with {charset_match.encoding}.")
-                        text = str(charset_match)
-
-                    # Build options for create() function
-                    options = {
-                        "bits": unit_bits,
-                        "bits_granular": simprint_bits,
-                    }
-
-                    # Add content flag if requested
-                    if content:
-                        options["contents"] = True
-
-                    # Generate ISCC
-                    sct_meta = create(text, granular=granular, **options)
-
-                    # Format and output
-                    if format == "json":
-                        result = {
-                            "iscc": sct_meta.iscc,
-                            "filename": file_path.as_posix(),
-                        }
-                        if granular and sct_meta.features:
-                            # Convert to object format for cleaner JSON
-                            features_list = []
-                            for feature_set in sct_meta.features:
-                                # Check if we're in index format
-                                if feature_set.simprints and isinstance(
-                                    feature_set.simprints[0], str
-                                ):
-                                    # Index format - convert to list of dicts
-                                    for i in range(len(feature_set.simprints)):
-                                        feature_dict = {"simprint": feature_set.simprints[i]}
-                                        if feature_set.offsets:
-                                            feature_dict["offset"] = feature_set.offsets[i]
-                                        if feature_set.sizes:
-                                            feature_dict["size"] = feature_set.sizes[i]
-                                        if feature_set.contents:
-                                            feature_dict["content"] = feature_set.contents[i]
-                                        features_list.append(feature_dict)
-                                else:
-                                    # Object format - use as is
-                                    for feature in feature_set.simprints:
-                                        features_list.append(feature.model_dump())
-                            result["features"] = features_list
-
-                        # Output JSON immediately as file is processed
-                        output_text = json.dumps(result, indent=json_indent)
-                        if console and progress:
-                            console.print(output_text, markup=False, highlight=False)
-                        else:
-                            typer.echo(output_text)
-                    else:
-                        # Text format output - always include filename with forward slashes
-                        line = f"{sct_meta.iscc} {file_path.as_posix()}"
-
-                        # Output the main line
-                        if console and progress:
-                            console.print(line, markup=False, highlight=False)
-                        else:
-                            typer.echo(line)
-
-                        # Add granular details if requested
-                        if granular and sct_meta.features:
-                            for feature_set in sct_meta.features:
-                                # Check format and output simprints with details
-                                if feature_set.simprints and isinstance(
-                                    feature_set.simprints[0], str
-                                ):
-                                    # Index format
-                                    for i in range(len(feature_set.simprints)):
-                                        parts = [f"  {feature_set.simprints[i]}"]
-                                        if feature_set.offsets:
-                                            parts.append(str(feature_set.offsets[i]))
-                                        if feature_set.sizes:
-                                            parts.append(str(feature_set.sizes[i]))
-                                        detail_line = " ".join(parts)
-                                        if console and progress:
-                                            console.print(
-                                                detail_line, markup=False, highlight=False
-                                            )
-                                        else:
-                                            typer.echo(detail_line)
-                                else:
-                                    # Object format
-                                    for feature in feature_set.simprints:
-                                        parts = [f"  {feature.simprint}"]
-                                        if feature.offset is not None:
-                                            parts.append(str(feature.offset))
-                                        if feature.size is not None:
-                                            parts.append(str(feature.size))
-                                        detail_line = " ".join(parts)
-                                        if console and progress:
-                                            console.print(
-                                                detail_line, markup=False, highlight=False
-                                            )
-                                        else:
-                                            typer.echo(detail_line)
-
-            except Exception as e:
-                logger.error(f"Error processing {file_path}: {e}")
-                continue
-
-            finally:
-                # Update progress bar if active
-                if progress and task_id is not None:
-                    progress.update(task_id, advance=1)
+            # Update progress
+            if progress and task_id is not None:
+                progress.update(task_id, advance=1)
 
     finally:
         if progress:
             progress.stop()
+
+
+def process_files(
+    paths,
+    format,
+    unit_bits,
+    simprint_bits,
+    granular,
+    pretty,
+    content,
+):
+    # type: (list[str], str, int, int, bool, bool, bool) -> None
+    """Process files and generate ISCC codes."""
+
+    # Setup environment
+    files, show_progress, json_indent = setup_processing_environment(
+        format, content, granular, paths
+    )
+
+    # Apply pretty flag to JSON indentation
+    json_indent = setup_pretty_json(pretty, format, json_indent)
+
+    # Create progress components (need console if pretty JSON is requested)
+    need_console = json_indent is not None and format == "json"
+    console, progress = create_progress(show_progress, len(files), need_console)
+
+    # Prepare options dictionary
+    options = {
+        "unit_bits": unit_bits,
+        "simprint_bits": simprint_bits,
+        "granular": granular,
+        "content": content,
+        "format": format,
+        "json_indent": json_indent,
+    }
+
+    # Run processing loop
+    run_processing_loop(files, options, console, progress)
 
 
 @app.callback(invoke_without_command=True)
