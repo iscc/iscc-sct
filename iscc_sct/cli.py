@@ -57,6 +57,7 @@ def find_files_from_glob(pattern):
     # type: (str) -> list[Path]
     """Find files matching a glob pattern."""
     import glob
+
     matches = glob.glob(pattern, recursive=True)
     return sorted([Path(m) for m in matches if Path(m).is_file()])
 
@@ -148,9 +149,7 @@ def read_text_from_file(file_path):
             logger.debug(f"Could not decode {file_path.name} as UTF-8.")
             charset_match = from_bytes(data).best()
             if not charset_match:
-                logger.error(
-                    f"SKIPPING {file_path.name} - failed to detect text encoding"
-                )
+                logger.error(f"SKIPPING {file_path.name} - failed to detect text encoding")
                 return None
             logger.debug(f"Decode {file_path.name} with {charset_match.encoding}.")
             return str(charset_match)
@@ -183,11 +182,7 @@ def process_single_file(file_path, unit_bits, simprint_bits, granular, content):
         # Generate ISCC
         sct_meta = create(text, granular=granular, **options)
 
-        return {
-            "iscc": sct_meta.iscc,
-            "filename": file_path.as_posix(),
-            "meta": sct_meta
-        }
+        return {"iscc": sct_meta.iscc, "filename": file_path.as_posix(), "meta": sct_meta}
 
     except Exception as e:
         logger.error(f"Error processing {file_path}: {e}")
@@ -270,7 +265,12 @@ def escape_content(content, max_length=50):
     Returns:
         Escaped and optionally truncated content
     """
-    escaped = content.replace('\r\n', '\\n').replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
+    escaped = (
+        content.replace("\r\n", "\\n")
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+        .replace("\t", "\\t")
+    )
     if max_length > 0 and len(escaped) > max_length:
         return escaped[:max_length] + "..."
     return escaped
@@ -306,7 +306,7 @@ def format_feature_parts_object(feature, include_content, truncate):
         parts.append(str(feature.offset))
     if feature.size is not None:
         parts.append(str(feature.size))
-    if include_content and hasattr(feature, 'content') and feature.content is not None:
+    if include_content and hasattr(feature, "content") and feature.content is not None:
         parts.append(escape_content(feature.content, truncate))
     return parts
 
@@ -425,7 +425,7 @@ def process_and_output_file(file_path, options, console, progress):
         options["unit_bits"],
         options["simprint_bits"],
         options["granular"],
-        options["content"]
+        options["content"],
     )
 
     if result:
@@ -433,7 +433,14 @@ def process_and_output_file(file_path, options, console, progress):
         if options["format"] == "json":
             output_json(result, options["json_indent"], console, progress)
         else:
-            output_text(result, options["granular"], console, progress, options["content"], options["truncate"])
+            output_text(
+                result,
+                options["granular"],
+                console,
+                progress,
+                options["content"],
+                options["truncate"],
+            )
 
 
 def run_processing_loop(files, options, console, progress):
@@ -603,8 +610,16 @@ def main():
         for i in range(1, len(sys.argv)):
             if not sys.argv[i].startswith("-"):
                 # Also skip the value after an option that takes a parameter
-                if i > 1 and sys.argv[i-1] in ["-f", "--format", "-u", "--unit-bits",
-                                                "-s", "--simprint-bits", "-t", "--truncate"]:
+                if i > 1 and sys.argv[i - 1] in [
+                    "-f",
+                    "--format",
+                    "-u",
+                    "--unit-bits",
+                    "-s",
+                    "--simprint-bits",
+                    "-t",
+                    "--truncate",
+                ]:
                     continue
                 first_non_option_idx = i
                 break
