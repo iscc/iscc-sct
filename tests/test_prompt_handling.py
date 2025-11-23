@@ -1,6 +1,7 @@
 """Test EmbeddingGemma prompt handling."""
 
 import pytest
+import iscc_sct.code_semantic_text
 from iscc_sct.code_semantic_text import (
     EmbeddingGemmaPrompt,
     tokenize_chunks,
@@ -28,6 +29,9 @@ def test_tokenize_chunks_applies_prompt_for_model_v1():
     # type: () -> None
     """Test that tokenize_chunks applies prompt for model version 1."""
     test_chunks = ["sample text", "another chunk"]
+
+    # Clear cache to ensure mock takes effect
+    iscc_sct.code_semantic_text.tokenizer.cache_clear()
 
     # Mock the tokenizer to capture what's being tokenized
     with patch("iscc_sct.code_semantic_text.tokenizer") as mock_tokenizer:
@@ -63,6 +67,9 @@ def test_tokenize_chunks_custom_prompt_type():
     """Test that tokenize_chunks uses custom prompt type when specified."""
     test_chunks = ["test query"]
 
+    # Clear cache to ensure mock takes effect
+    iscc_sct.code_semantic_text.tokenizer.cache_clear()
+
     with patch("iscc_sct.code_semantic_text.tokenizer") as mock_tokenizer:
         mock_tok_instance = MagicMock()
         mock_tokenizer.return_value = mock_tok_instance
@@ -84,6 +91,9 @@ def test_tokenize_chunks_string_prompt_type():
     """Test that tokenize_chunks converts string prompt types to enum."""
     test_chunks = ["clustering data"]
 
+    # Clear cache to ensure mock takes effect
+    iscc_sct.code_semantic_text.tokenizer.cache_clear()
+
     with patch("iscc_sct.code_semantic_text.tokenizer") as mock_tokenizer:
         mock_tok_instance = MagicMock()
         mock_tokenizer.return_value = mock_tok_instance
@@ -104,6 +114,9 @@ def test_tokenize_chunks_no_prompt_for_model_v0():
     # type: () -> None
     """Test that tokenize_chunks does not apply prompt for model version 0."""
     test_chunks = ["sample text"]
+
+    # Clear cache to ensure mock takes effect
+    iscc_sct.code_semantic_text.tokenizer.cache_clear()
 
     with patch("iscc_sct.code_semantic_text.tokenizer") as mock_tokenizer:
         mock_tok_instance = MagicMock()
@@ -132,6 +145,9 @@ def test_tokenize_chunks_none_prompt():
     """Test that NONE prompt type doesn't add any prefix."""
     test_chunks = ["raw text"]
 
+    # Clear cache to ensure mock takes effect
+    iscc_sct.code_semantic_text.tokenizer.cache_clear()
+
     with patch("iscc_sct.code_semantic_text.tokenizer") as mock_tokenizer:
         mock_tok_instance = MagicMock()
         mock_tokenizer.return_value = mock_tok_instance
@@ -152,6 +168,9 @@ def test_invalid_string_prompt_type():
     # type: () -> None
     """Test that invalid prompt type falls back to DOCUMENT with warning."""
     test_chunks = ["test text"]
+
+    # Clear cache to ensure mock takes effect
+    iscc_sct.code_semantic_text.tokenizer.cache_clear()
 
     with patch("iscc_sct.code_semantic_text.tokenizer") as mock_tokenizer:
         mock_tok_instance = MagicMock()
