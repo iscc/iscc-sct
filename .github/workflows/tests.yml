@@ -28,22 +28,30 @@ jobs:
       - name: Install platformdirs for cache setup
         run: uv pip install --system platformdirs
 
-      - name: Get model cache directory
+      - name: Get model cache directory and config hash
         id: model-cache-dir
         shell: python
         run: |
           from platformdirs import PlatformDirs
+          import hashlib
           import os
           cache_dir = PlatformDirs(appname='iscc-sct', appauthor='iscc').user_data_dir
           print(f"dir={cache_dir}")
           with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
               print(f"dir={cache_dir}", file=fh)
 
+          # Compute hash of models_config.py
+          with open('iscc_sct/models_config.py', 'rb') as f:
+              config_hash = hashlib.md5(f.read()).hexdigest()
+              print(f"hash={config_hash}")
+              with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+                  print(f"hash={config_hash}", file=fh)
+
       - name: Cache ONNX models
         uses: actions/cache@v4
         with:
           path: ${{ steps.model-cache-dir.outputs.dir }}
-          key: ${{ runner.os }}-onnx-models-${{ hashFiles('iscc_sct/models_config.py') }}
+          key: ${{ runner.os }}-onnx-models-${{ steps.model-cache-dir.outputs.hash }}
           restore-keys: |
             ${{ runner.os }}-onnx-models-
 
