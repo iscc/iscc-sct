@@ -169,6 +169,84 @@ distance = sct.iscc_distance(code1.iscc, code2.iscc)
 print(f"Hamming distance in bits: {distance}")
 ```
 
+### Multi-Model Support
+
+ISCC-SCT supports multiple embedding models. Different models produce different ISCC codes.
+
+#### Available Models
+
+| Version     | Model Name                            | Embedding Dims | Max Tokens |
+| ----------- | ------------------------------------- | -------------- | ---------- |
+| 0 (default) | paraphrase-multilingual-minilm-l12-v2 | 384            | 127        |
+| 1           | embeddinggemma-300m                   | 768            | 2048       |
+
+#### Model Selection
+
+**Via CLI:**
+
+```bash
+iscc-sct create file.txt -m 1  # Use embeddinggemma-300m
+```
+
+**Via Python API:**
+
+```python
+result = sct.create("Hello World", model_version=1)
+```
+
+**Via Environment Variable:**
+
+```bash
+export ISCC_SCT_MODEL_VERSION=1
+iscc-sct create file.txt
+```
+
+> [!IMPORTANT]
+> Different models produce different ISCC codes for the same text. The model version is encoded in
+> the ISCC header to ensure proper comparison. Only compare ISCCs generated with the same model
+> version.
+
+#### Installing Models
+
+Models are automatically downloaded on first use, but you can pre-install them using the `install`
+command:
+
+```bash
+# Install all available models (v0 and v1)
+iscc-sct install
+
+# Install a specific model version
+iscc-sct install -m 0
+
+# Install multiple specific versions
+iscc-sct install -m 0 -m 1
+
+# Force re-download even if files exist
+iscc-sct install --force
+
+# Verify existing models without downloading
+iscc-sct install --verify-only
+
+# Quiet mode (suppress progress bars)
+iscc-sct install --quiet
+```
+
+**Use Cases:**
+
+- **Container Builds**: Pre-download models during image build
+  ```dockerfile
+  RUN iscc-sct install
+  ```
+- **CI/CD Pipelines**: Ensure models are available before running tests
+  ```yaml
+  - name: Install models
+    run: iscc-sct install
+  ```
+- **Production Deployments**: Verify model integrity before starting services
+  ```bash
+  iscc-sct install --verify-only || iscc-sct install
+  ```
+
 The installation also provides an `iscc-sct` command-line tool:
 
 ```shell
@@ -179,14 +257,15 @@ iscc-sct create <path> [OPTIONS]
 iscc-sct demo
 
 Options:
-  -b, --bits INTEGER    Bit-length of Code (default: 256)
-  -g, --granular        Activate granular processing
-  -d, --debug           Show debugging messages
-  -q, --quiet           Suppress informational messages
-  -o, --output PATH     Write output to file
-  -f, --format TEXT     Output format: text or json (default: text)
-  --version, -v         Show version and exit
-  --help                Show this message and exit
+  -b, --bits INTEGER         Bit-length of Code (default: 256)
+  -g, --granular             Activate granular processing
+  -m, --model-version INT    Model version (0=minilm-l12, 1=embeddinggemma-300m)
+  -d, --debug                Show debugging messages
+  -q, --quiet                Suppress informational messages
+  -o, --output PATH          Write output to file
+  -f, --format TEXT          Output format: text or json (default: text)
+  --version, -v              Show version and exit
+  --help                     Show this message and exit
 ```
 
 ## How It Works

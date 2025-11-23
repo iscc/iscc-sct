@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from iscc_sct.models_config import MODEL_REGISTRY
 
 
 __all__ = [
@@ -60,8 +61,8 @@ class SctOptions(BaseSettings):
 
     max_tokens: int = Field(
         127,
-        description="ISCC_SCT_MAX_TOKENS - Max tokens per chunk (Default 127)",
-        le=127,
+        description="ISCC_SCT_MAX_TOKENS - Max tokens per chunk (Default 127, max 2048)",
+        le=2048,
     )
 
     overlap: int = Field(
@@ -83,6 +84,78 @@ class SctOptions(BaseSettings):
         None,
         description="ISCC_SCT_MODEL_DIR - Custom directory for model storage (default: platform-specific user data dir)",
     )
+
+    model_version: int = Field(
+        0,
+        description="ISCC_SCT_MODEL_VERSION - Embedding model version (0=minilm-l12, 1=embeddinggemma-300m)",
+        ge=0,
+    )
+
+    prompt_type: str | None = Field(
+        None,
+        description="ISCC_SCT_PROMPT_TYPE - EmbeddingGemma prompt type (e.g., DOCUMENT, QUERY, CLUSTERING)",
+    )
+
+    @field_validator("model_version")
+    @classmethod
+    def validate_model_version(cls, v):
+        # type: (int) -> int
+        """Validate that model_version exists in MODEL_REGISTRY."""
+        if v not in MODEL_REGISTRY:
+            available = ", ".join(str(ver) for ver in sorted(MODEL_REGISTRY.keys()))
+            raise ValueError(f"Invalid model_version {v}. Available versions: {available}")
+        return v
+
+    @field_validator("prompt_type", mode="before")
+    @classmethod
+    def validate_prompt_type(cls, v):
+        # type: (str|None) -> str|None
+        """Validate prompt_type is a valid EmbeddingGemmaPrompt value."""
+        if v is None:
+            return v
+
+        # Handle EmbeddingGemmaPrompt enum objects
+        try:
+            from iscc_sct.code_semantic_text import EmbeddingGemmaPrompt
+
+            if isinstance(v, EmbeddingGemmaPrompt):
+                return v.name
+        except ImportError:  # pragma: no cover
+            pass  # pragma: no cover
+
+        # Handle string values - convert to uppercase for case-insensitive comparison
+        if isinstance(v, str):
+            v_upper = v.upper()
+            valid_prompts = [
+                "DOCUMENT",
+                "QUERY",
+                "BITEXT_MINING",
+                "CLUSTERING",
+                "CLASSIFICATION",
+                "INSTRUCTION_RETRIEVAL",
+                "MULTILABEL_CLASSIFICATION",
+                "PAIR_CLASSIFICATION",
+                "RERANKING",
+                "RETRIEVAL",
+                "RETRIEVAL_QUERY",
+                "RETRIEVAL_DOCUMENT",
+                "STS",
+                "SUMMARIZATION",
+                "NONE",
+            ]
+            if v_upper not in valid_prompts:
+                raise ValueError(
+                    f"Invalid prompt_type '{v}'. Valid options: {', '.join(valid_prompts)}"
+                )
+            return v_upper
+
+        # Try to handle any object with a 'name' attribute (like enum)
+        if hasattr(v, "name"):
+            return v.name
+
+        raise ValueError(
+            f"prompt_type must be a string or EmbeddingGemmaPrompt enum, got {type(v)}"
+        )
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -51,6 +51,7 @@ dependencies = [
     "pyyaml",
     "pydantic",
     "typer",
+    "niquests",
 ]
 
 [project.optional-dependencies]
@@ -69,6 +70,7 @@ dev = [
     "mdformat-frontmatter",
     "gradio",
     "radon>=6.0.1",
+    "xenon>=0.9.3",
 ]
 
 [project.urls]
@@ -89,6 +91,11 @@ line-length = 100
 [tool.ruff.format]
 line-ending = "lf"
 
+[tool.pytest.ini_options]
+markers = [
+    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+]
+
 [tool.coverage.run]
 omit = ["iscc_sct/dev.py", "tests/", "iscc_sct/demo.py"]
 
@@ -98,9 +105,9 @@ format-markdown = { cmd = "mdformat --wrap 100 --end-of-line lf README.md", help
 format-yml = { script = "iscc_sct.dev:format_yml", help = "Format YML files"}
 convert-lf = { script = "iscc_sct.dev:convert_lf", help = "Convert line endings to LF"}
 test = { cmd = "pytest --cov=iscc_sct --cov-fail-under=100", help = "Run tests with coverage" }
-check-complexity = { cmd = "radon cc iscc_sct --min C -s -a --total-average", help = "Check code complexity with radon" }
+check-complexity = { shell = "radon cc iscc_sct -s -a --total-average && xenon iscc_sct --max-absolute C --max-modules B --max-average A", help = "Show complexity report then enforce thresholds (fail on >C)" }
 update-dependencies = { cmd = "uv sync --upgrade", help = "Update dependencies" }
-all = ["format-code", "format-markdown", "format-yml", "convert-lf", "test"]
+all = ["format-code", "format-markdown", "format-yml", "convert-lf", "check-complexity", "test"]
 update = ["update-dependencies", "all"]
 
 [build-system]

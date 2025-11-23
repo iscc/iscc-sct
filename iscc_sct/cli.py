@@ -10,9 +10,21 @@ from charset_normalizer import from_bytes
 from loguru import logger
 from rich.console import Console
 from rich.json import JSON
-from rich.progress import Progress, TextColumn, BarColumn, TaskProgressColumn
+from rich.progress import (
+    Progress,
+    TextColumn,
+    BarColumn,
+    TaskProgressColumn,
+    DownloadColumn,
+    TransferSpeedColumn,
+    TimeRemainingColumn,
+)
+from rich.table import Table
 
 from iscc_sct.main import create
+from iscc_sct.models_config import MODEL_REGISTRY, get_model_config
+from iscc_sct.utils import get_model_path, download_file, check_integrity
+from iscc_sct.options import sct_opts
 
 # Get version from package metadata
 try:
@@ -155,8 +167,8 @@ def read_text_from_file(file_path):
             return str(charset_match)
 
 
-def process_single_file(file_path, unit_bits, simprint_bits, granular, content):
-    # type: (Path, int, int, bool, bool) -> dict | None
+def process_single_file(file_path, unit_bits, simprint_bits, granular, content, model_version):
+    # type: (Path, int, int, bool, bool, int) -> dict | None
     """Process a single file and generate ISCC.
 
     Returns:
@@ -173,6 +185,7 @@ def process_single_file(file_path, unit_bits, simprint_bits, granular, content):
         options = {
             "bits": unit_bits,
             "bits_granular": simprint_bits,
+            "model_version": model_version,
         }
 
         # Add content flag if requested
@@ -426,6 +439,7 @@ def process_and_output_file(file_path, options, console, progress):
         options["simprint_bits"],
         options["granular"],
         options["content"],
+        options["model_version"],
     )
 
     if result:
@@ -474,8 +488,9 @@ def process_files(
     pretty,
     content,
     truncate,
+    model_version,
 ):
-    # type: (list[str], str, int, int, bool, bool, bool, int) -> None
+    # type: (list[str], str, int, int, bool, bool, bool, int, int) -> None
     """Process files and generate ISCC codes."""
 
     # Setup environment
@@ -499,6 +514,7 @@ def process_files(
         "format": format,
         "json_indent": json_indent,
         "truncate": truncate,
+        "model_version": model_version,
     }
 
     # Run processing loop
@@ -573,10 +589,21 @@ def create_command(
         "-t",
         help="Max length for content output (0 = no limit)",
     ),
+    model_version: Optional[int] = typer.Option(
+        None,
+        "--model-version",
+        "-m",
+        help="Model version (0=minilm-l12, 1=embeddinggemma-300m)",
+    ),
 ):
-    # type: (list[str], str, int, int, bool, bool, bool, int) -> None
+    # type: (list[str], str, int, int, bool, bool, bool, int, int|None) -> None
     """Generate Semantic Text-Codes for text files."""
-    process_files(paths, format, unit_bits, simprint_bits, granular, pretty, content, truncate)
+    # Use environment-configured default if not specified
+    if model_version is None:
+        model_version = sct_opts.model_version
+    process_files(
+        paths, format, unit_bits, simprint_bits, granular, pretty, content, truncate, model_version
+    )
 
 
 @app.command()
@@ -596,6 +623,206 @@ def demo():
         raise typer.Exit(code=1)
 
 
+def _determine_versions_to_install(model_version, console):
+    # type: (Optional[List[int]], Console) -> list[int]
+    """Determine and validate which model versions to install."""
+    if model_version is None:
+        return sorted(MODEL_REGISTRY.keys())
+
+    versions_to_install = []
+    for v in model_version:
+        if v not in MODEL_REGISTRY:
+            available = ", ".join(str(ver) for ver in sorted(MODEL_REGISTRY.keys()))
+            console.print(
+                f"[red]Error: Model version {v} not found. Available versions: {available}[/red]"
+            )
+            raise typer.Exit(code=1)
+        versions_to_install.append(v)
+    return sorted(set(versions_to_install))
+
+
+def _verify_model_integrity(config, model_dir, quiet, console):
+    # type: (object, Path, bool, Console) -> bool
+    """Verify integrity of model files. Returns True if valid, False otherwise."""
+    try:
+        for filename, checksum in zip(config.filenames, config.checksums):
+            file_path = model_dir / filename
+            check_integrity(file_path, checksum)
+        return True
+    except RuntimeError:
+        return False
+
+
+def _process_verify_only(version, config, model_dir, quiet, console):
+    # type: (int, object, Path, bool, Console) -> tuple[int, str, str]
+    """Process a model in verify-only mode."""
+    all_files_exist = all((model_dir / fname).exists() for fname in config.filenames)
+
+    if not all_files_exist:
+        if not quiet:
+            console.print("  [red]✗ Files missing[/red]")
+        return (version, config.name, "Missing")
+
+    if _verify_model_integrity(config, model_dir, quiet, console):
+        if not quiet:
+            console.print("  [green]✓ Integrity verified[/green]")
+        return (version, config.name, "OK")
+    else:
+        if not quiet:
+            console.print("  [red]✗ Integrity check failed[/red]")
+        return (version, config.name, "Failed")
+
+
+def _process_install_mode(version, config, model_dir, force, timeout, quiet, console):
+    # type: (int, object, Path, bool, int, bool, Console) -> tuple[int, str, str]
+    """Process a model in install mode."""
+    all_files_exist = all((model_dir / fname).exists() for fname in config.filenames)
+
+    if all_files_exist and not force:
+        if _verify_model_integrity(config, model_dir, quiet, console):
+            if not quiet:
+                console.print("  [green]✓ Already installed and verified[/green]")
+            return (version, config.name, "OK")
+        else:
+            if not quiet:
+                console.print("  [yellow]⚠ Integrity check failed - re-downloading[/yellow]")
+
+    download_model_files(config, model_dir, timeout, quiet, console)
+    return (version, config.name, "OK")
+
+
+def _process_model_version(version, verify_only, force, quiet, console):
+    # type: (int, bool, bool, bool, Console) -> tuple[int, str, str]
+    """Process a single model version."""
+    config = get_model_config(version)
+    model_dir = get_model_path(version)
+    timeout = sct_opts.download_timeout
+
+    if not quiet:
+        console.print(f"[bold cyan]Model v{version}:[/bold cyan] {config.name}")
+
+    if verify_only:
+        return _process_verify_only(version, config, model_dir, quiet, console)
+    else:
+        return _process_install_mode(version, config, model_dir, force, timeout, quiet, console)
+
+
+def _display_install_summary(results, quiet, console):
+    # type: (list[tuple[int, str, str]], bool, Console) -> None
+    """Display installation summary table."""
+    if quiet:
+        return
+
+    console.print("[bold]Summary[/bold]")
+    table = Table(show_header=True, header_style="bold")
+    table.add_column("Version", style="cyan")
+    table.add_column("Model Name")
+    table.add_column("Status")
+    table.add_column("Location")
+
+    for version, name, status in results:
+        model_dir = get_model_path(version)
+        status_icon = "[green]✓ OK[/green]" if status == "OK" else f"[red]✗ {status}[/red]"
+        display_name = name if len(name) <= 30 else name[:27] + "..."
+        location_str = str(model_dir)
+        if len(location_str) > 40:
+            location_str = "..." + location_str[-37:]
+        table.add_row(f"v{version}", display_name, status_icon, location_str)
+
+    console.print(table)
+    console.print()
+
+
+@app.command()
+def install(
+    model_version: Optional[List[int]] = typer.Option(
+        None,
+        "--model-version",
+        "-m",
+        help="Model version(s) to install (0, 1, or both if omitted)",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        "-f",
+        help="Force re-download even if files exist and are valid",
+    ),
+    verify_only: bool = typer.Option(
+        False,
+        "--verify-only",
+        "-v",
+        help="Only verify existing models without downloading",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        "-q",
+        help="Suppress progress bars and detailed output",
+    ),
+):
+    # type: (Optional[List[int]], bool, bool, bool) -> None
+    """Download and verify ISCC-SCT embedding models.
+
+    Examples:
+        iscc-sct install              # Install both v0 and v1
+        iscc-sct install -m 0         # Install only v0
+        iscc-sct install -m 0 -m 1    # Install both (explicit)
+        iscc-sct install --force      # Re-download all models
+        iscc-sct install --verify-only # Only check existing models
+    """
+    console = Console()
+    versions_to_install = _determine_versions_to_install(model_version, console)
+
+    if not quiet:
+        console.print("\n[bold]Installing ISCC-SCT Models[/bold]")
+        console.print("━" * console.width)
+        console.print()
+
+    results = []
+    for version in versions_to_install:
+        result = _process_model_version(version, verify_only, force, quiet, console)
+        results.append(result)
+        if not quiet:
+            console.print()
+
+    _display_install_summary(results, quiet, console)
+
+
+def download_model_files(config, model_dir, timeout, quiet, console):
+    # type: (object, Path, int, bool, Console) -> None
+    """Download model files with progress tracking."""
+    if quiet:
+        # No progress bars in quiet mode
+        for filename, url, checksum in zip(config.filenames, config.urls, config.checksums):
+            dest_path = model_dir / filename
+            download_file(url, dest_path, checksum, timeout)
+    else:
+        # Create progress bar for downloads
+        progress = Progress(
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            DownloadColumn(),
+            TransferSpeedColumn(),
+            TimeRemainingColumn(),
+            console=console,
+        )
+
+        with progress:
+            for filename, url, checksum in zip(config.filenames, config.urls, config.checksums):
+                dest_path = model_dir / filename
+                task_id = progress.add_task(f"  {filename}", total=None)
+
+                try:
+                    download_file(url, dest_path, checksum, timeout, progress, task_id)
+                    progress.update(task_id, completed=True)
+                except Exception as e:
+                    progress.stop()
+                    console.print(f"  [red]✗ Download failed: {e}[/red]")
+                    raise
+
+        console.print("  [green]✓ Integrity verified[/green]")
+
+
 def main():
     # type: () -> None
     """Entry point for the CLI."""
@@ -603,7 +830,7 @@ def main():
 
     # Check if we should insert 'create' as default command
     if len(sys.argv) > 1:
-        known_commands = ["create", "demo"]
+        known_commands = ["create", "demo", "install"]
 
         # Find first non-option argument
         first_non_option_idx = None
@@ -619,6 +846,8 @@ def main():
                     "--simprint-bits",
                     "-t",
                     "--truncate",
+                    "-m",
+                    "--model-version",
                 ]:
                     continue
                 first_non_option_idx = i

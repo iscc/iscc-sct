@@ -2,7 +2,6 @@
 
 import json
 import sys
-from pathlib import Path
 from io import StringIO
 from unittest.mock import patch, MagicMock
 
@@ -263,7 +262,7 @@ def test_read_text_from_file_binary(tmp_path):
     """Test reading binary file returns None."""
     binary_file = tmp_path / "binary.bin"
     binary_file.write_bytes(b"\x00\x01\x02\x03\xff\xfe")
-    text = read_text_from_file(binary_file)
+    _text = read_text_from_file(binary_file)
     # Should return None or decoded text depending on charset detection
     # The actual behavior depends on charset_normalizer
 
@@ -276,33 +275,39 @@ def test_read_text_from_file_no_charset_match(tmp_path):
     # Write completely random binary data that is not valid in any encoding
     binary_file.write_bytes(bytes(range(256)) * 10)
 
-    text = read_text_from_file(binary_file)
+    _text = read_text_from_file(binary_file)
     # charset_normalizer might still detect something, or return None
     # The actual behavior depends on the library
 
 
-def test_process_single_file(sample_text_file):
-    # type: (Path) -> None
+@patch("iscc_sct.code_semantic_text.embed_chunks")
+def test_process_single_file(mock_embed, sample_text_file, mock_embed_chunks):
+    # type: (MagicMock, Path, callable) -> None
     """Test processing a single file."""
-    result = process_single_file(sample_text_file, 256, 256, False, False)
+    mock_embed.side_effect = mock_embed_chunks
+    result = process_single_file(sample_text_file, 256, 256, False, False, 0)
     assert result is not None
     assert "iscc" in result
     assert "filename" in result
     assert "meta" in result
 
 
-def test_process_single_file_with_granular(sample_text_file):
-    # type: (Path) -> None
+@patch("iscc_sct.code_semantic_text.embed_chunks")
+def test_process_single_file_with_granular(mock_embed, sample_text_file, mock_embed_chunks):
+    # type: (MagicMock, Path, callable) -> None
     """Test processing a single file with granular option."""
-    result = process_single_file(sample_text_file, 256, 256, True, False)
+    mock_embed.side_effect = mock_embed_chunks
+    result = process_single_file(sample_text_file, 256, 256, True, False, 0)
     assert result is not None
     assert result["meta"].features is not None
 
 
-def test_process_single_file_with_content(sample_text_file):
-    # type: (Path) -> None
+@patch("iscc_sct.code_semantic_text.embed_chunks")
+def test_process_single_file_with_content(mock_embed, sample_text_file, mock_embed_chunks):
+    # type: (MagicMock, Path, callable) -> None
     """Test processing a single file with content option."""
-    result = process_single_file(sample_text_file, 256, 256, True, True)
+    mock_embed.side_effect = mock_embed_chunks
+    result = process_single_file(sample_text_file, 256, 256, True, True, 0)
     assert result is not None
     # Content should be included in features
 
@@ -310,7 +315,7 @@ def test_process_single_file_with_content(sample_text_file):
 def test_process_single_file_empty(empty_text_file):
     # type: (Path) -> None
     """Test processing empty file returns None."""
-    result = process_single_file(empty_text_file, 256, 256, False, False)
+    result = process_single_file(empty_text_file, 256, 256, False, False, 0)
     assert result is None
 
 
@@ -319,7 +324,7 @@ def test_process_single_file_error(tmp_path):
     """Test processing file with error."""
     # Create a file that will cause an error
     nonexistent = tmp_path / "nonexistent.txt"
-    result = process_single_file(nonexistent, 256, 256, False, False)
+    result = process_single_file(nonexistent, 256, 256, False, False, 0)
     assert result is None
 
 
@@ -739,6 +744,7 @@ def test_process_and_output_file(sample_text_file, capsys):
         "format": "text",
         "json_indent": None,
         "truncate": 50,
+        "model_version": 0,
     }
 
     process_and_output_file(sample_text_file, options, None, None)
@@ -757,6 +763,7 @@ def test_process_and_output_file_json(sample_text_file, capsys):
         "format": "json",
         "json_indent": None,
         "truncate": 50,
+        "model_version": 0,
     }
 
     process_and_output_file(sample_text_file, options, None, None)
@@ -776,6 +783,7 @@ def test_run_processing_loop(sample_text_file, capsys):
         "format": "text",
         "json_indent": None,
         "truncate": 50,
+        "model_version": 0,
     }
 
     run_processing_loop([sample_text_file], options, None, None)
@@ -806,6 +814,7 @@ def test_run_processing_loop_with_progress(sample_text_file):
         "format": "text",
         "json_indent": None,
         "truncate": 50,
+        "model_version": 0,
     }
 
     run_processing_loop([sample_text_file], options, console, progress)
@@ -814,7 +823,7 @@ def test_run_processing_loop_with_progress(sample_text_file):
 def test_process_files(sample_text_file, capsys):
     # type: (Path, pytest.CaptureFixture) -> None
     """Test main process_files function."""
-    process_files([str(sample_text_file)], "text", 256, 256, False, False, False, 50)
+    process_files([str(sample_text_file)], "text", 256, 256, False, False, False, 50, 0)
     captured = capsys.readouterr()
     assert "ISCC:" in captured.out
 
@@ -822,7 +831,7 @@ def test_process_files(sample_text_file, capsys):
 def test_process_files_json(sample_text_file, capsys):
     # type: (Path, pytest.CaptureFixture) -> None
     """Test process_files with JSON output."""
-    process_files([str(sample_text_file)], "json", 256, 256, False, False, False, 50)
+    process_files([str(sample_text_file)], "json", 256, 256, False, False, False, 50, 0)
     captured = capsys.readouterr()
     data = json.loads(captured.out.strip())
     assert "iscc" in data
@@ -831,7 +840,7 @@ def test_process_files_json(sample_text_file, capsys):
 def test_process_files_pretty_json(sample_text_file, capsys):
     # type: (Path, pytest.CaptureFixture) -> None
     """Test process_files with pretty JSON output."""
-    process_files([str(sample_text_file)], "json", 256, 256, False, True, False, 50)
+    process_files([str(sample_text_file)], "json", 256, 256, False, True, False, 50, 0)
     captured = capsys.readouterr()
     assert "iscc" in captured.out
     assert "\n" in captured.out
@@ -840,7 +849,7 @@ def test_process_files_pretty_json(sample_text_file, capsys):
 def test_process_files_granular(sample_text_file, capsys):
     # type: (Path, pytest.CaptureFixture) -> None
     """Test process_files with granular output."""
-    process_files([str(sample_text_file)], "text", 256, 256, True, False, False, 50)
+    process_files([str(sample_text_file)], "text", 256, 256, True, False, False, 50, 0)
     captured = capsys.readouterr()
     assert "ISCC:" in captured.out
 
@@ -848,7 +857,7 @@ def test_process_files_granular(sample_text_file, capsys):
 def test_process_files_with_content(sample_text_file, capsys):
     # type: (Path, pytest.CaptureFixture) -> None
     """Test process_files with content output."""
-    process_files([str(sample_text_file)], "text", 256, 256, True, False, True, 50)
+    process_files([str(sample_text_file)], "text", 256, 256, True, False, True, 50, 0)
     captured = capsys.readouterr()
     assert "ISCC:" in captured.out
 
@@ -980,12 +989,11 @@ def test_cli_demo_import_error():
     # type: () -> None
     """Test demo command when import fails."""
     # Test the import error path - directly test the demo function
-    from iscc_sct import cli
 
     # Temporarily replace the demo module to simulate ImportError
     with patch.dict("sys.modules", {"iscc_sct.demo": None}):
         # Call the runner to test the command
-        result = runner.invoke(app, ["demo"])
+        _result = runner.invoke(app, ["demo"])
         # The command might succeed if gradio is installed
         # or fail if it's not - both are valid outcomes
         # We just want to ensure the command doesn't crash
@@ -1013,7 +1021,7 @@ def test_main_default_command(sample_text_file):
     test_args = ["iscc-sct", str(sample_text_file)]
 
     with patch.object(sys, "argv", test_args):
-        with patch("iscc_sct.cli.app") as mock_app:
+        with patch("iscc_sct.cli.app"):
             main()
             # Verify that 'create' was inserted
             assert sys.argv == ["iscc-sct", "create", str(sample_text_file)]
@@ -1025,7 +1033,7 @@ def test_main_with_explicit_command(sample_text_file):
     test_args = ["iscc-sct", "create", str(sample_text_file)]
 
     with patch.object(sys, "argv", test_args):
-        with patch("iscc_sct.cli.app") as mock_app:
+        with patch("iscc_sct.cli.app"):
             main()
             # 'create' should not be inserted again
             assert sys.argv.count("create") == 1
@@ -1037,7 +1045,7 @@ def test_main_with_demo_command():
     test_args = ["iscc-sct", "demo"]
 
     with patch.object(sys, "argv", test_args):
-        with patch("iscc_sct.cli.app") as mock_app:
+        with patch("iscc_sct.cli.app"):
             main()
             # 'create' should not be inserted
             assert "create" not in sys.argv
@@ -1049,7 +1057,7 @@ def test_main_with_options(sample_text_file):
     test_args = ["iscc-sct", "-f", "json", str(sample_text_file)]
 
     with patch.object(sys, "argv", test_args):
-        with patch("iscc_sct.cli.app") as mock_app:
+        with patch("iscc_sct.cli.app"):
             main()
             # 'create' should be inserted at position 1
             assert sys.argv[1] == "create"
@@ -1063,7 +1071,7 @@ def test_main_with_version_flag():
     test_args = ["iscc-sct", "--version"]
 
     with patch.object(sys, "argv", test_args):
-        with patch("iscc_sct.cli.app") as mock_app:
+        with patch("iscc_sct.cli.app"):
             main()
             # Version flag should not trigger 'create' insertion
             assert "create" not in sys.argv
@@ -1124,3 +1132,55 @@ def test_cli_create_with_simprint_bits(sample_text_file):
     """Test create command with simprint-bits option."""
     result = runner.invoke(app, ["create", str(sample_text_file), "-s", "128"])
     assert result.exit_code == 0
+
+
+@patch("iscc_sct.code_semantic_text.embed_chunks")
+def test_cli_create_with_model_version_1(mock_embed, sample_text_file, mock_embed_chunks):
+    # type: (MagicMock, Path, callable) -> None
+    """Test create command with model version 1."""
+    mock_embed.side_effect = mock_embed_chunks
+    result = runner.invoke(app, ["create", str(sample_text_file), "-m", "1"])
+    assert result.exit_code == 0
+    assert "ISCC:" in result.stdout
+
+
+@patch("iscc_sct.code_semantic_text.embed_chunks")
+@patch("iscc_sct.cli.sct_opts")
+def test_cli_create_respects_env_model_version(
+    mock_opts, mock_embed, sample_text_file, mock_embed_chunks
+):
+    # type: (MagicMock, MagicMock, Path, callable) -> None
+    """Test create command respects ISCC_SCT_MODEL_VERSION when -m not provided."""
+    # Setup: Configure mock sct_opts to return model_version=1
+    mock_opts.model_version = 1
+    mock_embed.side_effect = mock_embed_chunks
+
+    # Run without -m flag - should use env var default (model_version=1)
+    result = runner.invoke(app, ["create", str(sample_text_file)])
+
+    assert result.exit_code == 0
+    assert "ISCC:" in result.stdout
+    # Verify embed_chunks was called with model_version=1 from environment
+    calls = [call for call in mock_embed.call_args_list if call[1].get("model_version") == 1]
+    assert len(calls) > 0, "embed_chunks should be called with model_version=1 from environment"
+
+
+@patch("iscc_sct.code_semantic_text.embed_chunks")
+@patch("iscc_sct.cli.sct_opts")
+def test_cli_create_explicit_model_version_overrides_env(
+    mock_opts, mock_embed, sample_text_file, mock_embed_chunks
+):
+    # type: (MagicMock, MagicMock, Path, callable) -> None
+    """Test create command with -m flag overrides ISCC_SCT_MODEL_VERSION."""
+    # Setup: Configure mock sct_opts to return model_version=1
+    mock_opts.model_version = 1
+    mock_embed.side_effect = mock_embed_chunks
+
+    # Run with -m 0 flag - should override env var default
+    result = runner.invoke(app, ["create", str(sample_text_file), "-m", "0"])
+
+    assert result.exit_code == 0
+    assert "ISCC:" in result.stdout
+    # Verify embed_chunks was called with model_version=0 from CLI flag
+    calls = [call for call in mock_embed.call_args_list if call[1].get("model_version") == 0]
+    assert len(calls) > 0, "embed_chunks should be called with model_version=0 from CLI flag"

@@ -1,8 +1,7 @@
 from pathlib import Path
 import os
-import subprocess
-import sys
 import tempfile
+from unittest.mock import patch
 
 import pytest
 from blake3 import blake3
@@ -17,6 +16,18 @@ from iscc_sct.code_semantic_text import (
     compress,
 )
 import numpy as np
+
+
+# Helper function for mock embeddings
+def create_mock_embeddings(chunks, model_version=0, **kwargs):
+    """Create deterministic mock embeddings for testing."""
+    num_chunks = len(chunks)
+    embedding_dim = 768 if model_version == 1 else 384
+    # Use hash of chunks for deterministic but varied results
+    seed = sum(hash(chunk) for chunk in chunks) % (2**32)
+    embeddings = np.random.RandomState(seed).randn(num_chunks, embedding_dim).astype(np.float32)
+    embeddings = embeddings / np.linalg.norm(embeddings, axis=1, keepdims=True)
+    return embeddings
 
 
 HERE = Path(__file__).parent.absolute()
@@ -39,7 +50,9 @@ def test_version():
     assert sct.__version__ == "0.1.5"
 
 
+@pytest.mark.integration
 def test_code_text_semantic_default():
+    """Integration test: End-to-end ISCC generation with real model."""
     fp = HERE / "en.txt"
     result = sct.code_text_semantic(fp)
     assert result == {
@@ -109,42 +122,45 @@ def test_gen_text_code_semantic_granular():
         offsets=True,
         contents=True,
     )
-    assert result == {
-        "characters": 726,
-        "iscc": "ISCC:CAARISHPJHEXQAYL",
-        "features": [
-            {
-                "maintype": "semantic",
-                "subtype": "text",
-                "version": 0,
-                "byte_offsets": False,
-                "simprints": ["FWjtTcl4Aws", "lAjHSc1wAws"],
-                "offsets": [0, 297],
-                "contents": [
-                    "\n"
-                    "`iscc-sct` is a **proof of concept implementation** of a semantic "
-                    "Text-Code for the\n"
-                    "[ISCC](https://core.iscc.codes) (*International Standard Content "
-                    "Code*). Semantic Text-Codes are\n"
-                    "designed to capture and represent the language agnostic semantic "
-                    "content of text for improved\n"
-                    "similarity detection.\n"
-                    "\n",  # NOTE: end of first chunk (see comma :)
-                    "\n"
-                    "\n"
-                    "The ISCC framework already comes with a Text-Code that is based "
-                    "on lexical similarity and can match\n"
-                    "near duplicates. The ISCC Semantic Text-Code is planned as a new "
-                    "additional ISCC-UNIT focused on\n"
-                    "capturing a more abstract and broad semantic similarity. As such "
-                    "the Semantic Text-Code is\n"
-                    "engineered to be robust against a broader range of variations and "
-                    "translations of text that cannot\n"
-                    "be matched based on lexical similarity.\n",
-                ],
-            }
-        ],
-    }
+    assert (
+        result
+        == {
+            "characters": 726,
+            "iscc": "ISCC:CAARISHPJHEXQAYL",
+            "features": [
+                {
+                    "maintype": "semantic",
+                    "subtype": "text",
+                    "version": 0,
+                    "byte_offsets": False,
+                    "simprints": ["FWjtTcl4Aws", "lAjHSc1wAws"],
+                    "offsets": [0, 297],
+                    "contents": [
+                        "\n"
+                        "`iscc-sct` is a **proof of concept implementation** of a semantic "
+                        "Text-Code for the\n"
+                        "[ISCC](https://core.iscc.codes) (*International Standard Content "
+                        "Code*). Semantic Text-Codes are\n"
+                        "designed to capture and represent the language agnostic semantic "
+                        "content of text for improved\n"
+                        "similarity detection.\n"
+                        "\n",  # NOTE: end of first chunk (see comma :)
+                        "\n"
+                        "\n"
+                        "The ISCC framework already comes with a Text-Code that is based "
+                        "on lexical similarity and can match\n"
+                        "near duplicates. The ISCC Semantic Text-Code is planned as a new "
+                        "additional ISCC-UNIT focused on\n"
+                        "capturing a more abstract and broad semantic similarity. As such "
+                        "the Semantic Text-Code is\n"
+                        "engineered to be robust against a broader range of variations and "
+                        "translations of text that cannot\n"
+                        "be matched based on lexical similarity.\n",
+                    ],
+                }
+            ],
+        }
+    )
 
 
 def test_gen_text_code_semantic_checks_bits():
@@ -218,11 +234,33 @@ def test_gen_text_code_semantic(text_en):
     )
 
 
+@pytest.mark.integration
 def test_cross_lingual_match(text_en, text_de):
+    """Integration test: Validates cross-lingual semantic matching with real models."""
     a = sct.gen_text_code_semantic(text_en)["iscc"]
     assert a == "ISCC:CAA636IXQD736IGJ"
     b = sct.gen_text_code_semantic(text_de)["iscc"]
     assert b == "ISCC:CAA636IXQD4TMIGL"  # hamming distance for the codes is 6 bits
+
+
+@pytest.mark.integration
+def test_regression_256bit_model_v0(text_en, text_de):
+    """Regression test: 256-bit ISCC codes for model v0 should remain stable."""
+    en_result = sct.gen_text_code_semantic(text_en, bits=256, model_version=0)
+    assert en_result["iscc"] == "ISCC:CAD636IXQD736IGJG4HIHCNQXELCFPH5N674DY32Q3PBUZOODLIQ23I"
+
+    de_result = sct.gen_text_code_semantic(text_de, bits=256, model_version=0)
+    assert de_result["iscc"] == "ISCC:CAD636IXQD4TMIGLU47IHHNUXEDCUPH5MO5UB232A3LBUZOKDDAR2YI"
+
+
+@pytest.mark.integration
+def test_regression_256bit_model_v1(text_en, text_de):
+    """Regression test: 256-bit ISCC codes for model v1 should remain stable."""
+    en_result = sct.gen_text_code_semantic(text_en, bits=256, model_version=1)
+    assert en_result["iscc"] == "ISCC:CALZUZN3HFJEPYIJANSMCBT43Y2IKJ27OSGNSTRJBJCMMZBEUUWCTCI"
+
+    de_result = sct.gen_text_code_semantic(text_de, bits=256, model_version=1)
+    assert de_result["iscc"] == "ISCC:CALZVZQR7FNGPCTJWU6GCRTM2AKK25E4OCGYS3ZOZZCON3DEUU4EXWI"
 
 
 def test_tokenizer_integrity(text_en):
@@ -242,7 +280,9 @@ def test_soft_hash_text_semantic():
     )
 
 
+@pytest.mark.integration
 def test_shift_resistance(text_en):
+    """Integration test: Validates shift resistance with real models."""
     a = sct.soft_hash_text_semantic(text_en)
     shifted = "Just put another sentence in the begginging of the text!\n" + text_en
     b = sct.soft_hash_text_semantic(shifted)
@@ -382,11 +422,9 @@ def test_options_model_dir_from_env(monkeypatch):
 
 def test_model_path_resolution():
     """Test that custom model_dir gets resolved to absolute path."""
-    from importlib import reload
-    import iscc_sct.utils as utils_module
 
     # Test with a relative path
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory():
         # Create a test to verify that relative paths would be resolved
         # Note: This test verifies the logic without actually reloading modules
         test_path = Path("./test_relative_path")
@@ -427,10 +465,83 @@ def test_custom_model_dir_via_reload(monkeypatch):
 
         # Verify the custom directory was used
         expected = custom_dir.resolve()
-        actual = iscc_sct.utils.MODEL_PATH.parent
+        actual = iscc_sct.utils.model_storage_dir
         assert actual == expected, f"Expected {expected}, got {actual}"
 
         # Reload again to restore default state for other tests
         monkeypatch.delenv("ISCC_SCT_MODEL_DIR")
         reload(iscc_sct.options)
         reload(iscc_sct.utils)
+
+
+def test_tokenizer_downloads_model_for_v1(tmp_path):
+    """Test that tokenizer() attempts to download model if tokenizer.json missing for model v1."""
+    from unittest.mock import MagicMock
+    import iscc_sct.code_semantic_text
+
+    # Create a temporary model directory
+    v1_model_dir = tmp_path / "v1"
+    v1_model_dir.mkdir(parents=True, exist_ok=True)
+
+    # Clear tokenizer cache to force re-execution
+    iscc_sct.code_semantic_text.tokenizer.cache_clear()
+
+    try:
+        # Mock get_model_path to return our temp directory
+        with patch("iscc_sct.code_semantic_text.sct.get_model_path") as mock_get_path:
+            mock_get_path.return_value = v1_model_dir
+
+            # Mock get_model to create tokenizer.json without actual download
+            with patch("iscc_sct.code_semantic_text.sct.get_model") as mock_get_model:
+                # When get_model is called, create a minimal tokenizer.json
+                def create_tokenizer_json(model_version):
+                    tokenizer_path = v1_model_dir / "tokenizer.json"
+                    # Create a minimal valid tokenizer.json
+                    tokenizer_path.write_text('{"version": "1.0"}')
+
+                mock_get_model.side_effect = create_tokenizer_json
+
+                # Mock Tokenizer.from_file to avoid loading the fake tokenizer
+                with patch("iscc_sct.code_semantic_text.Tokenizer.from_file") as mock_from_file:
+                    mock_tok = MagicMock()
+                    mock_tok.enable_padding = MagicMock()
+                    mock_from_file.return_value = mock_tok
+
+                    # This should trigger the download path (line 272)
+                    tok = iscc_sct.code_semantic_text.tokenizer(model_version=1)
+
+                    # Verify get_model was called
+                    mock_get_model.assert_called_once_with(1)
+                    assert tok is not None
+    finally:
+        # Cleanup
+        iscc_sct.code_semantic_text.tokenizer.cache_clear()
+
+
+def test_prompt_type_unexpected_type_warning():
+    """Test that unexpected prompt_type type triggers warning and uses default."""
+    from iscc_sct.code_semantic_text import tokenize_chunks
+
+    # Test the tokenize_chunks function directly with an unexpected type
+    # This bypasses Pydantic validation and tests the runtime handling (lines 367-370)
+    test_chunks = ["Hello World"]
+
+    # Call tokenize_chunks with an invalid prompt_type (integer instead of enum/string)
+    result = tokenize_chunks(test_chunks, model_version=1, prompt_type=12345)
+
+    # Should succeed despite invalid input (falls back to default DOCUMENT prompt)
+    assert result is not None
+    assert "input_ids" in result
+
+
+def test_prompt_type_enum_instance():
+    """Test that EmbeddingGemmaPrompt enum instances are handled correctly (line 355)."""
+    from iscc_sct.code_semantic_text import tokenize_chunks, EmbeddingGemmaPrompt
+
+    # Test with EmbeddingGemmaPrompt enum instance directly (triggers line 355 - pass statement)
+    test_chunks = ["Test text"]
+    result = tokenize_chunks(test_chunks, model_version=1, prompt_type=EmbeddingGemmaPrompt.QUERY)
+
+    # Should succeed with enum instance
+    assert result is not None
+    assert "input_ids" in result

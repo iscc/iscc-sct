@@ -5,13 +5,12 @@ from loguru import logger as log
 import os
 import time
 from pathlib import Path
-from urllib.request import urlretrieve
+import niquests
 from blake3 import blake3
 from filelock import FileLock, Timeout
 from platformdirs import PlatformDirs
-from typing import List, Tuple
-from iscc_sct.models import Metadata, Feature
 from iscc_sct.options import sct_opts
+from iscc_sct.models_config import get_model_config
 
 
 APP_NAME = "iscc-sct"
@@ -31,6 +30,7 @@ os.makedirs(model_storage_dir, exist_ok=True)
 __all__ = [
     "timer",
     "get_model",
+    "get_model_path",
     "encode_base32",
     "encode_base64",
     "decode_base32",
@@ -40,16 +40,20 @@ __all__ = [
     "cosine_similarity",
     "granular_similarity",
     "char_to_byte_offsets",
-    "MODEL_PATH",
 ]
 
 
-BASE_VERSION = "1.0.0"
-BASE_URL = f"https://github.com/iscc/iscc-binaries/releases/download/v{BASE_VERSION}"
-MODEL_FILENAME = "iscc-sct-v0.1.0.onnx"
-MODEL_URL = f"{BASE_URL}/{MODEL_FILENAME}"
-MODEL_PATH = model_storage_dir / MODEL_FILENAME
-MODEL_CHECKSUM = "ff254d62db55ed88a1451b323a66416f60838dd2f0338dba21bc3b8822459abc"
+def get_model_path(model_version):
+    # type: (int) -> Path
+    """
+    Get the storage path for a model version.
+
+    :param model_version: Model version integer
+    :return: Path to model directory for the version
+    """
+    version_dir = model_storage_dir / f"v{model_version}"
+    os.makedirs(version_dir, exist_ok=True)
+    return version_dir
 
 
 class timer:
@@ -67,46 +71,97 @@ class timer:
         log.debug(f"{self.message} {elapsed_time:.4f} seconds")
 
 
-def get_model():  # pragma: no cover
+def download_file(url, dest_path, checksum, timeout, progress=None, task_id=None):
+    # type: (str, Path, str, int, object|None, object|None) -> Path
     """
-    Check and return local model file if it exists, otherwise download.
-    Uses file locking to prevent race conditions in concurrent scenarios.
+    Download a single file with integrity checking using niquests.
+
+    :param url: URL to download from
+    :param dest_path: Destination file path
+    :param checksum: Expected blake3 checksum
+    :param timeout: Download timeout in seconds
+    :param progress: Optional Rich Progress instance for progress tracking
+    :param task_id: Optional Rich TaskID for progress updates
+    :return: Path to downloaded file
     """
-    lock_path = MODEL_PATH.with_suffix(".lock")
-    timeout = sct_opts.download_timeout
+    lock_path = dest_path.with_suffix(dest_path.suffix + ".lock")
 
     try:
         with FileLock(lock_path, timeout=timeout):
             # Double-check pattern: another process may have completed download
-            if MODEL_PATH.exists():
+            if dest_path.exists():
                 try:
-                    return check_integrity(MODEL_PATH, MODEL_CHECKSUM)
+                    return check_integrity(dest_path, checksum)
                 except RuntimeError:
-                    log.warning("Model file integrity error - redownloading ...")
-                    MODEL_PATH.unlink()  # Remove corrupt file
+                    log.warning(f"File integrity error for {dest_path.name} - redownloading ...")
+                    dest_path.unlink()  # Remove corrupt file
 
             # Atomic download: temp file + rename
-            temp_path = MODEL_PATH.with_suffix(f".tmp.{os.getpid()}")
+            temp_path = dest_path.with_suffix(f".tmp.{os.getpid()}")
             try:
-                log.info("Downloading embedding model ...")
-                urlretrieve(MODEL_URL, filename=temp_path)
-                check_integrity(temp_path, MODEL_CHECKSUM)
-                os.replace(temp_path, MODEL_PATH)  # Atomic on all platforms
-                log.info("Model download completed successfully")
+                log.info(f"Downloading {dest_path.name} ...")
+
+                # Stream download with niquests
+                response = niquests.get(url, stream=True, timeout=timeout)
+                response.raise_for_status()
+
+                # Get file size if available
+                total_size = int(response.headers.get("content-length", 0))
+
+                # Update progress task with total size if progress tracking is enabled
+                if progress and task_id is not None and total_size:
+                    progress.update(task_id, total=total_size)
+
+                # Download file in chunks
+                with open(temp_path, "wb") as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                            # Update progress if tracking is enabled
+                            if progress and task_id is not None:
+                                progress.update(task_id, advance=len(chunk))
+
+                check_integrity(temp_path, checksum)
+                os.replace(temp_path, dest_path)  # Atomic on all platforms
+                log.info(f"Download of {dest_path.name} completed successfully")
             finally:
                 # Cleanup temp file on any failure
                 if temp_path.exists():
                     temp_path.unlink()
 
-            return check_integrity(MODEL_PATH, MODEL_CHECKSUM)
+            return check_integrity(dest_path, checksum)
 
     except Timeout:
-        msg = f"Timeout waiting for model download lock after {timeout} seconds"
+        msg = f"Timeout waiting for download lock after {timeout} seconds"
         log.error(msg)
         raise RuntimeError(
             f"{msg}. Another process may be downloading the model. "
             "Please wait or increase ISCC_SCT_DOWNLOAD_TIMEOUT."
         )
+
+
+def get_model(model_version=None):  # pragma: no cover
+    # type: (int|None) -> Path
+    """
+    Check and return local model directory if it exists, otherwise download.
+    Uses file locking to prevent race conditions in concurrent scenarios.
+
+    :param model_version: Model version integer (defaults to sct_opts.model_version)
+    :return: Path to model directory containing all model files
+    """
+    if model_version is None:
+        model_version = sct_opts.model_version
+
+    config = get_model_config(model_version)
+    model_dir = get_model_path(model_version)
+    timeout = sct_opts.download_timeout
+
+    # Download all files for this model
+    for filename, url, checksum in zip(config.filenames, config.urls, config.checksums):
+        dest_path = model_dir / filename
+        download_file(url, dest_path, checksum, timeout)
+
+    return model_dir
 
 
 def check_integrity(file_path, checksum):

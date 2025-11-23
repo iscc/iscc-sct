@@ -1,7 +1,10 @@
+from unittest.mock import patch
 import iscc_sct as sct
 
 
-def test_create_returns_sct_meta():
+@patch("iscc_sct.code_semantic_text.embed_chunks")
+def test_create_returns_sct_meta(mock_embed, mock_embed_chunks):
+    mock_embed.side_effect = mock_embed_chunks
     result = sct.create("Hello World")
     assert isinstance(result, sct.Metadata)
 
@@ -30,6 +33,8 @@ def test_create_granular():
     }
 
 
-def test_create_embedding():
+@patch("iscc_sct.code_semantic_text.embed_chunks")
+def test_create_embedding(mock_embed, mock_embed_chunks):
+    mock_embed.side_effect = mock_embed_chunks
     result = sct.create("Hello World", embedding=True)
     assert len(result.features[0].embedding) == 384

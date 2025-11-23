@@ -272,3 +272,262 @@ def test_test_char_to_byte_offsets_against_simple():
     assert utils.char_to_byte_offsets(text, offsets) == utils.char_to_byte_offsets_simple(
         text, offsets
     )
+
+
+def test_download_file_corrupt_file_redownload(tmp_path, monkeypatch):
+    # type: (object, object) -> None
+    """Test that corrupt files are re-downloaded (lines 92-97)."""
+    from blake3 import blake3
+
+    dest_file = tmp_path / "test_model.bin"
+    content = b"correct content"
+    hasher = blake3()
+    hasher.update(content)
+    correct_checksum = hasher.hexdigest()
+
+    # Create a corrupt file first
+    corrupt_content = b"corrupt content"
+    dest_file.write_bytes(corrupt_content)
+    assert dest_file.exists()
+
+    # Mock niquests.get to return correct content
+    class MockResponse:
+        def __init__(self, content):
+            self.content = content
+            self.headers = {"content-length": str(len(content))}
+
+        def raise_for_status(self):
+            pass
+
+        def iter_content(self, chunk_size):
+            yield self.content
+
+    def mock_get(url, stream=True, timeout=None):
+        return MockResponse(content)
+
+    monkeypatch.setattr("iscc_sct.utils.niquests.get", mock_get)
+
+    # This should detect corruption and re-download
+    result = utils.download_file(
+        url="http://example.com/model.bin",
+        dest_path=dest_file,
+        checksum=correct_checksum,
+        timeout=10,
+    )
+
+    # File should now have correct content
+    assert result == dest_file
+    assert dest_file.read_bytes() == content
+
+
+def test_download_file_lock_timeout(tmp_path, monkeypatch):
+    # type: (object, object) -> None
+    """Test that lock timeout raises RuntimeError (lines 114-120)."""
+    from filelock import FileLock
+
+    dest_file = tmp_path / "test_model.bin"
+    lock_path = dest_file.with_suffix(dest_file.suffix + ".lock")
+
+    # Acquire the lock to simulate another process holding it
+    lock = FileLock(lock_path, timeout=1)
+    lock.acquire()
+
+    try:
+        # Attempt download with very short timeout
+        with pytest.raises(RuntimeError) as excinfo:
+            utils.download_file(
+                url="http://example.com/model.bin",
+                dest_path=dest_file,
+                checksum="fake_checksum",
+                timeout=0.1,  # Very short timeout to trigger immediately
+            )
+
+        error_msg = str(excinfo.value)
+        assert "Timeout waiting for download lock" in error_msg
+        assert "ISCC_SCT_DOWNLOAD_TIMEOUT" in error_msg
+    finally:
+        lock.release()
+
+
+def test_download_file_temp_cleanup_on_failure(tmp_path, monkeypatch):
+    # type: (object, object) -> None
+    """Test that temp files are cleaned up on download failure (lines 108-110)."""
+
+    dest_file = tmp_path / "test_model.bin"
+
+    # Mock niquests.get to raise an exception
+    def mock_get_fail(url, stream=True, timeout=None):
+        raise Exception("Download failed")
+
+    monkeypatch.setattr("iscc_sct.utils.niquests.get", mock_get_fail)
+
+    # Download should fail, but temp file should be cleaned up
+    with pytest.raises(Exception, match="Download failed"):
+        utils.download_file(
+            url="http://example.com/model.bin",
+            dest_path=dest_file,
+            checksum="fake_checksum",
+            timeout=10,
+        )
+
+    # Temp file should not exist after cleanup
+    import os
+
+    temp_pattern = f".tmp.{os.getpid()}"
+    temp_files = list(tmp_path.glob(f"*{temp_pattern}"))
+    assert len(temp_files) == 0, f"Temp files not cleaned up: {temp_files}"
+
+
+def test_download_file_with_progress(tmp_path, monkeypatch):
+    # type: (object, object) -> None
+    """Test download_file with progress tracking."""
+    from blake3 import blake3
+
+    dest_file = tmp_path / "test_model.bin"
+    content = b"test model content for progress tracking"
+
+    # Calculate correct checksum
+    hasher = blake3()
+    hasher.update(content)
+    correct_checksum = hasher.hexdigest()
+
+    # Mock niquests.get
+    class MockResponse:
+        def __init__(self, content):
+            self.content = content
+            self.headers = {"content-length": str(len(content))}
+
+        def raise_for_status(self):
+            pass
+
+        def iter_content(self, chunk_size):
+            # Split content into chunks to test progress updates
+            for i in range(0, len(self.content), chunk_size):
+                yield self.content[i : i + chunk_size]
+
+    def mock_get(url, stream=True, timeout=None):
+        return MockResponse(content)
+
+    monkeypatch.setattr("iscc_sct.utils.niquests.get", mock_get)
+
+    # Mock progress object
+    class MockProgress:
+        def __init__(self):
+            self.updates = []
+
+        def update(self, task_id, total=None, advance=None, completed=None):
+            self.updates.append({"total": total, "advance": advance, "completed": completed})
+
+    progress = MockProgress()
+    task_id = "test_task"
+
+    # Download with progress tracking
+    result = utils.download_file(
+        url="http://example.com/model.bin",
+        dest_path=dest_file,
+        checksum=correct_checksum,
+        timeout=10,
+        progress=progress,
+        task_id=task_id,
+    )
+
+    # Verify file was downloaded
+    assert result == dest_file
+    assert dest_file.read_bytes() == content
+
+    # Verify progress was updated
+    assert len(progress.updates) > 0
+    # First update should set total size
+    assert progress.updates[0]["total"] == len(content)
+    # Subsequent updates should advance progress
+    assert any(u["advance"] is not None for u in progress.updates)
+
+
+def test_download_file_no_progress(tmp_path, monkeypatch):
+    # type: (object, object) -> None
+    """Test download_file without progress tracking."""
+    from blake3 import blake3
+
+    dest_file = tmp_path / "test_model.bin"
+    content = b"test model content without progress"
+
+    # Calculate correct checksum
+    hasher = blake3()
+    hasher.update(content)
+    correct_checksum = hasher.hexdigest()
+
+    # Mock niquests.get
+    class MockResponse:
+        def __init__(self, content):
+            self.content = content
+            self.headers = {"content-length": str(len(content))}
+
+        def raise_for_status(self):
+            pass
+
+        def iter_content(self, chunk_size):
+            yield self.content
+
+    def mock_get(url, stream=True, timeout=None):
+        return MockResponse(content)
+
+    monkeypatch.setattr("iscc_sct.utils.niquests.get", mock_get)
+
+    # Download without progress tracking
+    result = utils.download_file(
+        url="http://example.com/model.bin",
+        dest_path=dest_file,
+        checksum=correct_checksum,
+        timeout=10,
+    )
+
+    # Verify file was downloaded
+    assert result == dest_file
+    assert dest_file.read_bytes() == content
+
+
+def test_download_file_integrity_check_fails_cleanup(tmp_path, monkeypatch):
+    # type: (object, object) -> None
+    """Test that temp file is cleaned up when integrity check fails."""
+
+    dest_file = tmp_path / "test_model.bin"
+    content = b"test content"
+
+    # Mock niquests.get
+    class MockResponse:
+        def __init__(self, content):
+            self.content = content
+            self.headers = {"content-length": str(len(content))}
+
+        def raise_for_status(self):
+            pass
+
+        def iter_content(self, chunk_size):
+            yield self.content
+
+    def mock_get(url, stream=True, timeout=None):
+        return MockResponse(content)
+
+    monkeypatch.setattr("iscc_sct.utils.niquests.get", mock_get)
+
+    # Mock check_integrity to fail
+    def mock_check_integrity(file_path, checksum):
+        raise RuntimeError("Bad checksum")
+
+    monkeypatch.setattr("iscc_sct.utils.check_integrity", mock_check_integrity)
+
+    # Download should fail due to bad checksum
+    with pytest.raises(RuntimeError, match="Bad checksum"):
+        utils.download_file(
+            url="http://example.com/model.bin",
+            dest_path=dest_file,
+            checksum="fake_checksum",
+            timeout=10,
+        )
+
+    # Temp file should be cleaned up
+    import os
+
+    temp_pattern = f".tmp.{os.getpid()}"
+    temp_files = list(tmp_path.glob(f"*{temp_pattern}"))
+    assert len(temp_files) == 0, f"Temp file not cleaned up: {temp_files}"
