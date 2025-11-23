@@ -43,7 +43,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.model-cache-dir.outputs.dir }}
-          key: ${{ runner.os }}-onnx-models-${{ hashFiles('iscc_sct/models_config.py') }}
+          key: ${{ runner.os }}-onnx-models-${{ hashFiles('**/models_config.py') }}
           restore-keys: |
             ${{ runner.os }}-onnx-models-
 
