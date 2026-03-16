@@ -7,7 +7,7 @@ authors = [
 ]
 license = {text = "Apache-2.0"}
 readme = "README.md"
-requires-python = ">=3.10,<=3.13"
+requires-python = ">=3.11"
 keywords = ["iscc", "text similarity", "cross lingual", "semantic similarity"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -16,10 +16,10 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Natural Language :: English",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Text Processing",
     "Topic :: Text Processing :: General",
     "Topic :: Text Processing :: Indexing",
@@ -69,8 +69,9 @@ dev = [
     "mdformat-gfm-alerts",
     "mdformat-frontmatter",
     "gradio",
-    "radon>=6.0.1",
-    "xenon>=0.9.3",
+    "radon",
+    "xenon",
+    "datasets",
 ]
 
 [project.urls]
