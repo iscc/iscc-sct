@@ -10,6 +10,13 @@ resolution-markers = [
     "python_full_version >= '3.11' and python_full_version < '3.13' and sys_platform != 'emscripten' and sys_platform != 'win32'",
     "python_full_version < '3.11'",
 ]
+conflicts = [[
+    { package = "iscc-sct", extra = "cpu" },
+    { package = "iscc-sct", extra = "gpu" },
+], [
+    { package = "iscc-sct", extra = "gpu" },
+    { package = "iscc-sct", group = "test" },
+]]
 
 [[package]]
 name = "annotated-doc"
@@ -34,9 +41,9 @@ name = "anyio"
 version = "4.13.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "exceptiongroup", marker = "python_full_version < '3.11'" },
+    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
     { name = "idna" },
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/19/14/2c5dd9f512b66549ae92767a9c7b330ae88e1932ca57876909410251fe13/anyio-4.13.0.tar.gz", hash = "sha256:334b70e641fd2221c1505b3890c69882fe4a2df910cba14d97019b90b24439dc", size = 231622, upload-time = "2026-03-24T12:59:09.671Z" }
 wheels = [
@@ -88,7 +95,7 @@ name = "blake3"
 version = "1.0.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.12'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.12' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/75/aa/abcd75e9600987a0bc6cfe9b6b2ff3f0e2cb08c170addc6e76035b5c4cb3/blake3-1.0.8.tar.gz", hash = "sha256:513cc7f0f5a7c035812604c2c852a0c1468311345573de647e310aca4ab165ba", size = 117308, upload-time = "2025-10-14T06:47:48.83Z" }
 wheels = [
@@ -289,7 +296,7 @@ name = "click"
 version = "8.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9b/98/518d8e5081007684232226f475082b30087d0f585e8457db087298259f49/click-8.4.1.tar.gz", hash = "sha256:918b5633eddf6b41c32d4f454bf0de810065c74e3f7dbf8ee5452f8be88d3e96", size = 353007, upload-time = "2026-05-22T04:08:37.769Z" }
 wheels = [
@@ -398,7 +405,7 @@ name = "exceptiongroup"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/50/79/66800aadf48771f6b62f7eb014e352e5d06856655206165d775e675a02c9/exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219", size = 30371, upload-time = "2025-11-21T23:01:54.787Z" }
 wheels = [
@@ -453,7 +460,7 @@ version = "6.17.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
-    { name = "audioop-lts", marker = "python_full_version >= '3.13'" },
+    { name = "audioop-lts", marker = "python_full_version >= '3.13' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
     { name = "brotli" },
     { name = "fastapi" },
     { name = "gradio-client" },
@@ -463,12 +470,12 @@ dependencies = [
     { name = "huggingface-hub" },
     { name = "jinja2" },
     { name = "markupsafe" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
     { name = "orjson" },
     { name = "packaging" },
-    { name = "pandas", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "pandas", version = "3.0.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "pandas", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
+    { name = "pandas", version = "3.0.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
     { name = "pillow" },
     { name = "pydantic" },
     { name = "pydub" },
@@ -595,7 +602,7 @@ dependencies = [
     { name = "click" },
     { name = "filelock" },
     { name = "fsspec" },
-    { name = "hf-xet", marker = "platform_machine == 'AMD64' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64'" },
+    { name = "hf-xet", marker = "platform_machine == 'AMD64' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
     { name = "httpx" },
     { name = "packaging" },
     { name = "pyyaml" },
@@ -635,10 +642,8 @@ dependencies = [
     { name = "certifi" },
     { name = "charset-normalizer" },
     { name = "loguru" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "onnxruntime", version = "1.24.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "onnxruntime", version = "1.26.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
     { name = "platformdirs" },
     { name = "pybase64" },
     { name = "pydantic" },
@@ -649,12 +654,16 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+cpu = [
+    { name = "onnxruntime", version = "1.24.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra == 'extra-8-iscc-sct-cpu') or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
+    { name = "onnxruntime", version = "1.26.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and extra == 'extra-8-iscc-sct-cpu') or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
+]
 demo = [
     { name = "gradio" },
 ]
 gpu = [
-    { name = "onnxruntime-gpu", version = "1.24.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "onnxruntime-gpu", version = "1.26.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "onnxruntime-gpu", version = "1.24.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
+    { name = "onnxruntime-gpu", version = "1.26.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
 ]
 
 [package.dev-dependencies]
@@ -668,6 +677,8 @@ dev = [
 ]
 test = [
     { name = "coverage" },
+    { name = "onnxruntime", version = "1.24.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra == 'extra-8-iscc-sct-cpu') or (python_full_version < '3.11' and extra != 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
+    { name = "onnxruntime", version = "1.26.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and extra == 'extra-8-iscc-sct-cpu') or (python_full_version >= '3.11' and extra != 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
     { name = "pytest" },
     { name = "pytest-cov" },
 ]
@@ -680,7 +691,7 @@ requires-dist = [
     { name = "gradio", marker = "extra == 'demo'" },
     { name = "loguru" },
     { name = "numpy" },
-    { name = "onnxruntime" },
+    { name = "onnxruntime", marker = "extra == 'cpu'" },
     { name = "onnxruntime-gpu", marker = "extra == 'gpu'" },
     { name = "platformdirs" },
     { name = "pybase64" },
@@ -690,7 +701,7 @@ requires-dist = [
     { name = "semantic-text-splitter" },
     { name = "tokenizers" },
 ]
-provides-extras = ["gpu", "demo"]
+provides-extras = ["cpu", "gpu", "demo"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -703,6 +714,7 @@ dev = [
 ]
 test = [
     { name = "coverage" },
+    { name = "onnxruntime" },
     { name = "pytest" },
     { name = "pytest-cov" },
 ]
@@ -724,8 +736,8 @@ name = "loguru"
 version = "0.7.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32'" },
-    { name = "win32-setctime", marker = "sys_platform == 'win32'" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
+    { name = "win32-setctime", marker = "sys_platform == 'win32' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/3a/05/a1dae3dffd1116099471c643b8924f5aa6524411dc6c63fdae648c4f1aca/loguru-0.7.3.tar.gz", hash = "sha256:19480589e77d47b8d85b2c827ad95d49bf31b0dcde16593892eb51dd18706eb6", size = 63559, upload-time = "2024-12-06T11:20:56.608Z" }
 wheels = [
@@ -813,7 +825,7 @@ version = "1.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "markdown-it-py" },
-    { name = "tomli", marker = "python_full_version < '3.11'" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/3f/05/32b5e14b192b0a8a309f32232c580aefedd9d06017cb8fe8fce34bec654c/mdformat-1.0.0.tar.gz", hash = "sha256:4954045fcae797c29f86d4ad879e43bb151fa55dbaf74ac6eaeacf1d45bb3928", size = 56953, upload-time = "2025-10-16T12:05:03.695Z" }
 wheels = [
@@ -1230,10 +1242,10 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "python-dateutil", marker = "python_full_version < '3.11'" },
-    { name = "pytz", marker = "python_full_version < '3.11'" },
-    { name = "tzdata", marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
+    { name = "python-dateutil", marker = "python_full_version < '3.11' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
+    { name = "pytz", marker = "python_full_version < '3.11' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
+    { name = "tzdata", marker = "python_full_version < '3.11' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/33/01/d40b85317f86cf08d853a4f495195c73815fdf205eef3993821720274518/pandas-2.3.3.tar.gz", hash = "sha256:e05e1af93b977f7eafa636d043f9f94c7ee3ac81af99c13508215942e64c993b", size = 4495223, upload-time = "2025-09-29T23:34:51.853Z" }
 wheels = [
@@ -1286,9 +1298,9 @@ resolution-markers = [
     "python_full_version >= '3.11' and python_full_version < '3.13' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 dependencies = [
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "python-dateutil", marker = "python_full_version >= '3.11'" },
-    { name = "tzdata", marker = "(python_full_version >= '3.11' and sys_platform == 'emscripten') or (python_full_version >= '3.11' and sys_platform == 'win32')" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
+    { name = "python-dateutil", marker = "python_full_version >= '3.11' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
+    { name = "tzdata", marker = "(python_full_version >= '3.11' and sys_platform == 'emscripten') or (python_full_version >= '3.11' and sys_platform == 'win32') or (sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (sys_platform != 'emscripten' and sys_platform != 'win32' and extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test') or (sys_platform == 'emscripten' and extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (sys_platform == 'emscripten' and extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test') or (sys_platform == 'win32' and extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (sys_platform == 'win32' and extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f8/87/4341c6252d1c47b08768c3d25ac487362bf403f0313ddae4a2a26c9b1b4c/pandas-3.0.3.tar.gz", hash = "sha256:696a4a00a2a2a35d4e5deb3fc946641b96c944f02230e4f76137fe35d806c4fc", size = 4651414, upload-time = "2026-05-11T18:54:29.21Z" }
 wheels = [
@@ -1432,7 +1444,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pastel" },
     { name = "pyyaml" },
-    { name = "tomli", marker = "python_full_version < '3.11'" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/3b/f5/d501fcb67e450fd3fae9db06050420c0c6043758cfa8c30ba40278211265/poethepoet-0.46.0.tar.gz", hash = "sha256:daf8469031879ef59ef0b34fdba83574d65e41eb9186e20cd0f7c89ce479b030", size = 117276, upload-time = "2026-05-15T15:52:02.548Z" }
 wheels = [
@@ -1764,7 +1776,7 @@ name = "pytest-cov"
 version = "7.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "coverage", extra = ["toml"] },
+    { name = "coverage", extra = ["toml"], marker = "extra == 'extra-8-iscc-sct-cpu' or extra != 'extra-8-iscc-sct-gpu' or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
     { name = "pluggy" },
     { name = "pytest" },
 ]
@@ -1967,7 +1979,7 @@ version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c1/37/cc24e33974e1439cf5ca62b0735b63026eabb768f472d8775f52d5851ed9/starlette-1.3.0.tar.gz", hash = "sha256:bb58cbb7a699da4ee4be9ed4cdfe4bc5b0390aa6dac1d1ac714ebebe8dc3c8df", size = 2702493, upload-time = "2026-06-11T06:27:41.869Z" }
 wheels = [
@@ -2063,7 +2075,7 @@ name = "tqdm"
 version = "4.68.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/85/05/0d5260f1f1ca784f4a4a0def9cbe6affe587f5b4025328d446c3d67765f4/tqdm-4.68.2.tar.gz", hash = "sha256:89c230e8dbc67c7615c142487111222f878c77427ea09549960f62389e258add", size = 171923, upload-time = "2026-06-09T13:26:42.539Z" }
 wheels = [
@@ -2122,7 +2134,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "h11" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'extra-8-iscc-sct-cpu' and extra == 'extra-8-iscc-sct-gpu') or (extra == 'extra-8-iscc-sct-gpu' and extra == 'group-8-iscc-sct-test')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c4/1f/fa18009dea8469069cca78a4e877a008ab78f08b064bfc9ab891579077ff/uvicorn-0.49.0.tar.gz", hash = "sha256:ebf4271aa580d9de97f93192d4595176df6e91f9aae919ca73e4fc07df1e66a3", size = 91284, upload-time = "2026-06-03T22:01:30.448Z" }
 wheels = [

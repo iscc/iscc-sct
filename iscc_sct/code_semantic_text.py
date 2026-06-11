@@ -20,13 +20,23 @@ The ISCC Text-Code Semantic is a content-based compact binary code generated fro
 """
 
 from loguru import logger as log
-from onnxruntime.capi.onnxruntime_pybind11_state import NoSuchFile
+
+try:
+    import onnxruntime as rt
+    from onnxruntime.capi.onnxruntime_pybind11_state import NoSuchFile
+except ImportError:  # pragma: no cover - depends on which extra was installed
+    raise ImportError(
+        "iscc-sct requires an ONNX runtime. Install exactly one of:\n"
+        '  pip install "iscc-sct[cpu]"  # CPU inference\n'
+        '  pip install "iscc-sct[gpu]"  # NVIDIA CUDA accelerated inference'
+    ) from None
+
+from importlib.metadata import PackageNotFoundError, distribution
 from semantic_text_splitter import TextSplitter
 from tokenizers import Tokenizer
 from pathlib import Path
 from typing import Any
 import numpy as np
-import onnxruntime as rt
 from numpy.typing import NDArray
 from functools import cache
 import iscc_sct as sct
@@ -229,6 +239,29 @@ def splitter(**options):
         )
 
 
+def warn_gpu_shadowed(available_providers):
+    # type: (list[str]) -> None
+    """
+    Warn when onnxruntime-gpu is installed but CUDA support is unavailable.
+
+    Both onnxruntime variant wheels unpack into the same directory, so installing the CPU
+    package alongside onnxruntime-gpu silently disables CUDA support.
+
+    :param available_providers: Providers reported by the installed onnxruntime build.
+    """
+    if "CUDAExecutionProvider" in available_providers:
+        return
+    try:
+        distribution("onnxruntime-gpu")
+    except PackageNotFoundError:
+        return
+    log.warning(
+        "onnxruntime-gpu is installed but CUDA support is unavailable - the onnxruntime CPU "
+        "package likely overwrote the GPU build. To fix run: pip uninstall -y onnxruntime "
+        'onnxruntime-gpu && pip install --force-reinstall "iscc-sct[gpu]"'
+    )
+
+
 @cache
 def model():
     # type: () -> rt.InferenceSession
@@ -239,9 +272,14 @@ def model():
     """
     available_onnx_providers = rt.get_available_providers()
     log.debug(f"Available ONNX providers {', '.join(available_onnx_providers)}")
+    warn_gpu_shadowed(available_onnx_providers)
     selected_onnx_providers = ["CPUExecutionProvider"]
     if "CUDAExecutionProvider" in available_onnx_providers:  # pragma: no cover
         selected_onnx_providers.insert(0, "CUDAExecutionProvider")
+        if hasattr(rt, "preload_dlls"):
+            # Load CUDA/cuDNN libraries from pip-provided nvidia wheels or the system PATH
+            # before session creation (available since onnxruntime 1.21).
+            rt.preload_dlls()
     log.debug(f"Using ONNX providers {', '.join(selected_onnx_providers)}")
     so = rt.SessionOptions()
     so.graph_optimization_level = rt.GraphOptimizationLevel.ORT_ENABLE_ALL

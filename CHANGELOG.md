@@ -2,6 +2,15 @@
 
 ## [0.2.0] - Unreleased
 
+- **BREAKING**: `onnxruntime` is no longer a base dependency — install `iscc-sct[cpu]` or
+  `iscc-sct[gpu]` instead. Previously the `[gpu]` extra was a silent no-op because the unconditional
+  CPU package shadowed `onnxruntime-gpu` (#23)
+- **BREAKING**: renamed the CLI command from `sct` to `iscc-sct` (package name = CLI command is the
+  standard across all iscc projects); enables `uvx "iscc-sct[cpu]" <file>` one-liners
+- Raise an instructive `ImportError` when no ONNX runtime is installed
+- Warn at runtime when `onnxruntime-gpu` is installed but shadowed by the CPU package
+- Call `onnxruntime.preload_dlls()` before CUDA session creation so pip-provided NVIDIA libraries
+  are found without a system-wide CUDA install
 - Migrated project tooling from Poetry to [uv](https://docs.astral.sh/uv/) (uv_build backend)
 - Generate `requirements.txt` from `uv.lock` via `poe export-requirements`
 - Include LICENSE file in built distributions via `license-files`

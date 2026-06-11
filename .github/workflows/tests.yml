@@ -30,7 +30,7 @@ jobs:
 
       - name: Check requirements.txt is in sync with uv.lock
         if: runner.os == 'Linux'
-        run: uv export --locked --no-default-groups --no-emit-project --no-hashes --no-annotate --no-header | diff - requirements.txt
+        run: uv export --locked --no-default-groups --extra cpu --no-emit-project --no-hashes --no-annotate --no-header | diff - requirements.txt
 
       - name: Get model cache directory
         id: model-cache-dir

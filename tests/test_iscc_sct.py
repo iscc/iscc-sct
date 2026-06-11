@@ -4,6 +4,7 @@ import pytest
 from blake3 import blake3
 
 import iscc_sct as sct
+from iscc_sct import code_semantic_text as cst
 from iscc_sct.code_semantic_text import (
     split_text,
     tokenize_chunks,
@@ -202,6 +203,33 @@ def test_embed_chunks():
     expected = [0.008697219, 0.038051583, 0.043976285]
     embeddings = embed_chunks(chunks)
     assert list(embeddings[0][:3]) == pytest.approx(expected, rel=1e-3)
+
+
+def capture_gpu_shadowed_warnings(providers):
+    # type: (list[str]) -> list[str]
+    """Run warn_gpu_shadowed with a capturing log sink and return emitted warnings."""
+    messages = []
+    handler_id = cst.log.add(messages.append, level="WARNING")
+    try:
+        cst.warn_gpu_shadowed(providers)
+    finally:
+        cst.log.remove(handler_id)
+    return messages
+
+
+def test_warn_gpu_shadowed_silent_with_cuda():
+    assert capture_gpu_shadowed_warnings(["CUDAExecutionProvider", "CPUExecutionProvider"]) == []
+
+
+def test_warn_gpu_shadowed_silent_without_gpu_package():
+    assert capture_gpu_shadowed_warnings(["CPUExecutionProvider"]) == []
+
+
+def test_warn_gpu_shadowed_warns_on_shadowed_install(monkeypatch):
+    monkeypatch.setattr(cst, "distribution", lambda name: object())
+    messages = capture_gpu_shadowed_warnings(["CPUExecutionProvider"])
+    assert len(messages) == 1
+    assert "CUDA support is unavailable" in messages[0]
 
 
 def test_gen_text_code_semantic(text_en):

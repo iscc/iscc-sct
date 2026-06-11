@@ -39,7 +39,6 @@ classifiers = [
 ]
 dependencies = [
     "semantic-text-splitter",
-    "onnxruntime",
     "loguru",
     "blake3",
     "platformdirs",
@@ -53,7 +52,10 @@ dependencies = [
     "pydantic",
 ]
 
+# The onnxruntime variant wheels unpack into the same site-packages directory and clobber each
+# other, so exactly one of the cpu/gpu extras must be installed (see issue #23).
 [project.optional-dependencies]
+cpu = ["onnxruntime"]
 gpu = ["onnxruntime-gpu"]
 demo = ["gradio"]
 
@@ -67,13 +69,14 @@ Twitter = "https://twitter.com/iscc_foundation"
 Donate = "https://iscc.foundation/support"
 
 [project.scripts]
-sct = "iscc_sct.cli:main"
+iscc-sct = "iscc_sct.cli:main"
 
 [dependency-groups]
 test = [
     "pytest",
     "coverage",
     "pytest-cov",
+    "onnxruntime",  # dev/test environments use CPU inference
 ]
 dev = [
     "poethepoet",
@@ -86,6 +89,10 @@ dev = [
 
 [tool.uv]
 default-groups = "all"
+conflicts = [
+    [{ extra = "cpu" }, { extra = "gpu" }],
+    [{ group = "test" }, { extra = "gpu" }],
+]
 
 [tool.uv.build-backend]
 module-root = ""
@@ -119,7 +126,7 @@ format-yml = { script = "iscc_sct.dev:format_yml", help = "Format YML files"}
 convert-lf = { script = "iscc_sct.dev:convert_lf", help = "Convert line endings to LF"}
 test = { cmd = "pytest --cov=iscc_sct --cov-fail-under=100", help = "Run tests with coverage" }
 precommit = { cmd = "uv run prek run", help = "Run prek hooks on changed files" }
-export-requirements = { cmd = "uv export --no-default-groups --no-emit-project --no-hashes --no-annotate --no-header --output-file requirements.txt", help = "Export requirements.txt from uv.lock for HF Space" }
+export-requirements = { cmd = "uv export --no-default-groups --extra cpu --no-emit-project --no-hashes --no-annotate --no-header --output-file requirements.txt", help = "Export requirements.txt from uv.lock for HF Space" }
 update-dependencies = { cmd = "uv sync --upgrade --extra demo", help = "Update dependencies" }
 all = ["format-code", "format-markdown", "format-yml", "convert-lf", "export-requirements", "test"]
 update = ["update-dependencies", "all"]

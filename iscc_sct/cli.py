@@ -7,7 +7,9 @@ from charset_normalizer import from_bytes
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate Semantic Text-Codes for text files.")
+    parser = argparse.ArgumentParser(
+        prog="iscc-sct", description="Generate Semantic Text-Codes for text files."
+    )
     parser.add_argument(
         "path",
         type=str,
@@ -37,7 +39,8 @@ def main():
             demo.launch(inbrowser=True, **launch_kwargs)
         except ImportError:
             print(
-                "Error: Gradio is not installed. Please install it with 'pip install iscc-sct[demo]' to use the GUI."
+                "Error: Gradio is not installed. Please install it with "
+                "'pip install \"iscc-sct[demo]\"' to use the GUI."
             )
         return
 

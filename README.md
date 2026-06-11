@@ -19,14 +19,17 @@ binarized document-vector text-embeddings.
 ## Quick Start
 
 ```bash
-# Install the package
-pip install iscc-sct
+# Install the package with CPU inference
+pip install "iscc-sct[cpu]"
 
 # Generate a semantic code
 python -c "import iscc_sct as sct; print(sct.create('Your text here').iscc)"
 
 # Or use the CLI
-sct "path/to/textfile.txt"
+iscc-sct "path/to/textfile.txt"
+
+# Or run the CLI directly via uvx without installation
+uvx "iscc-sct[cpu]" "path/to/textfile.txt"
 ```
 
 ## What is the ISCC
@@ -82,17 +85,24 @@ new possibilities for cross-lingual content identification and similarity detect
 
 ## Installation
 
-Ensure you have Python 3.10 or newer installed on your system. Install the library using:
+Ensure you have Python 3.10 or newer installed on your system. The package requires an ONNX runtime
+that is selected via install extras. For CPU inference (works everywhere):
 
 ```bash
-pip install iscc-sct
+pip install "iscc-sct[cpu]"
 ```
 
-For systems with GPU CUDA support, enhance performance by installing with:
+For NVIDIA CUDA accelerated inference (requires CUDA 12.x and cuDNN 9.x):
 
 ```bash
-pip install iscc-sct[gpu]
+pip install "iscc-sct[gpu]"
 ```
+
+> [!NOTE]
+> Install exactly **one** of the `cpu`/`gpu` extras. The underlying `onnxruntime` and
+> `onnxruntime-gpu` packages unpack into the same directory and overwrite each other, so installing
+> both silently disables GPU support. A plain `pip install iscc-sct` installs no ONNX runtime and
+> fails on import with instructions.
 
 ## Usage
 
@@ -169,10 +179,10 @@ distance = sct.iscc_distance(code1.iscc, code2.iscc)
 print(f"Hamming distance in bits: {distance}")
 ```
 
-The installation also provides a sct command-line tool:
+The installation also provides an iscc-sct command-line tool:
 
 ```shell
-usage: sct [-h] [-b BITS] [-g] [-d] [path]
+usage: iscc-sct [-h] [-b BITS] [-g] [-d] [path]
 
 Generate Semantic Text-Codes for text files.
 
@@ -219,8 +229,8 @@ See iscc_sct/options.py for more configuration settings.
 ## Performance Considerations
 
 - The embedding model will be downloaded on first execution
-- **CPU vs GPU**: On systems with CUDA-compatible GPUs, install with `pip install iscc-sct[gpu]` for
-  significantly faster processing.
+- **CPU vs GPU**: On systems with CUDA-compatible GPUs, install with `pip install "iscc-sct[gpu]"`
+  for significantly faster processing (~17x on large documents).
 
 ## Development and Contributing
 
@@ -265,15 +275,15 @@ To run the Gradio demo locally, you first need to install the `iscc-sct` package
 `demo` dependency:
 
 ```shell
-pip install iscc-sct[demo]
+pip install "iscc-sct[cpu,demo]"
 ```
 
 This will ensure that Gradio and other necessary dependencies for the demo are installed.
 
-After installation, you can use the `sct` command-line tool that comes with the package:
+After installation, you can use the `iscc-sct` command-line tool that comes with the package:
 
 ```shell
-sct gui
+iscc-sct gui
 ```
 
 This command will launch the Gradio interface in your default web browser, allowing you to interact
