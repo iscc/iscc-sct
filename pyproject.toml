@@ -81,6 +81,7 @@ dev = [
     "mdformat-gfm",
     "mdformat-gfm-alerts",
     "mdformat-frontmatter",
+    "prek>=0.4.4",
 ]
 
 [tool.uv]
@@ -96,6 +97,14 @@ build-backend = "uv_build"
 [tool.ruff]
 line-length = 100
 
+[tool.ruff.lint]
+# F401: imports referenced only in PEP 484 type comments are invisible to ruff
+ignore = ["F401"]
+
+[tool.ruff.lint.per-file-ignores]
+# F403: star imports intentionally re-export the public API
+"iscc_sct/__init__.py" = ["F403"]
+
 [tool.ruff.format]
 line-ending = "lf"
 
@@ -109,6 +118,7 @@ format-markdown = { cmd = "mdformat --wrap 100 --end-of-line lf README.md", help
 format-yml = { script = "iscc_sct.dev:format_yml", help = "Format YML files"}
 convert-lf = { script = "iscc_sct.dev:convert_lf", help = "Convert line endings to LF"}
 test = { cmd = "pytest --cov=iscc_sct --cov-fail-under=100", help = "Run tests with coverage" }
+precommit = { cmd = "uv run prek run", help = "Run prek hooks on changed files" }
 export-requirements = { cmd = "uv export --no-default-groups --no-emit-project --no-hashes --no-annotate --no-header --output-file requirements.txt", help = "Export requirements.txt from uv.lock for HF Space" }
 update-dependencies = { cmd = "uv sync --upgrade --extra demo", help = "Update dependencies" }
 all = ["format-code", "format-markdown", "format-yml", "convert-lf", "export-requirements", "test"]

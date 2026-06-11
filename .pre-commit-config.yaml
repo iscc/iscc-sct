@@ -1,0 +1,33 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(iscc_sct/tokenizer\.json|tests/.*\.txt)$
+      - id: check-added-large-files
+        exclude: ^(uv\.lock|iscc_sct/tokenizer\.json)$
+      - id: end-of-file-fixer
+        exclude: ^(iscc_sct/tokenizer\.json|tests/.*\.txt)$
+      - id: fix-byte-order-marker
+        exclude: ^tests/.*\.txt$
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml
+      - id: mixed-line-ending
+        args: [--fix=lf]
+        exclude: ^(iscc_sct/tokenizer\.json|tests/.*\.txt)$
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.16
+    hooks:
+      - id: ruff-format
+      - id: ruff-check
+        args: [--fix]
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 1.0.0
+    hooks:
+      - id: mdformat
+        args: [--wrap=100, --end-of-line=lf]
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-gfm-alerts
+          - mdformat-frontmatter

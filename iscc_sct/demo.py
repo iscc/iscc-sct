@@ -3,6 +3,7 @@ Gradio demo showcasing ISCC Semantic Text Code.
 """
 
 from loguru import logger as log
+import binascii
 import gradio as gr
 import iscc_sct as sct
 import textwrap
@@ -66,9 +67,6 @@ def compute_iscc_code(text1, text2, bit_length):
     code2 = sct.gen_text_code_semantic(text2, bits=bit_length)
     similarity = compare_codes(code1["iscc"], code2["iscc"], bit_length)
     return code1["iscc"], code2["iscc"], similarity
-
-
-import binascii
 
 
 def compare_codes(code_a, code_b, bits):
