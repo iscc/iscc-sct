@@ -9,3 +9,9 @@ coverage.xml
 .env
 .aider*
 datasets
+CLAUDE.md
+.claude/
+.venv
+.coverage
+.pytest_cache
+.ruff_cache

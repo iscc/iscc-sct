@@ -195,10 +195,10 @@ Text Input → Text Chunking → Embedding Generation → Vector Aggregation →
 `iscc-sct` employs the following process:
 
 1. Splits the text into overlaping chunks (using syntactically sensible breakpoints).
-2. Uses a pre-trained deep learning model for text embedding.
-3. Generates feature vectors capturing essential characteristics of the chunks.
-4. Aggregates these vectors and binarizes them to produce a Semantic Text-Code.
-5. Prefixes the binarized vector with the matching ISCC header, encodes it with base32, and adds the
+1. Uses a pre-trained deep learning model for text embedding.
+1. Generates feature vectors capturing essential characteristics of the chunks.
+1. Aggregates these vectors and binarizes them to produce a Semantic Text-Code.
+1. Prefixes the binarized vector with the matching ISCC header, encodes it with base32, and adds the
    "ISCC:" prefix.
 
 This process ensures robustness to variations and translations, enabling cross-lingual matching
@@ -225,12 +225,18 @@ See iscc_sct/options.py for more configuration settings.
 ## Development and Contributing
 
 We welcome contributions to enhance the capabilities and efficiency of this proof of concept. For
-development, install the project in development mode using [Poetry](https://python-poetry.org):
+development, install the project in development mode using [uv](https://docs.astral.sh/uv/):
 
 ```shell
 git clone https://github.com/iscc/iscc-sct.git
 cd iscc-sct
-poetry install
+uv sync --extra demo
+```
+
+Run code formatting and the test suite with:
+
+```shell
+uv run poe all
 ```
 
 If you have suggestions for improvements or bug fixes, please open an issue or pull request. For
@@ -299,8 +305,8 @@ If you use ISCC-SCT in your research, please cite:
   author = {Pan, Titusz},
   title = {ISCC-SCT: Semantic Text-Code for the International Standard Content Code},
   url = {https://github.com/iscc/iscc-sct},
-  version = {0.1.4},
-  year = {2025},
+  version = {0.2.0},
+  year = {2026},
 }
 ```
 

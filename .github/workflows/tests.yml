@@ -19,32 +19,25 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v3
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
-          poetry-version: 2.1.1
+          version: "0.11.20"
+          enable-cache: true
 
-      - name: Setup Venv
-        run: |
-          poetry config virtualenvs.create true --local
-          poetry config virtualenvs.in-project true --local
+      - name: Install Dependencies
+        run: uv sync --locked --extra demo
 
-      - name: Cache Project Dependencies
-        uses: actions/cache@v4
-        with:
-          path: ./.venv
-          key: venv-${{ hashFiles('poetry.lock') }}
+      - name: Check requirements.txt is in sync with uv.lock
+        if: runner.os == 'Linux'
+        run: uv export --locked --no-default-groups --no-emit-project --no-hashes --no-annotate --no-header | diff - requirements.txt
 
       - name: Get model cache directory
         id: model-cache-dir
-        shell: python
+        shell: bash
         run: |
-          from platformdirs import PlatformDirs
-          import os
-          cache_dir = PlatformDirs(appname='iscc-sct', appauthor='iscc').user_data_dir
-          print(f"dir={cache_dir}")
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
-              print(f"dir={cache_dir}", file=fh)
+          dir=$(uv run python -c "from iscc_sct.utils import MODEL_PATH; print(MODEL_PATH.parent)")
+          echo "dir=$dir" >> "$GITHUB_OUTPUT"
 
       - name: Cache ONNX model
         uses: actions/cache@v4
@@ -54,8 +47,5 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-onnx-model-
 
-      - name: Install Dependencies
-        run: poetry install -E demo
-
       - name: Run Tests
-        run: poetry run pytest --cov=iscc_sct --cov-report=xml -v tests
+        run: uv run pytest --cov=iscc_sct --cov-report=xml -v tests

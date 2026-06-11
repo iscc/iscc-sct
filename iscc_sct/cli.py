@@ -37,7 +37,7 @@ def main():
             demo.launch(inbrowser=True)
         except ImportError:
             print(
-                "Error: Gradio is not installed. Please install it with 'pip install gradio' to use the GUI."
+                "Error: Gradio is not installed. Please install it with 'pip install iscc-sct[demo]' to use the GUI."
             )
         return
 

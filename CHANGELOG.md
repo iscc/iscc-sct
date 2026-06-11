@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.0] - Unreleased
+
+- Migrated project tooling from Poetry to [uv](https://docs.astral.sh/uv/) (uv_build backend)
+- Generate `requirements.txt` from `uv.lock` via `poe export-requirements`
+- Include LICENSE file in built distributions via `license-files`
+- CI: pin uv version, enforce `uv sync --locked`, verify `requirements.txt` matches `uv.lock`
+- CI: derive ONNX model cache directory from `iscc_sct.utils.MODEL_PATH`
+- Updated Hugging Face Space to Gradio 5.26.0 (matches locked version)
+- Fixed `format_yml` glob pattern that only worked on Windows
+
 ## [0.1.4] - 2025-04-24
 
 - Added `bytes_offsets` option to generate UTF-8 byte positions instead of character positions
