@@ -140,7 +140,10 @@ iscc_theme = gr.themes.Default(
     radius_size=gr.themes.sizes.radius_none,
 )
 
-with gr.Blocks(css=custom_css, theme=iscc_theme) as demo:
+# Gradio 6 expects theme and css as launch() parameters - pass these at every launch site
+launch_kwargs = {"theme": iscc_theme, "css": custom_css}
+
+with gr.Blocks() as demo:
     with gr.Row(variant="panel"):
         gr.Markdown(
             """
@@ -519,4 +522,4 @@ For more information about the **ISCC** see:
         )
 
 if __name__ == "__main__":  # pragma: no cover
-    demo.launch()
+    demo.launch(**launch_kwargs)

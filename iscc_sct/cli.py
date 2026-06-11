@@ -32,9 +32,9 @@ def main():
 
     if args.path == "gui":  # pragma: no cover
         try:
-            from iscc_sct.demo import demo
+            from iscc_sct.demo import demo, launch_kwargs
 
-            demo.launch(inbrowser=True)
+            demo.launch(inbrowser=True, **launch_kwargs)
         except ImportError:
             print(
                 "Error: Gradio is not installed. Please install it with 'pip install iscc-sct[demo]' to use the GUI."
