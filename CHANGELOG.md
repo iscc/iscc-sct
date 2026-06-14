@@ -14,6 +14,9 @@
 - **BREAKING**: `onnxruntime` is no longer a base dependency — install `iscc-sct[cpu]` or
     `iscc-sct[gpu]` instead. Previously the `[gpu]` extra was a silent no-op because the
     unconditional CPU package shadowed `onnxruntime-gpu` (#23)
+- **BREAKING**: dropped Python 3.10 support and added Python 3.14 — `requires-python` is now
+    `>=3.11`. `onnxruntime` stopped shipping 3.10 wheels (last was 1.23.2) and added 3.14 wheels, so
+    the supported range tracks the runtime
 - **BREAKING**: renamed the CLI command from `sct` to `iscc-sct` (package name = CLI command is the
     standard across all iscc projects); enables `uvx "iscc-sct[cpu]" <file>` one-liners
 - Added an `iscc-sct doctor` command that diagnoses the ONNX runtime (missing, or a CPU package
@@ -29,6 +32,9 @@
 - Include LICENSE file in built distributions via `license-files`
 - CI: pin uv version, enforce `uv sync --locked`, verify `requirements.txt` matches `uv.lock`
 - CI: derive ONNX model cache directory from `iscc_sct.utils.MODEL_PATH`
+- CI: test matrix now covers Python 3.11–3.14 (dropped 3.10, added 3.14)
+- CI: added a release workflow that re-runs the full test matrix and publishes to PyPI on a
+    published GitHub Release, gated by a tag/version guard
 - Updated Hugging Face Space to Gradio 5.26.0 (matches locked version)
 - Fixed `format_yml` glob pattern that only worked on Windows
 - Updated dependencies (Gradio 6, pytest 9, pytest-cov 7, coverage 7.14)

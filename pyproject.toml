@@ -3,7 +3,7 @@ name = "iscc-sct"
 version = "0.2.0"
 description = "ISCC - Semantic Code Text"
 authors = [{ name = "Titusz", email = "tp@piscc.io" }]
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.11"
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
@@ -19,10 +19,10 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Natural Language :: English",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Text Processing",
     "Topic :: Text Processing :: General",
     "Topic :: Text Processing :: Indexing",
