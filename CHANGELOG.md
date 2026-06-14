@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.2.0] - Unreleased
+## [0.2.0] - 2026-06-14
 
 - Optimized the ONNX embedding model (`iscc-sct-v0.2.0.onnx`): the transformer graph is now fused
     offline via `onnxruntime.transformers.optimizer` (attention, embedding layer norm, skip layer
