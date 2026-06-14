@@ -1,8 +1,9 @@
 # ISCC - Semantic Text-Code
 
-[![Tests](https://github.com/iscc/iscc-sct/actions/workflows/tests.yml/badge.svg)](https://github.com/iscc/iscc-core/actions/workflows/tests.yml)
+[![Tests](https://github.com/iscc/iscc-sct/actions/workflows/tests.yml/badge.svg)](https://github.com/iscc/iscc-sct/actions/workflows/tests.yml)
 [![Version](https://img.shields.io/pypi/v/iscc-sct.svg)](https://pypi.python.org/pypi/iscc-sct/)
 [![Downloads](https://pepy.tech/badge/iscc-sct)](https://pepy.tech/project/iscc-sct)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/iscc/iscc-sct)
 
 > [!CAUTION]
 > **This is a proof of concept.** All releases with version numbers below v1.0.0 may break backward
@@ -75,13 +76,13 @@ new possibilities for cross-lingual content identification and similarity detect
 ## Key Features
 
 - **Semantic Similarity**: Utilizes deep learning models to generate codes that reflect the semantic
-  essence of text.
+    essence of text.
 - **Translation Matching**: Creates nearly identical codes for text translations, enabling
-  cross-lingual content identification.
+    cross-lingual content identification.
 - **Bit-Length Flexibility**: Supports generating codes of various bit lengths (up to 256 bits),
-  allowing for adjustable granularity in similarity detection.
+    allowing for adjustable granularity in similarity detection.
 - **ISCC Compatible**: Generates codes fully compatible with the ISCC specification, facilitating
-  seamless integration with existing ISCC-based systems.
+    seamless integration with existing ISCC-based systems.
 
 ## Installation
 
@@ -101,8 +102,15 @@ pip install "iscc-sct[gpu]"
 > [!NOTE]
 > Install exactly **one** of the `cpu`/`gpu` extras. The underlying `onnxruntime` and
 > `onnxruntime-gpu` packages unpack into the same directory and overwrite each other, so installing
-> both silently disables GPU support. A plain `pip install iscc-sct` installs no ONNX runtime and
-> fails on import with instructions.
+> both silently disables GPU support. A plain `pip install iscc-sct` installs no ONNX runtime; the
+> first code generation then fails with install instructions.
+
+Not sure which extra to install, or seeing a GPU that won't engage? Run the built-in check — it
+inspects your environment and, on confirmation, installs the right runtime:
+
+```shell
+iscc-sct doctor
+```
 
 ## Usage
 
@@ -182,18 +190,20 @@ print(f"Hamming distance in bits: {distance}")
 The installation also provides an iscc-sct command-line tool:
 
 ```shell
-usage: iscc-sct [-h] [-b BITS] [-g] [-d] [path]
+usage: iscc-sct [-h] [-b BITS] [-g] [-d] [-y] [path]
 
 Generate Semantic Text-Codes for text files.
 
 positional arguments:
-  path                  Path to text files (supports glob patterns) or 'gui' to launch Gradio demo.
+  path             Path to text files (glob patterns), 'doctor' to check the
+                   ONNX runtime, or 'gui' for the demo.
 
 options:
-  -h, --help            show this help message and exit
-  -b BITS, --bits BITS  Bit-Length of Code (default 256)
-  -g, --granular        Activate granular processing.
-  -d, --debug           Show debugging messages.
+  -h, --help       show this help message and exit
+  -b, --bits BITS  Bit-Length of Code (default 256)
+  -g, --granular   Activate granular processing.
+  -d, --debug      Show debugging messages.
+  -y, --yes        Auto-confirm the 'doctor' runtime install.
 ```
 
 ## How It Works
@@ -209,7 +219,7 @@ Text Input → Text Chunking → Embedding Generation → Vector Aggregation →
 1. Generates feature vectors capturing essential characteristics of the chunks.
 1. Aggregates these vectors and binarizes them to produce a Semantic Text-Code.
 1. Prefixes the binarized vector with the matching ISCC header, encodes it with base32, and adds the
-   "ISCC:" prefix.
+    "ISCC:" prefix.
 
 This process ensures robustness to variations and translations, enabling cross-lingual matching
 based on a short Simprint.
@@ -230,7 +240,7 @@ See iscc_sct/options.py for more configuration settings.
 
 - The embedding model will be downloaded on first execution
 - **CPU vs GPU**: On systems with CUDA-compatible GPUs, install with `pip install "iscc-sct[gpu]"`
-  for significantly faster processing (~17x on large documents).
+    for significantly faster processing (~17x on large documents).
 
 ## Development and Contributing
 
@@ -296,7 +306,7 @@ with the demo on your local machine.
 - Performance may vary across different language pairs.
 - The model size is approximately 450MB, which may impact initial loading time.
 
-## Suported Languages
+## Supported Languages
 
 Arabic, Armenian, Bengali, Bosnian, Bulgarian, Burmese, Catalan, Chinese (China), Chinese (Taiwan),
 Croatian, Czech, Danish, Dutch, English, Estonian, Farsi, Finnish, French, French (Canada),
@@ -348,4 +358,4 @@ higher-order granular simprints based on larger chunks of text.
 
 - Text Chunking: [text-splitter](https://github.com/benbrandt/text-splitter)
 - Text Embeddings:
-  [Sentence-Transformers](https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2)
+    [Sentence-Transformers](https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2)

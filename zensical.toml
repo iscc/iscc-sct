@@ -1,0 +1,126 @@
+[project]
+site_name = "iscc-sct"
+site_description = "Cross-lingual, similarity-preserving semantic ISCC code for text content."
+site_author = "Titusz Pan"
+site_url = "https://sct.iscc.codes/"
+repo_url = "https://github.com/iscc/iscc-sct"
+repo_name = "iscc/iscc-sct"
+copyright = "Copyright &copy; 2024-2026 ISCC Foundation"
+extra_css = ["stylesheets/extra.css"]
+extra_javascript = [
+    { path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js", async = true },
+    "https://iscc.ai/copilot/index.js",
+    "javascripts/copilot.js",
+    "javascripts/copypage.js",
+]
+
+nav = [
+    "index.md",
+    { "Tutorials" = [
+        "tutorials/getting-started.md",
+    ]},
+    { "How-to guides" = [
+        "howto/compare-texts.md",
+        "howto/granular-features.md",
+        "howto/configuration.md",
+        "howto/command-line.md",
+    ]},
+    { "Explanation" = [
+        "explanation/how-it-works.md",
+    ]},
+    { "Reference" = [
+        "reference/api.md",
+        "reference/for-coding-agents.md",
+    ]},
+]
+
+[project.theme]
+language = "en"
+custom_dir = "docs/overrides"
+logo = "assets/logo_light.png"
+favicon = "assets/favicon.png"
+features = [
+    "content.code.annotate",
+    "content.code.copy",
+    "content.tooltips",
+    "header.autohide",
+    "navigation.expand",
+    "navigation.footer",
+    "navigation.sections",
+    "navigation.top",
+    "navigation.tracking",
+    "search.highlight",
+    "toc.follow",
+]
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+toggle = { icon = "lucide/sun", name = "Switch to dark mode" }
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+toggle = { icon = "lucide/moon", name = "Switch to light mode" }
+
+[project.plugins.mkdocstrings]
+enabled = true
+
+[project.plugins.mkdocstrings.handlers.python]
+paths = ["."]
+
+[project.plugins.mkdocstrings.handlers.python.options]
+docstring_style = "sphinx"
+show_source = false
+show_root_heading = true
+show_root_full_path = false
+members_order = "source"
+heading_level = 2
+merge_init_into_class = true
+show_signature_annotations = true
+separate_signature = true
+
+[project.markdown_extensions]
+abbr = {}
+admonition = {}
+attr_list = {}
+def_list = {}
+footnotes = {}
+md_in_html = {}
+
+[project.markdown_extensions.toc]
+permalink = true
+
+[project.markdown_extensions.pymdownx]
+betterem = {}
+caret = {}
+details = {}
+inlinehilite = {}
+keys = {}
+magiclink = {}
+mark = {}
+smartsymbols = {}
+tasklist = { custom_checkbox = true }
+tilde = {}
+
+[project.markdown_extensions.pymdownx.emoji]
+emoji_generator = "zensical.extensions.emoji.to_svg"
+emoji_index = "zensical.extensions.emoji.twemoji"
+
+[project.markdown_extensions.pymdownx.arithmatex]
+generic = true
+
+[project.markdown_extensions.pymdownx.highlight]
+anchor_linenums = true
+line_spans = "__span"
+pygments_lang_class = true
+
+[project.markdown_extensions.pymdownx.superfences]
+custom_fences = [{ name = "mermaid", class = "mermaid" }]
+
+[project.markdown_extensions.pymdownx.tabbed]
+alternate_style = true
+combine_header_slug = true
+
+[project.markdown_extensions.pymdownx.snippets]
+auto_append = ["docs/includes/abbreviations.md"]

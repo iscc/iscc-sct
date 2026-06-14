@@ -180,6 +180,73 @@ def test_split_text_override_byte_offsets():
     ]
 
 
+def test_count_nonpad_ids_without_padding():
+    assert cst.count_nonpad_ids([5, 6, 7], None) == 3
+
+
+def test_count_nonpad_ids_skips_padding():
+    assert cst.count_nonpad_ids([1, 1, 5, 6, 1, 1], 1) == 2
+    assert cst.count_nonpad_ids([5, 6, 7], 1) == 3
+    assert cst.count_nonpad_ids([1, 1, 1], 1) == 0
+
+
+def test_token_count_matches_guarded_for_small_text():
+    text = "Ein kurzer deutscher Satz mit Umlauten: äöüß."
+    assert cst.token_count_guarded(text, 127) == cst.token_count(text)
+
+
+def test_token_count_guarded_short_circuits_oversized_text():
+    text = "Viele kleine Wörter ergeben einen sehr langen Text. " * 100
+    guarded = cst.token_count_guarded(text, 127)
+    assert guarded > 127
+    assert cst.token_count(text) > 127
+
+
+def test_token_count_guarded_falls_back_on_sparse_prefix():
+    # Prefix probe stays below max_tokens, forcing exact full tokenization
+    text = "a" + " " * 2000 + "b" * 2000
+    assert cst.token_count_guarded(text, 127) == cst.token_count(text)
+
+
+def test_token_count_guarded_short_circuits_unicode_whitespace():
+    # NBSP-separated words are tokenizer word boundaries (WhitespaceSplit), so the guard must
+    # short-circuit on them instead of falling back to full tokenization (issue #24 PDF whitespace).
+    text = chr(0xA0).join(["wort"] * 4000)  # NBSP-separated words
+    guarded = cst.token_count_guarded(text, 127)
+    # The overestimate path returns prefix_count + tail-chars, strictly above the exact count;
+    # a fallback would instead return exactly token_count(text).
+    assert guarded > cst.token_count(text)
+
+
+def test_needs_split_guard_paragraph_gap():
+    # Large gap from the start to the next paragraph separator routes to the guarded splitter.
+    assert cst.needs_split_guard("x" * 20000 + "\n\nEnde.") is True
+
+
+def test_needs_split_guard_newline_free_span():
+    # A giant span with no newline at all (one long paragraph) also blows up the native sizer.
+    assert cst.needs_split_guard("word " * 4000) is True
+
+
+def test_needs_split_guard_long_line_before_newline():
+    # A >8K separator-free span before the first single newline is enough to route to guarded.
+    assert cst.needs_split_guard("word " * 4000 + "\nrest") is True
+
+
+def test_needs_split_guard_trailing_separator_free_span():
+    # Early paragraph break then a long separator-free tail (missed by the paragraph-level scan).
+    assert cst.needs_split_guard("Intro.\n\n" + "word " * 4000) is True
+
+
+def test_needs_split_guard_dense_newlines_is_false():
+    # Dense single newlines bound the probes; no oversized span -> normal splitter.
+    assert cst.needs_split_guard("line\n" * 4000) is False
+
+
+def test_needs_split_guard_short_text_is_false():
+    assert cst.needs_split_guard("A short paragraph.\n\nAnother one.") is False
+
+
 def test_tokenize_chunks():
     chunks = ["Hello World", "These are chunks"]
     result = tokenize_chunks(chunks)

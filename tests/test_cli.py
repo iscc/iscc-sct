@@ -74,3 +74,11 @@ def test_cli_debug_mode(sample_text_file):
     )
     assert result.returncode == 0
     assert "DEBUG" in result.stderr
+
+
+def test_cli_doctor():
+    # The test environment has a working CPU runtime, so doctor reports OK and exits cleanly
+    # without prompting (no stdin, no pip call).
+    result = subprocess.run([*get_sct_command(), "doctor"], capture_output=True, text=True)
+    assert result.returncode == 0
+    assert "ONNX runtime" in result.stdout

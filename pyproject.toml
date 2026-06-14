@@ -81,10 +81,11 @@ test = [
 dev = [
     "poethepoet",
     "ruff",
-    "mdformat-gfm",
+    "mdformat-mkdocs[recommended]",
     "mdformat-gfm-alerts",
-    "mdformat-frontmatter",
     "prek>=0.4.4",
+    "zensical>=0.0.21",
+    "mkdocstrings-python>=1.16.0",
 ]
 
 [tool.uv]
@@ -121,10 +122,23 @@ patch = ["subprocess"]
 
 [tool.poe.tasks]
 format-code = { cmd = "ruff format", help = "Code style formating with ruff" }
-format-markdown = { cmd = "mdformat --wrap 100 --end-of-line lf README.md", help = "Markdown formating with mdformat" }
+format-markdown = { cmd = "mdformat --wrap 100 --end-of-line lf --exclude docs/reference/api.md README.md CHANGELOG.md docs", help = "Markdown formating with mdformat" }
 format-yml = { script = "iscc_sct.dev:format_yml", help = "Format YML files"}
 convert-lf = { script = "iscc_sct.dev:convert_lf", help = "Convert line endings to LF"}
-test = { cmd = "pytest --cov=iscc_sct --cov-fail-under=100", help = "Run tests with coverage" }
+# Erase any stale .coverage.* parallel data files left by an aborted run before measuring, so the
+# 100% gate never inherits orphaned subprocess data (patch=["subprocess"]) and report a spurious
+# <100% (issue: leftover .coverage.GOLEM.pid* files + failing coverage gate).
+test.sequence = [
+    { cmd = "coverage erase" },
+    { cmd = "pytest --cov=iscc_sct --cov-fail-under=100" },
+]
+test.help = "Run tests with coverage"
+docs-serve = { cmd = "zensical serve", help = "Serve the documentation site locally" }
+docs-build.sequence = [
+    { cmd = "zensical build" },
+    { cmd = "python scripts/gen_llms_full.py" },
+]
+docs-build.help = "Build the docs site and generate llms-full.txt"
 precommit = { cmd = "uv run prek run", help = "Run prek hooks on changed files" }
 export-requirements = { cmd = "uv export --no-default-groups --extra cpu --no-emit-project --no-hashes --no-annotate --no-header --output-file requirements.txt", help = "Export requirements.txt from uv.lock for HF Space" }
 update-dependencies = { cmd = "uv sync --upgrade --extra demo", help = "Update dependencies" }

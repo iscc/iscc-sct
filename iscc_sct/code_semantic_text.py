@@ -21,16 +21,6 @@ The ISCC Text-Code Semantic is a content-based compact binary code generated fro
 
 from loguru import logger as log
 
-try:
-    import onnxruntime as rt
-    from onnxruntime.capi.onnxruntime_pybind11_state import NoSuchFile
-except ImportError:  # pragma: no cover - depends on which extra was installed
-    raise ImportError(
-        "iscc-sct requires an ONNX runtime. Install exactly one of:\n"
-        '  pip install "iscc-sct[cpu]"  # CPU inference\n'
-        '  pip install "iscc-sct[gpu]"  # NVIDIA CUDA accelerated inference'
-    ) from None
-
 from importlib.metadata import PackageNotFoundError, distribution
 from semantic_text_splitter import TextSplitter
 from tokenizers import Tokenizer
@@ -38,7 +28,8 @@ from pathlib import Path
 from typing import Any
 import numpy as np
 from numpy.typing import NDArray
-from functools import cache
+from functools import cache, partial
+import re
 import iscc_sct as sct
 
 
@@ -69,6 +60,21 @@ MAINTYPE = "0001"  # SEMANTIC
 SUBTYPE = "0000"  # TEXT
 SCT_VERSION = "0000"  # V0
 
+# Newline runs that can act as paragraph-level split boundaries (2+ newline characters)
+NEWLINE_RUNS = re.compile(r"[\r\n]{2,}")
+
+# A single newline character - used by needs_split_guard to find separator-free spans
+NEWLINE = re.compile(r"[\r\n]")
+
+# Any Unicode whitespace - used by token_count_guarded to find a tokenizer word boundary.
+# The tokenizer's WhitespaceSplit pre-tokenizer splits on Unicode whitespace (not just ASCII),
+# so the prefix cut must match that to short-circuit NBSP/em-space/form-feed PDF text.
+WHITESPACE = re.compile(r"\s")
+
+# Max distance (chars) from any position to the next paragraph-level separator before
+# chunking switches to the guarded splitter (see needs_split_guard)
+SPLIT_GUARD_GAP = 8192
+
 
 def code_text_semantic(fp, **options):
     # type: (Path|str, Any) -> dict[str, Any]
@@ -76,22 +82,23 @@ def code_text_semantic(fp, **options):
     Generate ISCC Semantic-Code Text from a text file.
 
     NOTE:
-        If you enable generating granular features with `features=True` those features will have
-        the same bit-length as the generated ISCC-UNIT.
+        Enable granular features with `simprints=True`. Their length is set by `bits_granular`
+        (default 64) and is independent of the document `bits`.
 
     :param fp: File path of a plaintext file to process
-    :param options: Custom processing options for overriding global options
-    :key bits (int): Length of generated Semantic Text-Code in bits (default 64)
-    :key characters (bool): Return document character count (default True).
-    :key embedding (bool): Return global document embedding (default False).
-    :key precision (int): Max fractional digits for embeddings (default 8).
-    :key simprints (bool): Return granular document features (default False).
-    :key offsets (bool): Return character offsets for granular features (default False).
-    :key sizes (bool): Include sizes of granular features (number of chars, default False).
-    :key contents (bool): Return text chunks (default False).
-    :key max_tokens (int): Max tokens per chunk (default 127).
-    :key overlap (int): Max tokens allowed to overlap between chunks (default 48).
-    :key trim (int): Trim whitespace from chunks (default False).
+    :param options: Custom processing options for overriding global options. Recognized keys:
+
+        - ``bits`` (int): Length of generated Semantic Text-Code in bits (default 64).
+        - ``characters`` (bool): Return document character count (default True).
+        - ``embedding`` (bool): Return global document embedding (default False).
+        - ``precision`` (int): Max fractional digits for embeddings (default 8).
+        - ``simprints`` (bool): Return granular document features (default False).
+        - ``offsets`` (bool): Return character offsets for granular features (default False).
+        - ``sizes`` (bool): Include sizes of granular features in chars (default False).
+        - ``contents`` (bool): Return text chunks (default False).
+        - ``max_tokens`` (int): Max tokens per chunk (default 127).
+        - ``overlap`` (int): Max tokens allowed to overlap between chunks (default 48).
+        - ``trim`` (bool): Trim whitespace from chunks (default False).
     :return: Dict with ISCC processing results
     """
     fp = Path(fp)
@@ -103,19 +110,20 @@ def gen_text_code_semantic(text, **options):
     """
     Create an ISCC Semantic-Code Text from plaintext.
 
-    :param str text: Plaint text for ISCC processing
-    :param options: Custom processing options for overriding global options
-    :key bits (int): Length of generated Semantic Text-Code in bits (default 64)
-    :key characters (bool): Return document character count (default True).
-    :key embedding (bool): Return global document embedding (default False).
-    :key precision (int): Max fractional digits for embeddings (default 8).
-    :key simprints (bool): Return granular document features (default False).
-    :key offsets (bool): Return character offsets for granular features (default False).
-    :key sizes (bool): Include sizes of granular features (number of chars, default False).
-    :key contents (bool): Return text chunks (default False).
-    :key max_tokens (int): Max tokens per chunk (default 127).
-    :key overlap (int): Max tokens allowed overlapping between chunks (default 48).
-    :key trim (int): Trim whitespace from chunks (default False).
+    :param str text: Plain text for ISCC processing
+    :param options: Custom processing options for overriding global options. Recognized keys:
+
+        - ``bits`` (int): Length of generated Semantic Text-Code in bits (default 64).
+        - ``characters`` (bool): Return document character count (default True).
+        - ``embedding`` (bool): Return global document embedding (default False).
+        - ``precision`` (int): Max fractional digits for embeddings (default 8).
+        - ``simprints`` (bool): Return granular document features (default False).
+        - ``offsets`` (bool): Return character offsets for granular features (default False).
+        - ``sizes`` (bool): Include sizes of granular features in chars (default False).
+        - ``contents`` (bool): Return text chunks (default False).
+        - ``max_tokens`` (int): Max tokens per chunk (default 127).
+        - ``overlap`` (int): Max tokens allowed overlapping between chunks (default 48).
+        - ``trim`` (bool): Trim whitespace from chunks (default False).
     :return: Dict with ISCC processing results (using Index-Format for granular features)
     """
 
@@ -175,7 +183,7 @@ def gen_text_code_semantic(text, **options):
 
 def soft_hash_text_semantic(text):
     # type: (str) -> bytes
-    """Creates a 256-bit semantic similarity-preserving hash for text input."""
+    """Create a similarity-preserving hash for text as the full binarized document embedding (384 bits)."""
     chunks = [item[1] for item in split_text(text)]
     embeddings = embed_chunks(chunks)
     embedding = mean_pooling(embeddings)
@@ -196,7 +204,8 @@ def split_text(text, **options):
     :return: A list of offset, chunk tuples [(offset, chunk), ...]
     """
     opts = sct.sct_opts.override(options)
-    chunks = splitter(**opts.model_dump()).chunk_indices(text)
+    select = splitter_guarded if needs_split_guard(text) else splitter
+    chunks = select(**opts.model_dump()).chunk_indices(text)
 
     if not opts.byte_offsets:
         return chunks
@@ -239,6 +248,149 @@ def splitter(**options):
         )
 
 
+@cache
+def splitter_guarded(**options):
+    # type: (Any) -> TextSplitter
+    """
+    Load and cache a text splitter that sizes chunks via a guarded Python callback.
+
+    Produces chunks identical to splitter() but avoids the super-linear cost of sizing huge
+    probe texts on inputs without regular paragraph separators (see needs_split_guard).
+
+    :param options: Custom processing options for overriding global options
+    :key max_tokens (int): Max tokens per chunk (default 127).
+    :key overlap (int): Max tokens allowed overlapping between chunks (default 48).
+    :key trim (int): Trim whitespace from chunks (default False).
+    :return: An instance of TextSplitter.
+    """
+    opts = sct.sct_opts.override(options)
+    sizer = partial(token_count_guarded, max_tokens=opts.max_tokens)
+    with sct.timer("TEXTSPLITTER load time"):
+        return TextSplitter.from_callback(
+            sizer, capacity=opts.max_tokens, overlap=opts.overlap, trim=opts.trim
+        )
+
+
+def needs_split_guard(text):
+    # type: (str) -> bool
+    """
+    Detect text where tokenizer-based chunking degrades to super-linear runtime.
+
+    For every chunk, the text-splitter sizes the text from the current position up to the
+    next separator of each newline level present in the remaining text. If some position is
+    more than SPLIT_GUARD_GAP characters away from the next separator of a level, those
+    probes tokenize huge strings and chunking time grows quadratically with the gap size
+    (issue #24, typical for text extracted from print-layout PDFs).
+
+    The same blow-up occurs across any span containing no newline at all (a giant single
+    paragraph, or a trailing separator-free run), so those are flagged as well.
+
+    :param text: Text to analyze.
+    :return: True if the guarded splitter should be used for this text.
+    """
+    runs = []
+    for match in NEWLINE_RUNS.finditer(text):
+        run = match.group()
+        level = len(run) - run.count("\r\n")  # number of newline graphemes in the run
+        if level >= 2:
+            runs.append((level, match.start(), match.end()))
+    for min_level in sorted({level for level, _, _ in runs}):
+        pos = 0
+        for level, start, end in runs:
+            if level < min_level:
+                continue
+            if start - pos > SPLIT_GUARD_GAP:
+                return True
+            pos = end
+    # A span containing no newline at all blows up the native sizer the same way: with no
+    # line- or paragraph-level separator to bound the probes, sizing reaches toward a distant
+    # or absent coarse separator. Catches giant single paragraphs and trailing separator-free
+    # runs that the paragraph-level scan above does not see.
+    pos = 0
+    for match in NEWLINE.finditer(text):
+        if match.start() - pos > SPLIT_GUARD_GAP:
+            return True
+        pos = match.end()
+    return len(text) - pos > SPLIT_GUARD_GAP
+
+
+def count_nonpad_ids(ids, pad_id):
+    # type: (list[int], int|None) -> int
+    """
+    Count token ids skipping padding tokens at either end.
+
+    Replicates the counting of text-splitter's Hugging Face chunk sizer: skip padding at the
+    start, then count until the first padding token.
+
+    :param ids: Token ids of an encoding.
+    :param pad_id: Id of the padding token or None if padding is disabled.
+    :return: Number of non-padding tokens.
+    """
+    if pad_id is None:
+        return len(ids)
+    start = 0
+    while start < len(ids) and ids[start] == pad_id:
+        start += 1
+    count = 0
+    for token_id in ids[start:]:
+        if token_id == pad_id:
+            break
+        count += 1
+    return count
+
+
+def token_count(text):
+    # type: (str) -> int
+    """
+    Count tokens exactly like text-splitter's Hugging Face tokenizer chunk sizer.
+
+    Encodes without special tokens and sums non-padding tokens across the main encoding and
+    all overflowing encodings produced by tokenizer truncation.
+
+    :param text: Text to size.
+    :return: Number of tokens.
+    """
+    tok = tokenizer()
+    padding = tok.padding
+    pad_id = padding["pad_id"] if padding else None
+    total = 0
+    stack = [tok.encode(text, add_special_tokens=False)]
+    while stack:
+        encoding = stack.pop()
+        total += count_nonpad_ids(encoding.ids, pad_id)
+        stack.extend(encoding.overflowing)
+    return total
+
+
+def token_count_guarded(text, max_tokens):
+    # type: (str, int) -> int
+    """
+    Count tokens with a short-circuit for texts far larger than the chunk capacity.
+
+    For long texts, tokenize only a prefix that ends at a Unicode whitespace boundary. The
+    tokenizer pre-splits on whitespace (WhitespaceSplit + Metaspace), so the full text has at
+    least as many tokens as that prefix. If the prefix alone exceeds max_tokens, full
+    tokenization is skipped - the splitter only needs to know that the text is too big for one
+    chunk. The returned overestimate stays above max_tokens and grows with text length, so all
+    chunk capacity comparisons behave exactly as with real token counts.
+
+    :param text: Text to size.
+    :param max_tokens: Chunk capacity the splitter validates against.
+    :return: Number of tokens (exact, or an overestimate for oversized texts).
+    """
+    probe_chars = max_tokens * 10
+    if len(text) > probe_chars * 2:
+        window = text[:probe_chars]
+        cut = -1
+        for match in WHITESPACE.finditer(window):
+            cut = match.start()
+        if cut > 0:
+            prefix_count = token_count(text[:cut])
+            if prefix_count > max_tokens:
+                return prefix_count + len(text) - cut
+    return token_count(text)
+
+
 def warn_gpu_shadowed(available_providers):
     # type: (list[str]) -> None
     """
@@ -262,14 +414,43 @@ def warn_gpu_shadowed(available_providers):
     )
 
 
+ONNX_RUNTIME_MISSING = (
+    "iscc-sct requires an ONNX runtime. Install exactly one of:\n"
+    '  pip install "iscc-sct[cpu]"  # CPU inference\n'
+    '  pip install "iscc-sct[gpu]"  # NVIDIA CUDA accelerated inference'
+)
+
+
+def load_onnxruntime():
+    # type: () -> Any
+    """
+    Import and return the onnxruntime module.
+
+    The ONNX runtime is an optional dependency selected via the mutually exclusive cpu/gpu
+    extras, so the import is deferred until a model is actually needed. This lets the rest of
+    the package - and the `iscc-sct doctor` command - load without a runtime installed.
+
+    :return: The imported onnxruntime module.
+    :raises ImportError: If no ONNX runtime is installed.
+    """
+    try:
+        import onnxruntime as rt
+    except ImportError:  # pragma: no cover - exercised only without a runtime extra
+        raise ImportError(ONNX_RUNTIME_MISSING) from None
+    return rt
+
+
 @cache
 def model():
-    # type: () -> rt.InferenceSession
+    # type: () -> Any
     """
     Load and cache the ONNX inference model from a specified path.
 
-    :return: An ONNX inference session.
+    :return: An ONNX inference session (onnxruntime.InferenceSession).
     """
+    rt = load_onnxruntime()
+    from onnxruntime.capi.onnxruntime_pybind11_state import NoSuchFile
+
     available_onnx_providers = rt.get_available_providers()
     log.debug(f"Available ONNX providers {', '.join(available_onnx_providers)}")
     warn_gpu_shadowed(available_onnx_providers)

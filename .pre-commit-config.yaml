@@ -27,7 +27,10 @@ repos:
     hooks:
       - id: mdformat
         args: [--wrap=100, --end-of-line=lf]
+        # api.md uses mkdocstrings ::: directives that mdformat would collapse and break.
+        exclude: ^docs/reference/api\.md$
         additional_dependencies:
-          - mdformat-gfm
+          # mdformat-mkdocs[recommended] bundles mdformat-gfm and frontmatter support and adds
+          # mkdocs admonition handling (!!!/???); gfm-alerts keeps the README's GitHub alerts
+          - "mdformat-mkdocs[recommended]"
           - mdformat-gfm-alerts
-          - mdformat-frontmatter

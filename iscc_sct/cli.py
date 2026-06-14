@@ -1,5 +1,6 @@
 import argparse
 import glob
+import sys
 from pathlib import Path
 from loguru import logger
 from iscc_sct.main import create
@@ -13,7 +14,7 @@ def main():
     parser.add_argument(
         "path",
         type=str,
-        help="Path to text files (supports glob patterns) or 'gui' to launch Gradio demo.",
+        help="Path to text files (glob patterns), 'doctor' to check the ONNX runtime, or 'gui' for the demo.",
         nargs="?",
     )
     parser.add_argument(
@@ -23,6 +24,9 @@ def main():
         "-g", "--granular", action="store_true", help="Activate granular processing."
     )
     parser.add_argument("-d", "--debug", action="store_true", help="Show debugging messages.")
+    parser.add_argument(
+        "-y", "--yes", action="store_true", help="Auto-confirm the 'doctor' runtime install."
+    )
     args = parser.parse_args()
 
     if args.path is None:
@@ -43,6 +47,11 @@ def main():
                 "'pip install \"iscc-sct[demo]\"' to use the GUI."
             )
         return
+
+    if args.path == "doctor":
+        from iscc_sct.doctor import run_doctor
+
+        return run_doctor(assume_yes=args.yes)
 
     for path in glob.glob(args.path):
         path = Path(path)
@@ -71,4 +80,4 @@ def main():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    main()
+    sys.exit(main())

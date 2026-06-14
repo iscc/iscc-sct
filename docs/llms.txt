@@ -1,0 +1,20 @@
+# iscc-sct
+
+> Cross-lingual, similarity-preserving semantic ISCC code for text content.
+
+iscc-sct generates the ISCC Semantic Text-Code: a compact binary code derived from multilingual
+text embeddings. Semantically similar texts - including translations - produce codes with low
+hamming distance, enabling cross-lingual similarity detection and near-duplicate matching.
+
+This is an experimental proof of concept and not part of the ISO 24138:2024 standard.
+
+Install: `pip install "iscc-sct[cpu]"`
+
+- [Source code](https://github.com/iscc/iscc-sct)
+- [PyPI](https://pypi.org/project/iscc-sct/)
+- [Full documentation](https://sct.iscc.codes/llms-full.txt)
+
+## Reference
+
+- [For Coding Agents](https://sct.iscc.codes/reference/for-coding-agents.md): Dense architecture
+  map, constraints, and task recipes for AI coding agents working on this codebase.

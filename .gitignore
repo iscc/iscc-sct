@@ -5,6 +5,7 @@ site
 *.egg-info
 __pycache__
 .coverage
+.coverage.*
 coverage.xml
 .env
 .aider*
@@ -12,6 +13,5 @@ datasets
 CLAUDE.md
 .claude/
 .venv
-.coverage
 .pytest_cache
 .ruff_cache
