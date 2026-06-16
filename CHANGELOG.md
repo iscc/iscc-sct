@@ -1,5 +1,22 @@
 # Changelog
 
+## [Unreleased]
+
+- Disabled truncation on the tokenizer used for chunk sizing (new `chunking_tokenizer()`, separate
+    from the embedding `tokenizer()`). The vendored tokenizer truncates to 128 tokens, which made
+    the `tokenizers` >=0.23 chunk sizer emit one overflow encoding per 128 tokens, so sizing a large
+    probe string cost O(length) — the dominant cause of the issue #24 super-linear chunking. Sizing
+    the full text yields identical token counts and therefore identical chunk boundaries (verified
+    against `tests/chunking_vectors.json`) and unchanged ISCC codes, while further reducing the
+    guarded worst-case chunking time for PDF-extracted text. The token sizer is simplified
+    accordingly (no overflow summing; `count_nonpad_ids` removed)
+- Updated `semantic-text-splitter` to `>=0.32.0`, which adds the upstream "avoid sizing whole
+    distant split sections" fix (benbrandt/text-splitter#1184) and releases the GIL during native
+    chunking. The upstream fix probes lower-level semantic boundaries, so it speeds up texts with
+    distant but present separators; it does **not** cover spans with no intermediate separator at
+    all (the issue #24 PDF shape and spaceless CJK), where native chunking stays super-linear, so
+    the chunking guard is retained
+
 ## [0.2.0] - 2026-06-14
 
 - Optimized the ONNX embedding model (`iscc-sct-v0.2.0.onnx`): the transformer graph is now fused

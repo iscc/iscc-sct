@@ -180,14 +180,14 @@ def test_split_text_override_byte_offsets():
     ]
 
 
-def test_count_nonpad_ids_without_padding():
-    assert cst.count_nonpad_ids([5, 6, 7], None) == 3
-
-
-def test_count_nonpad_ids_skips_padding():
-    assert cst.count_nonpad_ids([1, 1, 5, 6, 1, 1], 1) == 2
-    assert cst.count_nonpad_ids([5, 6, 7], 1) == 3
-    assert cst.count_nonpad_ids([1, 1, 1], 1) == 0
+def test_chunking_tokenizer_disables_truncation_and_padding():
+    # The sizing tokenizer must not truncate/pad: truncation makes the HF chunk sizer emit
+    # overflow encodings and degrades chunking to super-linear runtime (issue #24). The
+    # embedding tokenizer must keep truncation so ISCC codes stay unchanged.
+    chunking = cst.chunking_tokenizer()
+    assert chunking.truncation is None
+    assert chunking.padding is None
+    assert cst.tokenizer().truncation is not None
 
 
 def test_token_count_matches_guarded_for_small_text():

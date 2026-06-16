@@ -15,18 +15,18 @@ SEMANTIC, SubType TEXT). It is an experimental proof of concept, **not** part of
 
 ### File layout
 
-| Path                                  | Contains                                                                                                                                                                                                                      |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `iscc_sct/main.py`                    | `create()` - high-level API; returns a `Metadata` object in Object-Format.                                                                                                                                                    |
-| `iscc_sct/code_semantic_text.py`      | Core algorithm. `gen_text_code_semantic()` (returns a plain dict, Index-Format), splitting, embedding, pooling, binarization. Module-level `@cache` singletons: `tokenizer()`, `splitter()`, `splitter_guarded()`, `model()`. |
-| `iscc_sct/models.py`                  | Pydantic schema: `Feature`, `FeatureSet`, `Metadata` + format converters.                                                                                                                                                     |
-| `iscc_sct/options.py`                 | `SctOptions` (pydantic-settings), `sct_opts` singleton, `.override()`.                                                                                                                                                        |
-| `iscc_sct/utils.py`                   | Codecs (base32/base64url), distances, model download + blake3 integrity, `char_to_byte_offsets`, `MODEL_PATH`, `timer`.                                                                                                       |
-| `iscc_sct/cli.py`                     | `iscc-sct` console entry point (`main()`): glob, charset detection, `gui` subcommand.                                                                                                                                         |
-| `iscc_sct/demo.py`, `iscc_sct/app.py` | Gradio demo (Hugging Face Space). Omitted from coverage.                                                                                                                                                                      |
-| `iscc_sct/dev.py`                     | Dev-only poe task helpers. Omitted from coverage.                                                                                                                                                                             |
-| `iscc_sct/tokenizer.json`             | Vendored tokenizer. Byte-exact; excluded from whitespace/EOL hooks.                                                                                                                                                           |
-| `tests/chunking_vectors.json`         | Frozen chunk-boundary test vectors. Never hand-edit (see Change playbook).                                                                                                                                                    |
+| Path                                  | Contains                                                                                                                                                                                                                                              |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `iscc_sct/main.py`                    | `create()` - high-level API; returns a `Metadata` object in Object-Format.                                                                                                                                                                            |
+| `iscc_sct/code_semantic_text.py`      | Core algorithm. `gen_text_code_semantic()` (returns a plain dict, Index-Format), splitting, embedding, pooling, binarization. Module-level `@cache` singletons: `tokenizer()`, `chunking_tokenizer()`, `splitter()`, `splitter_guarded()`, `model()`. |
+| `iscc_sct/models.py`                  | Pydantic schema: `Feature`, `FeatureSet`, `Metadata` + format converters.                                                                                                                                                                             |
+| `iscc_sct/options.py`                 | `SctOptions` (pydantic-settings), `sct_opts` singleton, `.override()`.                                                                                                                                                                                |
+| `iscc_sct/utils.py`                   | Codecs (base32/base64url), distances, model download + blake3 integrity, `char_to_byte_offsets`, `MODEL_PATH`, `timer`.                                                                                                                               |
+| `iscc_sct/cli.py`                     | `iscc-sct` console entry point (`main()`): glob, charset detection, `gui` subcommand.                                                                                                                                                                 |
+| `iscc_sct/demo.py`, `iscc_sct/app.py` | Gradio demo (Hugging Face Space). Omitted from coverage.                                                                                                                                                                                              |
+| `iscc_sct/dev.py`                     | Dev-only poe task helpers. Omitted from coverage.                                                                                                                                                                                                     |
+| `iscc_sct/tokenizer.json`             | Vendored tokenizer. Byte-exact; excluded from whitespace/EOL hooks.                                                                                                                                                                                   |
+| `tests/chunking_vectors.json`         | Frozen chunk-boundary test vectors. Never hand-edit (see Change playbook).                                                                                                                                                                            |
 
 ### Pipeline
 
@@ -126,8 +126,13 @@ cli             -> main, charset_normalizer
     (`splitter`) and guarded (`splitter_guarded`) paths. `needs_split_guard()` routes texts whose
     positions sit more than `SPLIT_GUARD_GAP` (8192) chars from the next paragraph separator to the
     guarded sizer (PDF-extracted text, issue #24).
-- **Singletons:** `tokenizer()`, `splitter(**opts)`, `splitter_guarded(**opts)`, `model()` are
-    `@cache`d. The splitter cache keys on the option kwargs, so all option values must be hashable.
+- **Singletons:** `tokenizer()`, `chunking_tokenizer()`, `splitter(**opts)`,
+    `splitter_guarded(**opts)`, `model()` are `@cache`d. The splitter cache keys on the option
+    kwargs, so all option values must be hashable.
+- **Two tokenizers:** `tokenizer()` keeps the vendored truncation (128) + padding and embeds chunks;
+    `chunking_tokenizer()` disables truncation/padding and sizes chunks. Truncation on the sizer
+    makes `tokenizers` >=0.23 emit overflow encodings, the root cause of the issue #24 super-linear
+    chunking. Both yield identical boundaries, so don't merge them.
 - **Coverage must stay at 100%** (`--cov-fail-under=100`). GPU branches and model download use
     `# pragma: no cover`. `dev.py`, `demo.py`, and `tests/` are omitted from coverage.
 - **Style:** PEP 484 **type comments** (first line after `def`), PEP 585 generics, PEP 604 unions.
@@ -136,16 +141,16 @@ cli             -> main, charset_normalizer
 
 ## Side effects catalog
 
-| Function                                          | Effect                                                                                                                                                                               |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `model()` (first call)                            | If the model file is absent/corrupt, `get_model()` **downloads ~450 MB** to the platformdirs user-data dir and verifies a blake3 checksum. Creates a cached ONNX `InferenceSession`. |
-| `get_model()`                                     | Network download + disk write to `MODEL_PATH`; blake3 integrity check (`# pragma: no cover`).                                                                                        |
-| `tokenizer()`, `splitter()`, `splitter_guarded()` | Populate process-global `@cache` (loaded once).                                                                                                                                      |
-| `model()`                                         | Calls `rt.preload_dlls()` when CUDA is available; logs a warning via `warn_gpu_shadowed()` if `onnxruntime-gpu` is installed but CUDA is missing.                                    |
-| `import iscc_sct.options`                         | `load_dotenv()` reads `.env`; instantiates `sct_opts`.                                                                                                                               |
-| `import iscc_sct.utils`                           | `os.makedirs(user_data_dir)` (idempotent).                                                                                                                                           |
-| `create()`, `gen_text_code_semantic()`            | Pure given a loaded model: no disk writes, no mutation of inputs.                                                                                                                    |
-| CLI `main()`                                      | Reads files, prints to stdout, removes the loguru logger unless `--debug`.                                                                                                           |
+| Function                                                                  | Effect                                                                                                                                                                               |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `model()` (first call)                                                    | If the model file is absent/corrupt, `get_model()` **downloads ~450 MB** to the platformdirs user-data dir and verifies a blake3 checksum. Creates a cached ONNX `InferenceSession`. |
+| `get_model()`                                                             | Network download + disk write to `MODEL_PATH`; blake3 integrity check (`# pragma: no cover`).                                                                                        |
+| `tokenizer()`, `chunking_tokenizer()`, `splitter()`, `splitter_guarded()` | Populate process-global `@cache` (loaded once).                                                                                                                                      |
+| `model()`                                                                 | Calls `rt.preload_dlls()` when CUDA is available; logs a warning via `warn_gpu_shadowed()` if `onnxruntime-gpu` is installed but CUDA is missing.                                    |
+| `import iscc_sct.options`                                                 | `load_dotenv()` reads `.env`; instantiates `sct_opts`.                                                                                                                               |
+| `import iscc_sct.utils`                                                   | `os.makedirs(user_data_dir)` (idempotent).                                                                                                                                           |
+| `create()`, `gen_text_code_semantic()`                                    | Pure given a loaded model: no disk writes, no mutation of inputs.                                                                                                                    |
+| CLI `main()`                                                              | Reads files, prints to stdout, removes the loguru logger unless `--debug`.                                                                                                           |
 
 ## Task recipes
 

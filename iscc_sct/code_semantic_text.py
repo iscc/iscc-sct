@@ -223,6 +223,9 @@ def tokenizer():
     """
     Load and cache the tokenizer model based on the predefined model name.
 
+    This tokenizer keeps the vendored truncation (128 tokens) and padding settings and is used
+    to embed chunks. For chunk sizing use chunking_tokenizer() instead.
+
     :return: An instance of the Tokenizer.
     """
     with sct.timer("TOKENIZER load time"):
@@ -230,10 +233,33 @@ def tokenizer():
 
 
 @cache
+def chunking_tokenizer():
+    # type: () -> Tokenizer
+    """
+    Load and cache the tokenizer used for chunk sizing, with truncation and padding disabled.
+
+    The embedding tokenizer truncates to the model's 128-token window. With tokenizers >=0.23
+    the Hugging Face chunk sizer then sees one overflow encoding per 128 tokens, so sizing a
+    huge probe string costs O(length) and chunking degrades to super-linear runtime (issue
+    #24). Chunk sizing needs the true token count, so truncation is disabled here; padding
+    would only add tokens irrelevant to a count and is disabled too. Boundaries stay unchanged
+    because the splitter only compares sizes against the token capacity: at or below it the
+    full and truncated counts agree, and any larger probe exceeds it under both, so every
+    accept/reject decision is identical.
+
+    :return: A Tokenizer with truncation and padding disabled.
+    """
+    tok = Tokenizer.from_file(TOKENIZER_PATH.as_posix())
+    tok.no_truncation()
+    tok.no_padding()
+    return tok
+
+
+@cache
 def splitter(**options):
     # type: (Any) -> TextSplitter
     """
-    Load and cache the text splitter, initialized with tokenizer.
+    Load and cache the text splitter, initialized with the chunking tokenizer.
 
     :param options: Custom processing options for overriding global options
     :key max_tokens (int): Max tokens per chunk (default 127).
@@ -244,7 +270,7 @@ def splitter(**options):
     opts = sct.sct_opts.override(options)
     with sct.timer("TEXTSPLITTER load time"):
         return TextSplitter.from_huggingface_tokenizer(
-            tokenizer(), capacity=opts.max_tokens, overlap=opts.overlap, trim=opts.trim
+            chunking_tokenizer(), capacity=opts.max_tokens, overlap=opts.overlap, trim=opts.trim
         )
 
 
@@ -276,14 +302,16 @@ def needs_split_guard(text):
     """
     Detect text where tokenizer-based chunking degrades to super-linear runtime.
 
-    For every chunk, the text-splitter sizes the text from the current position up to the
-    next separator of each newline level present in the remaining text. If some position is
-    more than SPLIT_GUARD_GAP characters away from the next separator of a level, those
-    probes tokenize huge strings and chunking time grows quadratically with the gap size
-    (issue #24, typical for text extracted from print-layout PDFs).
+    To size an oversized section, text-splitter (>=0.32.0) probes prefixes up to that
+    section's lower-level semantic boundaries instead of tokenizing the whole section, which
+    keeps chunking near-linear while such boundaries exist. When a span carries no
+    intermediate separator for more than SPLIT_GUARD_GAP characters - a giant single
+    paragraph, a trailing separator-free run, or words sitting far from the next
+    paragraph-level separator (print-layout PDF extraction, issue #24) - the probe finds no
+    boundary and falls back to tokenizing the whole section, so chunking time grows
+    quadratically with the gap size.
 
-    The same blow-up occurs across any span containing no newline at all (a giant single
-    paragraph, or a trailing separator-free run), so those are flagged as well.
+    Such texts are routed to the guarded splitter, whose token sizer caps that fallback cost.
 
     :param text: Text to analyze.
     :return: True if the guarded splitter should be used for this text.
@@ -314,52 +342,18 @@ def needs_split_guard(text):
     return len(text) - pos > SPLIT_GUARD_GAP
 
 
-def count_nonpad_ids(ids, pad_id):
-    # type: (list[int], int|None) -> int
-    """
-    Count token ids skipping padding tokens at either end.
-
-    Replicates the counting of text-splitter's Hugging Face chunk sizer: skip padding at the
-    start, then count until the first padding token.
-
-    :param ids: Token ids of an encoding.
-    :param pad_id: Id of the padding token or None if padding is disabled.
-    :return: Number of non-padding tokens.
-    """
-    if pad_id is None:
-        return len(ids)
-    start = 0
-    while start < len(ids) and ids[start] == pad_id:
-        start += 1
-    count = 0
-    for token_id in ids[start:]:
-        if token_id == pad_id:
-            break
-        count += 1
-    return count
-
-
 def token_count(text):
     # type: (str) -> int
     """
     Count tokens exactly like text-splitter's Hugging Face tokenizer chunk sizer.
 
-    Encodes without special tokens and sums non-padding tokens across the main encoding and
-    all overflowing encodings produced by tokenizer truncation.
+    Encodes without special tokens via the chunking tokenizer (truncation and padding
+    disabled), so the count reflects the full input text with no overflow encodings to sum.
 
     :param text: Text to size.
     :return: Number of tokens.
     """
-    tok = tokenizer()
-    padding = tok.padding
-    pad_id = padding["pad_id"] if padding else None
-    total = 0
-    stack = [tok.encode(text, add_special_tokens=False)]
-    while stack:
-        encoding = stack.pop()
-        total += count_nonpad_ids(encoding.ids, pad_id)
-        stack.extend(encoding.overflowing)
-    return total
+    return len(chunking_tokenizer().encode(text, add_special_tokens=False).ids)
 
 
 def token_count_guarded(text, max_tokens):

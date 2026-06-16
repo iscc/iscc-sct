@@ -38,7 +38,10 @@ classifiers = [
     "Topic :: System :: Distributed Computing",
 ]
 dependencies = [
-    "semantic-text-splitter",
+    # >=0.32.0 ships the upstream "avoid sizing whole distant split sections" fix and releases
+    # the GIL during native chunking. It mitigates - but does not eliminate - the issue #24
+    # super-linear cost on separator-free spans, so the chunking guard below is retained.
+    "semantic-text-splitter>=0.32.0",
     "loguru",
     "blake3",
     "platformdirs",
