@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.2.1] - 2026-06-16
 
 - Disabled truncation on the tokenizer used for chunk sizing (new `chunking_tokenizer()`, separate
     from the embedding `tokenizer()`). The vendored tokenizer truncates to 128 tokens, which made
