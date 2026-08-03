@@ -1,3 +1,4 @@
+from importlib.metadata import version
 from pathlib import Path
 
 import pytest
@@ -32,7 +33,8 @@ be matched based on lexical similarity.
 
 
 def test_version():
-    assert sct.__version__ == "0.2.0"
+    # Compared against the package metadata so the two cannot drift apart silently
+    assert sct.__version__ == version("iscc-sct")
 
 
 def test_code_text_semantic_default():
