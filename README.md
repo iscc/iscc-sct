@@ -228,11 +228,13 @@ based on a short Simprint.
 
 ISCC-SCT can be configured using environment variables:
 
-| Environment Variable | Description                          | Default |
-| -------------------- | ------------------------------------ | ------- |
-| ISCC_SCT_BITS        | Default bit-length of generated code | 64      |
-| ISCC_SCT_MAX_TOKENS  | Maximum tokens per chunk             | 127     |
-| ISCC_SCT_OVERLAP     | Maximum token overlap between chunks | 48      |
+| Environment Variable      | Description                           | Default    |
+| ------------------------- | ------------------------------------- | ---------- |
+| ISCC_SCT_BITS             | Default bit-length of generated code  | 64         |
+| ISCC_SCT_MAX_TOKENS       | Maximum tokens per chunk              | 127        |
+| ISCC_SCT_OVERLAP          | Maximum token overlap between chunks  | 48         |
+| ISCC_SCT_BATCH_SIZE       | Chunks per inference batch (0 = auto) | 0          |
+| ISCC_SCT_INTRA_OP_THREADS | ONNX Runtime threads per operator     | 0 (= auto) |
 
 See iscc_sct/options.py for more configuration settings.
 
@@ -241,6 +243,16 @@ See iscc_sct/options.py for more configuration settings.
 - The embedding model will be downloaded on first execution
 - **CPU vs GPU**: On systems with CUDA-compatible GPUs, install with `pip install "iscc-sct[gpu]"`
     for significantly faster processing (~17x on large documents).
+- **Batch size** defaults to auto: one chunk per batch on CPU, 100 on GPU. The tokenizer pads every
+    batch to its longest chunk and attention cost grows quadratically with sequence length, so on
+    CPU larger batches mostly buy padding — single-chunk batches measured ~1.4x faster and ~27%
+    leaner than batches of 100. A GPU is the opposite: it needs large batches to stay saturated
+    (measured 1.7x faster at batch 100 than at batch 1), and its activations live in VRAM rather
+    than in the process. Set `ISCC_SCT_BATCH_SIZE` to override.
+- **Running a worker pool?** Each process loads its own inference session (~870 MB, not shared via
+    copy-on-write) and by default each one starts a thread per core. With one worker per core, set
+    `ISCC_SCT_INTRA_OP_THREADS=1` to avoid oversubscription — measured 1.7x higher total throughput
+    on a 12-worker pool. Leave it at 0 for single-document use, where the extra threads help.
 
 ## Development and Contributing
 

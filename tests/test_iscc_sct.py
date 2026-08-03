@@ -180,6 +180,15 @@ def test_split_text_override_byte_offsets():
     ]
 
 
+def test_split_text_resource_options_do_not_fragment_splitter_cache():
+    # The splitter cache is keyed on its kwargs - resource knobs like batch_size must not
+    # reach it, or every distinct value would retain another tokenizer-backed TextSplitter.
+    split_text("Hello World", batch_size=11)
+    cached = cst.splitter.cache_info().currsize
+    split_text("Hello World", batch_size=12, intra_op_threads=3)
+    assert cst.splitter.cache_info().currsize == cached
+
+
 def test_chunking_tokenizer_disables_truncation_and_padding():
     # The sizing tokenizer must not truncate/pad: truncation makes the HF chunk sizer emit
     # overflow encodings and degrades chunking to super-linear runtime (issue #24). The
@@ -270,6 +279,46 @@ def test_embed_chunks():
     expected = [0.008697219, 0.038051583, 0.043976285]
     embeddings = embed_chunks(chunks)
     assert list(embeddings[0][:3]) == pytest.approx(expected, rel=1e-3)
+
+
+def test_embed_chunks_batching_is_result_invariant():
+    # Batch size is a pure resource knob - it must not change the embeddings. Chunks differ in
+    # length so the batched run pads, which is exactly what could perturb the result.
+    chunks = ["Hello World", "These are chunks", "A considerably longer chunk of sample text"]
+    assert embed_chunks(chunks, batch_size=1) == pytest.approx(
+        embed_chunks(chunks, batch_size=3), abs=1e-6
+    )
+
+
+def test_embed_chunks_default_uses_global_batch_size(monkeypatch):
+    # soft_hash_text_semantic calls embed_chunks without a batch size - the documented global
+    # override (ISCC_SCT_BATCH_SIZE) must still apply on that path.
+    calls = []
+    real_tokenize = cst.tokenize_chunks
+    monkeypatch.setattr(cst, "tokenize_chunks", lambda c: calls.append(len(c)) or real_tokenize(c))
+    monkeypatch.setattr(sct.sct_opts, "batch_size", 2)
+    embed_chunks(["Hello World", "These are chunks", "A third chunk"])
+    assert calls == [2, 1]
+
+
+def test_resolve_batch_size_explicit_wins():
+    assert cst.resolve_batch_size(7, ["CPUExecutionProvider"]) == 7
+    assert cst.resolve_batch_size(7, ["CUDAExecutionProvider"]) == 7
+
+
+def test_resolve_batch_size_auto():
+    assert cst.resolve_batch_size(0, ["CPUExecutionProvider"]) == cst.CPU_BATCH_SIZE
+    assert (
+        cst.resolve_batch_size(0, ["CUDAExecutionProvider", "CPUExecutionProvider"])
+        == cst.GPU_BATCH_SIZE
+    )
+
+
+def test_session_options_thread_default():
+    rt = cst.load_onnxruntime()
+    # 0 leaves the runtime default in place instead of pinning a thread count
+    assert cst.session_options(rt, 0).intra_op_num_threads == 0
+    assert cst.session_options(rt, 2).intra_op_num_threads == 2
 
 
 def capture_gpu_shadowed_warnings(providers):

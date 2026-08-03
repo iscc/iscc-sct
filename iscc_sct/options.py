@@ -73,6 +73,19 @@ class SctOptions(BaseSettings):
         False, description="ISCC_SCT_TRIM - Trim whitespace from chunks (Default False)"
     )
 
+    batch_size: int = Field(
+        0,
+        description="ISCC_SCT_BATCH_SIZE - Chunks per inference batch (0 = auto, Default 0)",
+        ge=0,
+    )
+
+    intra_op_threads: int = Field(
+        0,
+        description="ISCC_SCT_INTRA_OP_THREADS - ONNX Runtime threads per operator "
+        "(0 = runtime default, Default 0)",
+        ge=0,
+    )
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
