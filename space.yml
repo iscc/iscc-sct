@@ -3,7 +3,8 @@ emoji: 🔮
 colorFrom: red
 colorTo: blue
 sdk: gradio
-sdk_version: 5.26.0
+sdk_version: 6.22.0
+python_version: "3.12"
 pinned: true
 license: CC-BY-NC-SA-4.0
 short_description: Cross Lingual Similarity Preserving Text Simprints

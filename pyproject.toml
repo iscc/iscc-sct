@@ -97,6 +97,9 @@ conflicts = [
     [{ extra = "cpu" }, { extra = "gpu" }],
     [{ group = "test" }, { extra = "gpu" }],
 ]
+# The HF Space installs requirements.txt alongside gradio[oauth,mcp], whose mcp extra pins
+# pydantic<=2.12.5 — keep the locked pydantic co-installable with the Space runtime.
+constraint-dependencies = ["pydantic<=2.12.5"]
 
 [tool.uv.build-backend]
 module-root = ""
