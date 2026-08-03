@@ -21,6 +21,28 @@ custom_css = """
 }
 """
 
+# Gradio's embedded-height reporter (js/core Blocks.svelte) stops growing the HF Space iframe
+# after a few consecutive height increases (circuit breaker for vh-feedback loops). Progressive
+# rendering of results trips it, freezing the iframe height and making everything below the fold
+# unreachable - the Space iframe has scrolling="no", so the mouse wheel is dead too. Report the
+# true document height to the iframe-resizer parent ourselves whenever it changes.
+custom_head = """
+<script>
+(function () {
+    if (window.self === window.top) return;  // only needed when embedded on HF Spaces
+    var last = 0;
+    setInterval(function () {
+        if (!window.parentIFrame) return;
+        var height = Math.ceil(document.body.scrollHeight) + 32;
+        if (Math.abs(height - last) > 2 && height < 32768) {
+            last = height;
+            window.parentIFrame.size(height);
+        }
+    }, 300);
+})();
+</script>
+"""
+
 
 newline_symbols = {
     "\u000a": "⏎",  # Line Feed - Represented by the 'Return' symbol
@@ -138,8 +160,8 @@ iscc_theme = gr.themes.Default(
     radius_size=gr.themes.sizes.radius_none,
 )
 
-# Gradio 6 expects theme and css as launch() parameters - pass these at every launch site
-launch_kwargs = {"theme": iscc_theme, "css": custom_css}
+# Gradio 6 expects theme, css and head as launch() parameters - pass these at every launch site
+launch_kwargs = {"theme": iscc_theme, "css": custom_css, "head": custom_head}
 
 with gr.Blocks() as demo:
     with gr.Row(variant="panel"):
