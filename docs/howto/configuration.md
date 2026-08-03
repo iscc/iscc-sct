@@ -13,24 +13,31 @@ variable, and as a field on the `SctOptions` model.
 
 ## Options reference
 
-| Option          | Env variable             | Default | Notes                                                   |
-| --------------- | ------------------------ | ------- | ------------------------------------------------------- |
-| `bits`          | `ISCC_SCT_BITS`          | `64`    | Document code length. 32–256, multiple of 32.           |
-| `bits_granular` | `ISCC_SCT_BITS_GRANULAR` | `64`    | Granular simprint length. 32–256, multiple of 32.       |
-| `characters`    | `ISCC_SCT_CHARACTERS`    | `True`  | Include the document character count.                   |
-| `embedding`     | `ISCC_SCT_EMBEDDING`     | `False` | Include the global document embedding vector.           |
-| `precision`     | `ISCC_SCT_PRECISION`     | `8`     | Max fractional digits when storing the embedding.       |
-| `simprints`     | `ISCC_SCT_SIMPRINTS`     | `False` | Include granular per-chunk simprints.                   |
-| `offsets`       | `ISCC_SCT_OFFSETS`       | `False` | Include per-chunk offsets.                              |
-| `byte_offsets`  | `ISCC_SCT_BYTE_OFFSETS`  | `False` | Report UTF-8 byte offsets instead of character offsets. |
-| `sizes`         | `ISCC_SCT_SIZES`         | `False` | Include per-chunk sizes.                                |
-| `contents`      | `ISCC_SCT_CONTENTS`      | `False` | Include the per-chunk text.                             |
-| `max_tokens`    | `ISCC_SCT_MAX_TOKENS`    | `127`   | Max tokens per chunk. Cannot exceed 127.                |
-| `overlap`       | `ISCC_SCT_OVERLAP`       | `48`    | Max tokens shared between adjacent chunks.              |
-| `trim`          | `ISCC_SCT_TRIM`          | `False` | Trim whitespace from chunks.                            |
+| Option             | Env variable                | Default | Notes                                                           |
+| ------------------ | --------------------------- | ------- | --------------------------------------------------------------- |
+| `bits`             | `ISCC_SCT_BITS`             | `64`    | Document code length. 32–256, multiple of 32.                   |
+| `bits_granular`    | `ISCC_SCT_BITS_GRANULAR`    | `64`    | Granular simprint length. 32–256, multiple of 32.               |
+| `characters`       | `ISCC_SCT_CHARACTERS`       | `True`  | Include the document character count.                           |
+| `embedding`        | `ISCC_SCT_EMBEDDING`        | `False` | Include the global document embedding vector.                   |
+| `precision`        | `ISCC_SCT_PRECISION`        | `8`     | Max fractional digits when storing the embedding.               |
+| `simprints`        | `ISCC_SCT_SIMPRINTS`        | `False` | Include granular per-chunk simprints.                           |
+| `offsets`          | `ISCC_SCT_OFFSETS`          | `False` | Include per-chunk offsets.                                      |
+| `byte_offsets`     | `ISCC_SCT_BYTE_OFFSETS`     | `False` | Report UTF-8 byte offsets instead of character offsets.         |
+| `sizes`            | `ISCC_SCT_SIZES`            | `False` | Include per-chunk sizes.                                        |
+| `contents`         | `ISCC_SCT_CONTENTS`         | `False` | Include the per-chunk text.                                     |
+| `max_tokens`       | `ISCC_SCT_MAX_TOKENS`       | `127`   | Max tokens per chunk. Cannot exceed 127.                        |
+| `overlap`          | `ISCC_SCT_OVERLAP`          | `48`    | Max tokens shared between adjacent chunks.                      |
+| `trim`             | `ISCC_SCT_TRIM`             | `False` | Trim whitespace from chunks.                                    |
+| `batch_size`       | `ISCC_SCT_BATCH_SIZE`       | `0`     | Chunks per inference batch. `0` = auto (1 on CPU, 100 on CUDA). |
+| `intra_op_threads` | `ISCC_SCT_INTRA_OP_THREADS` | `0`     | ONNX Runtime threads per operator. `0` = runtime default.       |
 
 The `granular=True` shortcut on `create()` is equivalent to setting `simprints`, `offsets`, `sizes`,
 and `contents` to `True` at once.
+
+The two inference options only change resource usage, never the generated codes. `intra_op_threads`
+configures the process-wide inference session, so it only takes effect through the global options or
+an environment variable before the first embedding call — worker pools with one process per core
+should set it to `1` to avoid thread oversubscription.
 
 ## Override per call
 
@@ -79,6 +86,19 @@ print(sct.sct_opts.bits)  # 64 — the global is unchanged
 
 Prefer `override()` or per-call keyword arguments over assigning to `sct_opts` fields directly. Both
 keep the global default predictable for other code in the same process.
+
+## Model storage directory
+
+The ~450 MB embedding model is downloaded on first use into the platform-specific user data
+directory. The `ISCC_SCT_MODEL_DIR` environment variable overrides that location — useful for
+container images, CI caches, or a model directory shared between users:
+
+```bash
+export ISCC_SCT_MODEL_DIR=/opt/shared/iscc-sct
+```
+
+Unlike the options above, `ISCC_SCT_MODEL_DIR` is not an `SctOptions` field — the path is resolved
+when `iscc_sct` is imported, so set it (or place it in `.env`) before importing.
 
 ## Validation
 
