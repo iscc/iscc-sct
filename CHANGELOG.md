@@ -22,6 +22,9 @@
 - The cached text splitters are now keyed only on the chunking options (`max_tokens`, `overlap`,
     `trim`). Previously every distinct combination of unrelated per-call options (e.g. `bits`, or
     the batch size added above) retained an additional tokenizer-backed `TextSplitter` instance
+- Added the `ISCC_SCT_MODEL_DIR` environment variable to override the embedding model storage
+    directory (defaults to the platform-specific user data directory), enabling container images, CI
+    caches, and shared model directories (#19)
 - Fixed `__version__`, which still reported `0.2.0` in the 0.2.1 release. The version test now
     compares against the installed package metadata so the two cannot drift apart silently
 

@@ -1,3 +1,5 @@
+import importlib
+from pathlib import Path
 import pytest
 import iscc_sct as sct
 from iscc_sct import utils
@@ -272,3 +274,16 @@ def test_test_char_to_byte_offsets_against_simple():
     assert utils.char_to_byte_offsets(text, offsets) == utils.char_to_byte_offsets_simple(
         text, offsets
     )
+
+
+def test_model_dir_env_override(monkeypatch, tmp_path):
+    monkeypatch.setenv("ISCC_SCT_MODEL_DIR", str(tmp_path))
+    try:
+        reloaded = importlib.reload(utils)
+        assert reloaded.MODEL_DIR == tmp_path
+        assert reloaded.MODEL_PATH == tmp_path / reloaded.MODEL_FILENAME
+    finally:
+        monkeypatch.delenv("ISCC_SCT_MODEL_DIR")
+        importlib.reload(utils)
+    assert utils.MODEL_DIR == Path(utils.dirs.user_data_dir)
+    assert utils.MODEL_PATH == Path(utils.dirs.user_data_dir) / utils.MODEL_FILENAME

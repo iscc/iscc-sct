@@ -228,19 +228,22 @@ based on a short Simprint.
 
 ISCC-SCT can be configured using environment variables:
 
-| Environment Variable      | Description                           | Default    |
-| ------------------------- | ------------------------------------- | ---------- |
-| ISCC_SCT_BITS             | Default bit-length of generated code  | 64         |
-| ISCC_SCT_MAX_TOKENS       | Maximum tokens per chunk              | 127        |
-| ISCC_SCT_OVERLAP          | Maximum token overlap between chunks  | 48         |
-| ISCC_SCT_BATCH_SIZE       | Chunks per inference batch (0 = auto) | 0          |
-| ISCC_SCT_INTRA_OP_THREADS | ONNX Runtime threads per operator     | 0 (= auto) |
+| Environment Variable      | Description                           | Default       |
+| ------------------------- | ------------------------------------- | ------------- |
+| ISCC_SCT_BITS             | Default bit-length of generated code  | 64            |
+| ISCC_SCT_MAX_TOKENS       | Maximum tokens per chunk              | 127           |
+| ISCC_SCT_OVERLAP          | Maximum token overlap between chunks  | 48            |
+| ISCC_SCT_BATCH_SIZE       | Chunks per inference batch (0 = auto) | 0             |
+| ISCC_SCT_INTRA_OP_THREADS | ONNX Runtime threads per operator     | 0 (= auto)    |
+| ISCC_SCT_MODEL_DIR        | Directory for the embedding model     | user data dir |
 
 See iscc_sct/options.py for more configuration settings.
 
 ## Performance Considerations
 
-- The embedding model will be downloaded on first execution
+- The embedding model will be downloaded on first execution. It is stored in the platform-specific
+    user data directory by default; set `ISCC_SCT_MODEL_DIR` to store it elsewhere (useful for
+    containers, CI caches, or shared model directories).
 - **CPU vs GPU**: On systems with CUDA-compatible GPUs, install with `pip install "iscc-sct[gpu]"`
     for significantly faster processing (~17x on large documents).
 - **Batch size** defaults to auto: one chunk per batch on CPU, 100 on GPU. The tokenizer pads every
