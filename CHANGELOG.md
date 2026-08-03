@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.2.2] - Unreleased
+
+- Changed the default inference batch size from a fixed 100 to auto (`batch_size=0`), which resolves
+    to 1 chunk per batch on CPU and 100 on CUDA (#25). The vendored tokenizer pads each batch to its
+    longest chunk and attention cost is quadratic in sequence length, so on CPU large batches mostly
+    pay for padding. Measured on a 2238-chunk book: ~1.4x faster and 1529 MB → 1110 MB steady RSS
+    single-process; on a 12-worker pool 1.45x throughput and 18.5 GB → 13.4 GB total PSS. Generated
+    ISCC codes are unchanged (verified bit-identical at 256 bits across ~50 configurations, and
+    identical between the CPU and CUDA providers). A GPU scales the opposite way, which is why the
+    default is provider-aware rather than one global value: on a GTX 1080, throughput rises from 384
+    chunks/s at batch 1 to 668 at batch 100 and then plateaus (batch 200 is no faster and nearly
+    doubles VRAM), so the CUDA path keeps batch 100. Host RSS on the GPU path is unaffected by batch
+    size — those activations live in VRAM
+- Added the `batch_size` option (`ISCC_SCT_BATCH_SIZE`) to override the batch size per call or
+    globally, and `intra_op_threads` (`ISCC_SCT_INTRA_OP_THREADS`) to set the ONNX Runtime intra-op
+    thread count. Both default to 0, meaning auto. `intra_op_threads` configures the process-wide
+    inference session, so it only takes effect through the global options before the session is
+    created — worker pools with one process per core should set it to 1 to avoid thread
+    oversubscription (measured 1.7x higher total throughput on a 12-worker pool)
+- The cached text splitters are now keyed only on the chunking options (`max_tokens`, `overlap`,
+    `trim`). Previously every distinct combination of unrelated per-call options (e.g. `bits`, or
+    the batch size added above) retained an additional tokenizer-backed `TextSplitter` instance
+
 ## [0.2.1] - 2026-06-16
 
 - Disabled truncation on the tokenizer used for chunk sizing (new `chunking_tokenizer()`, separate

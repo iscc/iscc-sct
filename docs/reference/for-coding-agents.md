@@ -38,7 +38,8 @@ text -> split_text() -> embed_chunks() -> mean_pooling() -> binarize() -> ISCC h
 
 1. Reject empty text (`ValueError`), then `sct_opts.override(options)`.
 1. `split_text()` -> `[(offset, chunk), ...]` at semantic boundaries (max 127 tokens, 48 overlap).
-1. `embed_chunks()` tokenizes (batch 100), runs the ONNX model, `attention_pooling()` per chunk.
+1. `embed_chunks()` tokenizes in batches (auto: 1 on CPU, 100 on CUDA), runs the ONNX model,
+    `attention_pooling()` per chunk.
 1. `mean_pooling()` averages chunk vectors into one L2-normalized document vector.
 1. `binarize()` (`vec >= 0` -> bits), truncate to `bits // 8`, prefix the 2-byte ISCC header,
     `encode_base32()`, prepend `"ISCC:"`.
@@ -66,7 +67,7 @@ cli             -> main, charset_normalizer
 | `gen_text_code_semantic(text, **options)`                                       | code_semantic_text | Low-level. Returns `dict` (Index-Format).        |
 | `code_text_semantic(fp, **options)`                                             | code_semantic_text | Same, reading a UTF-8 file path.                 |
 | `soft_hash_text_semantic(text)`                                                 | code_semantic_text | Raw 384-bit digest (`bytes`), no header.         |
-| `embed_chunks(chunks, batch_size=100)`                                          | code_semantic_text | Chunk list -> embedding array.                   |
+| `embed_chunks(chunks, batch_size=None)`                                         | code_semantic_text | Chunk list -> embedding array.                   |
 | `Metadata`, `FeatureSet`, `Feature`                                             | models             | Result schema + converters.                      |
 | `SctOptions`, `sct_opts`                                                        | options            | Settings model + global instance.                |
 | `iscc_distance`, `hamming_distance`, `cosine_similarity`, `granular_similarity` | utils              | Similarity metrics.                              |

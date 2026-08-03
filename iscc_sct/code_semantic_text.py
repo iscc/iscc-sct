@@ -75,6 +75,12 @@ WHITESPACE = re.compile(r"\s")
 # chunking switches to the guarded splitter (see needs_split_guard)
 SPLIT_GUARD_GAP = 8192
 
+# Chunks per inference batch chosen by resolve_batch_size when batch_size is 0 (auto).
+# On CPU one chunk per batch is both faster and leaner; on GPU large batches keep the device
+# saturated and the memory lives in VRAM (see resolve_batch_size).
+CPU_BATCH_SIZE = 1
+GPU_BATCH_SIZE = 100
+
 
 def code_text_semantic(fp, **options):
     # type: (Path|str, Any) -> dict[str, Any]
@@ -99,6 +105,7 @@ def code_text_semantic(fp, **options):
         - ``max_tokens`` (int): Max tokens per chunk (default 127).
         - ``overlap`` (int): Max tokens allowed to overlap between chunks (default 48).
         - ``trim`` (bool): Trim whitespace from chunks (default False).
+        - ``batch_size`` (int): Chunks per inference batch (default 0 = auto).
     :return: Dict with ISCC processing results
     """
     fp = Path(fp)
@@ -124,6 +131,12 @@ def gen_text_code_semantic(text, **options):
         - ``max_tokens`` (int): Max tokens per chunk (default 127).
         - ``overlap`` (int): Max tokens allowed overlapping between chunks (default 48).
         - ``trim`` (bool): Trim whitespace from chunks (default False).
+        - ``batch_size`` (int): Chunks per inference batch (default 0 = auto).
+
+    NOTE:
+        `intra_op_threads` configures the shared inference session and therefore only takes
+        effect via the global options (`ISCC_SCT_INTRA_OP_THREADS`) before the session is
+        created. Passing it here has no effect.
     :return: Dict with ISCC processing results (using Index-Format for granular features)
     """
 
@@ -143,7 +156,7 @@ def gen_text_code_semantic(text, **options):
 
     # Chunk embedding
     with sct.timer("EMBEDDING time"):
-        embeddings = embed_chunks(chunks)
+        embeddings = embed_chunks(chunks, batch_size=opts.batch_size)
 
     # Create global document embedding
     embedding = mean_pooling(embeddings)
@@ -205,7 +218,11 @@ def split_text(text, **options):
     """
     opts = sct.sct_opts.override(options)
     select = splitter_guarded if needs_split_guard(text) else splitter
-    chunks = select(**opts.model_dump()).chunk_indices(text)
+    # Only the chunking options may reach the cached splitter constructors - unrelated knobs
+    # (e.g. batch_size) would fragment the cache with one TextSplitter per distinct value.
+    chunks = select(max_tokens=opts.max_tokens, overlap=opts.overlap, trim=opts.trim).chunk_indices(
+        text
+    )
 
     if not opts.byte_offsets:
         return chunks
@@ -434,6 +451,47 @@ def load_onnxruntime():
     return rt
 
 
+def resolve_batch_size(batch_size, providers):
+    # type: (int, list[str]) -> int
+    """
+    Resolve the number of chunks to embed per inference batch.
+
+    A non-zero batch_size is used as given. Zero means auto, which depends on the execution
+    provider: on CPU the vendored tokenizer pads every batch to its longest chunk and attention
+    cost grows quadratically with sequence length, so batching mostly buys padding - single-chunk
+    batches are both faster and hold a smaller activation peak. A GPU instead needs large batches
+    to stay saturated, and its activations live in device memory rather than in the process.
+
+    :param batch_size: Configured batch size, 0 for auto.
+    :param providers: Execution providers the inference session actually runs on.
+    :return: Number of chunks per batch.
+    """
+    if batch_size:
+        return batch_size
+    return GPU_BATCH_SIZE if "CUDAExecutionProvider" in providers else CPU_BATCH_SIZE
+
+
+def session_options(rt, intra_op_threads):
+    # type: (Any, int) -> Any
+    """
+    Build the ONNX Runtime session options for the inference session.
+
+    Thread count is a session-level setting and the session is a process-wide singleton, so it
+    is read from the global options rather than passed per call. Leaving it at 0 keeps the
+    runtime default (one thread per core), which is fastest for a single process. Callers that
+    run a pool of one worker per core should set it to 1 to avoid oversubscription.
+
+    :param rt: The onnxruntime module.
+    :param intra_op_threads: Threads per operator, 0 for the runtime default.
+    :return: Configured onnxruntime.SessionOptions.
+    """
+    so = rt.SessionOptions()
+    so.graph_optimization_level = rt.GraphOptimizationLevel.ORT_ENABLE_ALL
+    if intra_op_threads:
+        so.intra_op_num_threads = intra_op_threads
+    return so
+
+
 @cache
 def model():
     # type: () -> Any
@@ -456,8 +514,7 @@ def model():
             # before session creation (available since onnxruntime 1.21).
             rt.preload_dlls()
     log.debug(f"Using ONNX providers {', '.join(selected_onnx_providers)}")
-    so = rt.SessionOptions()
-    so.graph_optimization_level = rt.GraphOptimizationLevel.ORT_ENABLE_ALL
+    so = session_options(rt, sct.sct_opts.intra_op_threads)
     try:
         with sct.timer("ONNXMODEL load time"):
             return rt.InferenceSession(
@@ -486,14 +543,19 @@ def tokenize_chunks(chunks):
     return {"input_ids": input_ids, "attention_mask": attention_mask, "token_type_ids": type_ids}
 
 
-def embed_chunks(chunks, batch_size=100):
+def embed_chunks(chunks, batch_size=None):
+    # type: (list[str], int|None) -> NDArray
     """
     Embed text chunks and return vector embeddings.
 
     :param chunks: Text chunks to embed.
-    :param batch_size: Number of chunks to process in each batch.
+    :param batch_size: Number of chunks to process in each batch (None = use the global
+        `batch_size` option, 0 = auto, see resolve_batch_size).
     :return: An array of embeddings for each chunk.
     """
+    if batch_size is None:
+        batch_size = sct.sct_opts.batch_size
+    batch_size = resolve_batch_size(batch_size, model().get_providers())
     embeddings = []
     for start_idx in range(0, len(chunks), batch_size):
         batch_chunks = chunks[start_idx : start_idx + batch_size]
