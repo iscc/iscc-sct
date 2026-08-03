@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.2.2] - Unreleased
+## [0.2.2] - 2026-08-03
 
 - Changed the default inference batch size from a fixed 100 to auto (`batch_size=0`), which resolves
     to 1 chunk per batch on CPU and 100 on CUDA (#25). The vendored tokenizer pads each batch to its
