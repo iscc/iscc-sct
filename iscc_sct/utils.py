@@ -15,7 +15,11 @@ from iscc_sct.models import Metadata, Feature
 APP_NAME = "iscc-sct"
 APP_AUTHOR = "iscc"
 dirs = PlatformDirs(appname=APP_NAME, appauthor=APP_AUTHOR)
-os.makedirs(dirs.user_data_dir, exist_ok=True)
+# ISCC_SCT_MODEL_DIR overrides the platform-specific model storage directory (issue #19).
+# Read via os.environ (not SctOptions) because the path must be known at import time; a `.env`
+# file still works because `iscc_sct.options` runs `load_dotenv()` before this module is imported.
+MODEL_DIR = Path(os.environ.get("ISCC_SCT_MODEL_DIR") or dirs.user_data_dir)
+os.makedirs(MODEL_DIR, exist_ok=True)
 
 
 __all__ = [
@@ -38,7 +42,7 @@ BASE_VERSION = "1.0.0"
 BASE_URL = f"https://github.com/iscc/iscc-binaries/releases/download/v{BASE_VERSION}"
 MODEL_FILENAME = "iscc-sct-v0.2.0.onnx"
 MODEL_URL = f"{BASE_URL}/{MODEL_FILENAME}"
-MODEL_PATH = Path(dirs.user_data_dir) / MODEL_FILENAME
+MODEL_PATH = MODEL_DIR / MODEL_FILENAME
 MODEL_CHECKSUM = "d4f763474f9be35ce5358637c87935ee11ba396b9196f73b95ab97da0cef8749"
 
 
