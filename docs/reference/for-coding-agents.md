@@ -73,7 +73,7 @@ cli             -> main, charset_normalizer
 | `iscc_distance`, `hamming_distance`, `cosine_similarity`, `granular_similarity` | utils              | Similarity metrics.                              |
 | `encode_base32`, `decode_base32`, `encode_base64`, `decode_base64`              | utils              | Codecs.                                          |
 | `char_to_byte_offsets`, `get_model`, `MODEL_PATH`, `timer`                      | utils              | Helpers.                                         |
-| `__version__`                                                                   | `__init__`         | `"0.2.0"`.                                       |
+| `__version__`                                                                   | `__init__`         | Package version string.                          |
 
 ## Decision dispatch
 
